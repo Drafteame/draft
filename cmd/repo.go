@@ -60,12 +60,14 @@ func init() {
 	rootCmd.AddCommand(repositoryCmd)
 
 	repositoryCmd.Flags().StringP("name", "n", "", "Name of the repository")
+	repositoryCmd.Flags().StringP("entity", "e", "", "Name of the entity (table, collection, etc) that should be managed by the repository")
 	repositoryCmd.Flags().StringP("type", "t", "mongo", "Repository type to be crated")
 }
 
 func getRepositoryArgs(cmd *cobra.Command) *repositoryArgs {
 	name := cmd.Flag("name").Value.String()
 	repoType := cmd.Flag("type").Value.String()
+	entity := cmd.Flag("entity").Value.String()
 
 	if name == "" {
 		fmt.Println("engine: --name is required")
@@ -77,11 +79,15 @@ func getRepositoryArgs(cmd *cobra.Command) *repositoryArgs {
 		os.Exit(1)
 	}
 
+	if entity == "" {
+		entity = utils.ToSnakeCase(name)
+	}
+
 	a := &repositoryArgs{}
 
 	a.RawName = name
 	a.Type = repoType
-	a.CollectionName = utils.ToSnakeCase(a.RawName)
+	a.CollectionName = entity
 	a.PackageName = utils.ToPackageName(a.RawName)
 	a.CammelCaseName = utils.ToCammelCase(a.RawName)
 
