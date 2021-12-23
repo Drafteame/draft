@@ -9,3 +9,6 @@ test: ## Execute unit testing
 
 lint: ## Lint code
 	@golangci-lint run ./...
+
+fmt:
+	@gofmt -s -w -l $(shell go list -f {{.Dir}} ./... | grep -v /vendor/)
