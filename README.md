@@ -18,7 +18,7 @@ export GOPRIVATE=github.com/Drafteame
 Then you can install the latest version of the CLI:
 
 ```shell
-go install github.com/Drafteame/engine/engine@latest
+go install github.com/Drafteame/draft@latest
 ```
 
 ## Create new project
