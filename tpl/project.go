@@ -2,7 +2,9 @@ package tpl
 
 var (
 	CzToml = `[tool.commitizen]
-version = "0.0.0"`
+version = "0.0.0"
+tag_format = "v$version"
+`
 
 	GoreleaserYaml = `# This is an example .goreleaser.yml file with some sensible defaults.
 # Make sure to check the documentation at https://goreleaser.com
@@ -34,7 +36,20 @@ changelog:
   filters:
     exclude:
       - '^docs:'
-      - '^test:'`
+      - '^test:'
+
+announce:
+  slack:
+    # Whether its enabled or not.
+    # Defaults to false.
+    enabled: true
+
+    # Message template to use while publishing.
+    message_template: 'Project **{{Name}}** {{ReleaseTagReplacer}} is out!'
+
+    # The name of the channel that the user selected as a destination for webhook messages.
+    channel: '#engineering'
+`
 
 	ReadmeMd = `# {{Name}}
 
