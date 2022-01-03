@@ -4,8 +4,11 @@ help: ## Display this help screen.
 install: ## Install all dependencies for Go and Serverless framework
 	@go mod download
 
+precommit_install: ## Install precommit actions
+	@pre-commit install && pre-commit install --hook-type commit-msg
+
 test: ## Execute unit testing
-	@go test -v -race `go list ./... | grep -v cmd` --cover
+	@go test -v -race $(shell go list ./... | grep -v cmd) --cover -tags=unit -short
 
 lint: ## Lint code
 	@golangci-lint run ./...
