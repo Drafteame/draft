@@ -91,8 +91,9 @@ This is the project structure to be created by the command:
 }
 
 type newArgs struct {
-	Name      string
-	Namespace string
+	Name               string
+	Namespace          string
+	ReleaseTagReplacer string
 }
 
 func init() {
@@ -116,8 +117,9 @@ func getNewArgs(cmd *cobra.Command) *newArgs {
 	}
 
 	return &newArgs{
-		Name:      name,
-		Namespace: namespace,
+		Name:               name,
+		Namespace:          namespace,
+		ReleaseTagReplacer: "{{ .Tag }}",
 	}
 }
 
