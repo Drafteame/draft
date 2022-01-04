@@ -1,3 +1,9 @@
+## v0.2.1 (2022-01-04)
+
+### Fix
+
+- release webhook config
+
 ## v0.2.0 (2022-01-04)
 
 ### Feat
