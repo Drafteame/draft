@@ -16,9 +16,7 @@ func RenderTemplate(template string, data interface{}) (string, error) {
 		return "", err
 	}
 
-	rendered := tmpl.Render(data)
-
-	return rendered, err
+	return tmpl.Render(data), nil
 }
 
 // CreateFile creates a file with the given name and content

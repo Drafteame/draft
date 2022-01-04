@@ -171,7 +171,7 @@ func (args *newArgs) createFiles() {
 		{".github/workflows/manual_redeploy.yml", tpl.GithubActionManualRedeploy},
 		{".github/workflows/pull_request.yml", tpl.GithubActionPullRequest},
 		{".github/workflows/release.yml", tpl.GithubActionRelease},
-		{"cmd/api/main.go", tpl.MainGo},
+		{"cmd/api/main.go", tpl.HTTPMainGo},
 		{"config/concurrency.yml", tpl.ConcurrencyYaml},
 		{"config/cors.yml", tpl.CorsYaml},
 		{"config/domains.yml", tpl.DomainsYaml},
