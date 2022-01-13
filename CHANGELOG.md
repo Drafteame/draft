@@ -1,3 +1,9 @@
+## v0.3.0 (2022-01-13)
+
+### Feat
+
+- add migration commands
+
 ## v0.2.1 (2022-01-04)
 
 ### Fix
