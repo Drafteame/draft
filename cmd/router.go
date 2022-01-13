@@ -79,15 +79,33 @@ func getRouterArgs(cmd *cobra.Command) *routerArgs {
 }
 
 func (args *routerArgs) validatePaths() {
-	utils.PathExists(handlersPath)
-	utils.PathExists(routesPath)
-	utils.PathExists(schemasPath)
+	pathsExists := []string{
+		handlersPath,
+		routesPath,
+		schemasPath,
+	}
 
-	utils.PathNotExists(fmt.Sprintf("%s/%s", handlersPath, args.PackageName))
-	utils.PathNotExists(fmt.Sprintf("%s/%s/handler.go", handlersPath, args.PackageName))
-	utils.PathNotExists(fmt.Sprintf("%s/%s/%s.go", handlersPath, args.PackageName, args.PackageName))
-	utils.PathNotExists(fmt.Sprintf("%s/%s.go", routesPath, args.PackageName))
-	utils.PathNotExists(fmt.Sprintf("%s/%s.go", schemasPath, args.PackageName))
+	for _, path := range pathsExists {
+		if utils.PathNotExists(path) {
+			fmt.Printf("engine: %s not found.\n", path)
+			os.Exit(1)
+		}
+	}
+
+	pathsNotExists := []string{
+		fmt.Sprintf("%s/%s", handlersPath, args.PackageName),
+		fmt.Sprintf("%s/%s/handler.go", handlersPath, args.PackageName),
+		fmt.Sprintf("%s/%s/%s.go", handlersPath, args.PackageName, args.PackageName),
+		fmt.Sprintf("%s/%s.go", routesPath, args.PackageName),
+		fmt.Sprintf("%s/%s.go", schemasPath, args.PackageName),
+	}
+
+	for _, path := range pathsNotExists {
+		if utils.PathNotExists(path) {
+			fmt.Printf("engine: %s alredy exists.\n", path)
+			os.Exit(1)
+		}
+	}
 }
 
 func (args *routerArgs) createFiles() {

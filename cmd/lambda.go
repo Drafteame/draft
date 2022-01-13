@@ -24,6 +24,8 @@ with an event handler like sqs, sns, plain lambda etc.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		a := getLambdaArgs(cmd)
 
+		utils.PathExists(currentDir + "/.engine.yml")
+
 		fmt.Println("engine: Creating Lambda function", a.Name)
 
 		a.createDirs()

@@ -93,19 +93,17 @@ func GetCurrentPath() string {
 }
 
 // PathExists checks if the given path exists
-func PathExists(path string) {
+func PathExists(path string) bool {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		fmt.Printf("engine: path %s not found\n", path)
-		os.Exit(1)
+		return false
 	}
+
+	return true
 }
 
 // PathNotExists checks if the given path not exists
-func PathNotExists(path string) {
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
-		fmt.Printf("engine: path %s already exists\n", path)
-		os.Exit(1)
-	}
+func PathNotExists(path string) bool {
+	return !PathExists(path)
 }
 
 func NewStringValue(p *string, val string) *StringValue {

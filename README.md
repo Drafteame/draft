@@ -57,7 +57,7 @@ draft repo --name <repo_name>
 You can specify the type of the repository to be creates, by default is a `mongo` repository.
 
 ```shell
-draft repo --name <repo_name> --type <repo_type>
+draft repo --name <repo_name> --type [mongo, qldb]
 ```
 
 Also you can specify a custom entity (table or collection) name that should handle the repository.
@@ -66,7 +66,31 @@ Also you can specify a custom entity (table or collection) name that should hand
 draft repo --name <repo_name> --entity <entity_name>
 ```
 
-### Repo types
+## Migrations
 
-- mongo
-- qldb (in progress)
+### Crete new Migration
+
+DB migrations will be placed under the folder `migrations/<selected_db>/migrate`.
+A database should be specified to create the proper migration.
+
+```shell
+draft migrate:new --name "<migration_name>" [--mongo, --qldb]
+```
+
+### Execute UP migrations
+
+To execute UP command over migrations execute the next commands.
+A database should be specified to create the proper migration.
+
+```shell
+draft migrate:up [--mongo, --qldb]
+```
+
+## Execute DOWN migrations
+
+To execute UP command over migrations execute the next commands.
+A database should be specified to create the proper migration.
+
+```shell
+draft migrate:down [--mongo, --qldb]
+```
