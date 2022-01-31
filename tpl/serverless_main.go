@@ -7,13 +7,23 @@ import (
 	"context"
 	"errors"
 
+	"github.com/Drafteame/framework/engine"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+
 	handler "{{Namespace}}/internal/handlers/{{PackageName}}"
 )
 
-func init() {
+var app engine.App
 
+func init() {
+	app = engine.NewApp(func(cfg engine.AppConfig, s *engine.Services) {
+		s.Router = false
+		s.Mongo = true
+		s.QLDB = true
+		s.Sentry = true
+	})
 }
 
 func main() {
@@ -33,15 +43,23 @@ func worker(ctx context.Context, event events.SQSEvent) (map[string]interface{},
 
 import (
 	"context"
-	"errors"
-	"fmt"
+
+	"github.com/Drafteame/framework/engine"
 
 	"github.com/aws/aws-lambda-go/lambda"
+
 	handler "{{Namespace}}/internal/handlers/{{PackageName}}"
 )
 
-func init() {
+var app engine.App
 
+func init() {
+	app = engine.NewApp(func(cfg engine.AppConfig, s *engine.Services) {
+		s.Router = false
+		s.Mongo = true
+		s.QLDB = true
+		s.Sentry = true
+	})
 }
 
 func main() {
