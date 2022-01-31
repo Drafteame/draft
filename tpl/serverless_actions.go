@@ -9,16 +9,7 @@ var (
       - sqs:
           batchSize: 1
           functionResponseType: ReportBatchItemFailures
-          arn:
-            Fn::Join:
-              - ':'
-              - - arn
-                - aws
-                - sqs
-                - Ref: AWS::Region
-                - Ref: AWS::AccountId
-                - {{CamelCaseName}}
-                - "-${self:provider.stage}"`
+          arn: {{TriggerArn}}`
 
 	ServerlessPlainEvent = `# engine:serverless:functions
 

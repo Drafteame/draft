@@ -33,7 +33,7 @@ with an event handler like sqs, sns, plain lambda etc.`,
 		a.registerEvent()
 
 		fmt.Printf("engine: Lambda function created\n\n")
-		fmt.Printf("\t Run `go mod tidy` to update dependencies.\n\n")
+		fmt.Printf("\tRun `go mod tidy` to update dependencies.\n\n")
 	},
 }
 
@@ -41,7 +41,8 @@ func init() {
 	rootCmd.AddCommand(lambdaCmd)
 
 	lambdaCmd.Flags().StringP("name", "n", "", "Name of the Lambda function")
-	lambdaCmd.Flags().StringP("type", "t", "", "Type of the Lambda function (sqs, sns, plain)")
+	lambdaCmd.Flags().StringP("type", "t", "", "Type of the Lambda function (sqs, plain)")
+	lambdaCmd.Flags().String("trigger-arn", "", "Arn of the lambda trigger")
 }
 
 type lambdaArgs struct {
@@ -51,6 +52,7 @@ type lambdaArgs struct {
 	SnakeCaseName string
 	CamelCaseName string
 	PackageName   string
+	TriggerArn    string
 }
 
 func getLambdaArgs(cmd *cobra.Command) *lambdaArgs {
@@ -66,14 +68,22 @@ func getLambdaArgs(cmd *cobra.Command) *lambdaArgs {
 		typeLambda = "plain"
 	}
 
-	return &lambdaArgs{
+	args := &lambdaArgs{
 		Name:          name,
 		Type:          typeLambda,
 		Namespace:     viper.GetString("namespace"),
 		SnakeCaseName: utils.ToSnakeCase(name),
 		CamelCaseName: utils.ToCamelCase(name),
 		PackageName:   utils.ToPackageName(name),
+		TriggerArn:    cmd.Flag("trigger-arn").Value.String(),
 	}
+
+	if args.Type == "sqs" && args.TriggerArn == "" {
+		fmt.Println("engine: --trigger-arn is required")
+		os.Exit(1)
+	}
+
+	return args
 }
 
 func (la *lambdaArgs) createDirs() {

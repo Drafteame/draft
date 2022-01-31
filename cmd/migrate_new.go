@@ -18,11 +18,11 @@ import (
 // migrate:newCmd represents the migrate:new command
 var migrateNewCmd = &cobra.Command{
 	Use:   "migrate:new",
-	Short: "Genere new migration file",
-	Long: `Genere a new migration file for the specified database.
+	Short: "Generate new migration file",
+	Long: `Generate a new migration file for the specified database.
 
 If the database migrations folder is empty ir creates all needed structure
-to genere the new migration file.`,
+to generate the new migration file.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		utils.PathExists(currentDir + "/.engine.yml")
 
@@ -31,7 +31,8 @@ to genere the new migration file.`,
 		a.validatePaths()
 		a.addMigration()
 
-		fmt.Println("engine:migrate: Migration file created")
+		fmt.Printf("engine:migrate: Migration file created\n\n")
+		fmt.Printf("\tRun `go mod tidy` to update dependencies.\n\n")
 	},
 }
 
