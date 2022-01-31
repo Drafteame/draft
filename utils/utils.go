@@ -25,7 +25,12 @@ func CreateFile(path string, content string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
 
 	_, err = f.WriteString(content)
 	if err != nil {
@@ -55,6 +60,13 @@ func ReadFile(path string) string {
 // ReplaceFileContent replaces the content of a file with the given content
 func ReplaceFileContent(path, content string) {
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
 	if err != nil {
 		fmt.Printf("engine: error opening file %s: %s\n", path, err)
 		os.Exit(1)
@@ -62,23 +74,18 @@ func ReplaceFileContent(path, content string) {
 
 	if err = f.Truncate(0); err != nil {
 		fmt.Printf("engine: error truncating file %s: %s\n", path, err)
-		f.Close()
 		os.Exit(1)
 	}
 
 	if _, err = f.Seek(0, 0); err != nil {
 		fmt.Printf("engine: error seeking file %s: %s\n", path, err)
-		f.Close()
 		os.Exit(1)
 	}
 
 	if _, err = fmt.Fprint(f, content); err != nil {
 		fmt.Printf("engine: error writing to file %s: %s\n", path, err)
-		f.Close()
 		os.Exit(1)
 	}
-
-	f.Close()
 }
 
 // GetCurrentPath obtain and return the path where the command is executed

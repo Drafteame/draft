@@ -66,6 +66,7 @@ func executeMongoMigrationsUp() {
 	err := utils.Run("go", "run", fmt.Sprintf("%s/migrations/mongo/main.go", currentDir), "up")
 	if err != nil {
 		fmt.Println("engine:migrate: Error executing MongoDB migration")
+		fmt.Printf("engine:migrate: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -74,6 +75,7 @@ func executeQldbMigrationsUp() {
 	err := utils.Run("go", "run", fmt.Sprintf("%s/migrations/qldb/main.go", currentDir), "up")
 	if err != nil {
 		fmt.Println("engine:migrate: Error executing QLDB migration")
+		fmt.Printf("engine:migrate: %v\n", err)
 		os.Exit(1)
 	}
 }

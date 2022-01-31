@@ -32,8 +32,8 @@ with an event handler like sqs, sns, plain lambda etc.`,
 		a.createFiles()
 		a.registerEvent()
 
-		fmt.Println("engine: Lambda function created")
-		fmt.Println("\n\t Run `go mod tidy` to update dependencies.")
+		fmt.Printf("engine: Lambda function created\n\n")
+		fmt.Printf("\t Run `go mod tidy` to update dependencies.\n\n")
 	},
 }
 
@@ -45,12 +45,12 @@ func init() {
 }
 
 type lambdaArgs struct {
-	Name           string
-	Type           string
-	Namespace      string
-	SnakeCaseName  string
-	CammelCaseName string
-	PackageName    string
+	Name          string
+	Type          string
+	Namespace     string
+	SnakeCaseName string
+	CamelCaseName string
+	PackageName   string
 }
 
 func getLambdaArgs(cmd *cobra.Command) *lambdaArgs {
@@ -67,12 +67,12 @@ func getLambdaArgs(cmd *cobra.Command) *lambdaArgs {
 	}
 
 	return &lambdaArgs{
-		Name:           name,
-		Type:           typeLambda,
-		Namespace:      viper.GetString("namespace"),
-		SnakeCaseName:  utils.ToSnakeCase(name),
-		CammelCaseName: utils.ToCammelCase(name),
-		PackageName:    utils.ToPackageName(name),
+		Name:          name,
+		Type:          typeLambda,
+		Namespace:     viper.GetString("namespace"),
+		SnakeCaseName: utils.ToSnakeCase(name),
+		CamelCaseName: utils.ToCamelCase(name),
+		PackageName:   utils.ToPackageName(name),
 	}
 }
 
@@ -83,7 +83,10 @@ func (la *lambdaArgs) createDirs() {
 	}
 
 	for _, dir := range dirs {
-		utils.CreateFolder(dir)
+		if err := utils.CreateFolder(dir); err != nil {
+			fmt.Printf("engine: %v\n", err)
+			os.Exit(1)
+		}
 	}
 }
 
@@ -105,24 +108,27 @@ func (la *lambdaArgs) createFiles() {
 	for _, file := range files {
 		template, err := la.getLambdaTemplate(file.name)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("engine: %v\n", err)
 			os.Exit(1)
 		}
 
 		template, err = utils.RenderTemplate(template, la)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("engine: %v\n", err)
 			os.Exit(1)
 		}
 
-		utils.CreateFile(file.path, template)
+		if err = utils.CreateFile(file.path, template); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	}
 }
 
 func (la *lambdaArgs) registerEvent() {
 	template, err := la.getEventTemplate()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("engine: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -148,7 +154,7 @@ func (la *lambdaArgs) getLambdaTemplate(name string) (string, error) {
 	case "serverless":
 		return la.getEventTemplate()
 	default:
-		return "", fmt.Errorf("engine: template '%s' is not supported", name)
+		return "", fmt.Errorf("template '%s' is not supported", name)
 	}
 }
 
@@ -159,7 +165,7 @@ func (la *lambdaArgs) getHandlerTemplate() (string, error) {
 	case "sqs":
 		return tpl.SqsHandlerGo, nil
 	default:
-		return "", fmt.Errorf("engine: lambda type '%s' is not supported", la.Type)
+		return "", fmt.Errorf("lambda type '%s' is not supported", la.Type)
 	}
 }
 
@@ -170,7 +176,7 @@ func (la *lambdaArgs) getMainTemplate() (string, error) {
 	case "sqs":
 		return tpl.SqsMainGo, nil
 	default:
-		return "", fmt.Errorf("engine: lambda type '%s' is not supported", la.Type)
+		return "", fmt.Errorf("lambda type '%s' is not supported", la.Type)
 	}
 }
 
@@ -181,6 +187,6 @@ func (la *lambdaArgs) getEventTemplate() (string, error) {
 	case "sqs":
 		return tpl.ServerlessSQSEvent, nil
 	default:
-		return "", fmt.Errorf("engine: lambda type '%s' is not supported", la.Type)
+		return "", fmt.Errorf("lambda type '%s' is not supported", la.Type)
 	}
 }

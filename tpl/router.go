@@ -1,7 +1,7 @@
 package tpl
 
 const (
-	RegisterRouter = `router{{CammelCaseName}}(app)
+	RegisterRouter = `router{{CamelCaseName}}(app)
 	// router:register`
 
 	HandlerInterface = `package {{PackageName}}
@@ -28,21 +28,14 @@ type Handler interface {
 
 	HandlerStruct = `package {{PackageName}}
 
-import (
-	"github.com/Drafteame/framework/logger"
-	"github.com/labstack/echo/v4"
-)
+import "github.com/labstack/echo/v4"
 
-type handler struct {
-	logger logger.Logger
-}
+type handler struct {}
 
 var _ Handler = &handler{}
 
-func NewHandler(l logger.Logger) Handler {
-	return &handler{
-		logger: l,
-	}
+func NewHandler() Handler {
+	return &handler{}
 }
 
 func (h *handler) Create(ec echo.Context) error {
@@ -85,12 +78,12 @@ func (h *handler) Find(ec echo.Context) error {
 import "github.com/Drafteame/framework/types"
 
 var (
-	Create{{CammelCaseName}} = types.JSONSchema{
+	Create{{CamelCaseName}} = types.JSONSchema{
 		Type: "object",
 		AdditionalProperties: true,
 	}
 
-	Update{{CammelCaseName}} = types.JSONSchema{
+	Update{{CamelCaseName}} = types.JSONSchema{
 		Type: "object",
 		AdditionalProperties: true,
 	}
@@ -100,18 +93,18 @@ var (
 
 import (
 	"github.com/Drafteame/framework/engine"
-	em "github.com/Drafteame/framework/middlewares"
-	handlers "{{Namespace}}/internal/handlers/{{PackageName}}"
+	"github.com/Drafteame/framework/middlewares"
+	"{{Namespace}}/internal/handlers/{{PackageName}}"
 	"{{Namespace}}/internal/schemas"
 )
 
-func router{{CammelCaseName}}(app engine.App) {
-	handler := handlers.NewHandler(app.Logger())
+func router{{CamelCaseName}}(app engine.App) {
+	h := {{PackageName}}.NewHandler()
 
-	app.POST("/{{SnakeCaseName}}", handler.Create, em.JSONSchema(schemas.Create{{CammelCaseName}}))
-	app.GET("/{{SnakeCaseName}}", handler.Find)
-	app.PUT("/{{SnakeCaseName}}/:id", handler.Update, em.JSONSchema(schemas.Update{{CammelCaseName}}))
-	app.DELETE("/{{SnakeCaseName}}/:id", handler.Delete)
-	app.GET("/{{SnakeCaseName}}/:id", handler.FindOne)
+	app.POST("/{{SnakeCaseName}}", h.Create, middlewares.JSONSchema(schemas.Create{{CamelCaseName}}))
+	app.GET("/{{SnakeCaseName}}", h.Find)
+	app.PUT("/{{SnakeCaseName}}/:id", h.Update, middlewares.JSONSchema(schemas.Update{{CamelCaseName}}))
+	app.DELETE("/{{SnakeCaseName}}/:id", h.Delete)
+	app.GET("/{{SnakeCaseName}}/:id", h.FindOne)
 }`
 )
