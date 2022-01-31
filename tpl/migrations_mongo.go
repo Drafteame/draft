@@ -6,7 +6,7 @@ var (
 import (
 	"fmt"
 
-	migrate "github.com/xakep666/mongo-migrate"
+	migrate "github.com/Drafteame/mongo-migrate"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -14,7 +14,7 @@ func init() {
 	name := "add_index_to_users"
 	version := "1642035425"
 
-	migrate.Register(
+	err := migrate.Register(
 		func(db *mongo.Database) error {
 			fmt.Printf("[UP] %s - version %s\n", name, version)
 
@@ -26,6 +26,10 @@ func init() {
 			return nil
 		},
 	)
+
+	if err != nil {
+		panic(err)
+	}
 }
 `
 
@@ -37,9 +41,10 @@ import (
 	"os"
 	"runtime/debug"
 
+	migrate "github.com/Drafteame/mongo-migrate"
 	mongoDriver "github.com/Drafteame/framework/mongo"
+
 	"github.com/spf13/viper"
-	migrate "github.com/xakep666/mongo-migrate"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	_ "{{Namespace}}/migrations/mongo/migrate"
