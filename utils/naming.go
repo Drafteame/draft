@@ -13,8 +13,8 @@ func ToPackageName(name string) string {
 	return strings.ToLower(name)
 }
 
-// ToCammelCase converts a string to a valid camel case string
-func ToCammelCase(name string) string {
+// ToCamelCase converts a string to a valid camel case string
+func ToCamelCase(name string) string {
 	for _, p := range partitions {
 		parts := strings.Split(name, p)
 

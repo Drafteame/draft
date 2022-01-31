@@ -17,7 +17,7 @@ var (
                 - sqs
                 - Ref: AWS::Region
                 - Ref: AWS::AccountId
-                - {{CammelCaseName}}
+                - {{CamelCaseName}}
                 - "-${self:provider.stage}"`
 
 	ServerlessPlainEvent = `# engine:serverless:functions

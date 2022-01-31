@@ -32,7 +32,7 @@ type repositoryArgs struct {
 	RawName        string
 	CollectionName string
 	PackageName    string
-	CammelCaseName string
+	CamelCaseName  string
 	Type           string
 }
 
@@ -89,7 +89,7 @@ func getRepositoryArgs(cmd *cobra.Command) *repositoryArgs {
 	a.Type = repoType
 	a.CollectionName = entity
 	a.PackageName = utils.ToPackageName(a.RawName)
-	a.CammelCaseName = utils.ToCammelCase(a.RawName)
+	a.CamelCaseName = utils.ToCamelCase(a.RawName)
 
 	return a
 }
@@ -114,7 +114,10 @@ func (ra *repositoryArgs) validatePaths() {
 func (ra *repositoryArgs) createDirs() {
 	path := fmt.Sprintf("%s/internal/ports/repositories/%s", currentDir, ra.PackageName)
 
-	utils.CreateFolder(path)
+	if err := utils.CreateFolder(path); err != nil {
+		fmt.Printf("engine: %v\n", err)
+		os.Exit(1)
+	}
 }
 
 func (ra *repositoryArgs) createFiles() {
@@ -122,9 +125,12 @@ func (ra *repositoryArgs) createFiles() {
 
 	content, err := utils.RenderTemplate(tpl.MongoRepository, ra)
 	if err != nil {
-		fmt.Println("engine: Error rendering repository")
+		fmt.Println("engine: Error rendering repository template")
 		os.Exit(1)
 	}
 
-	utils.CreateFile(file, content)
+	if err = utils.CreateFile(file, content); err != nil {
+		fmt.Printf("engine: %v\n", err)
+		os.Exit(1)
+	}
 }

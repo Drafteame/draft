@@ -31,7 +31,7 @@ to genere the new migration file.`,
 		a.validatePaths()
 		a.addMigration()
 
-		fmt.Println("engine: Migration file created")
+		fmt.Println("engine:migrate: Migration file created")
 	},
 }
 
@@ -56,7 +56,7 @@ func getMigrateNewArgs(cmd *cobra.Command) *migrateNewArgs {
 	name := cmd.Flag("name").Value.String()
 
 	if name == "" {
-		fmt.Println("engine: Migration name is required")
+		fmt.Println("engine:migrate: Migration name is required")
 		os.Exit(1)
 	}
 
@@ -93,18 +93,18 @@ func (a *migrateNewArgs) addMongoMigration(fileName string) {
 
 	render, err := utils.RenderTemplate(tpl.MigrateMongoGo, a)
 	if err != nil {
-		fmt.Println("engine: error creating migrationfile", err)
+		fmt.Printf("engine:migrate: %v\n", err)
 		os.Exit(1)
 	}
 
-	if err := utils.CreateFile(path, render); err != nil {
-		fmt.Println("engine: error creating migrationfile", err)
+	if err = utils.CreateFile(path, render); err != nil {
+		fmt.Printf("engine:migrate: %v\n", err)
 		os.Exit(1)
 	}
 }
 
 func (a *migrateNewArgs) addQldbMigration(_ string) {
-	fmt.Println("engine: QLDB migration not implemented yet")
+	fmt.Println("engine:migrate: QLDB migration not implemented yet")
 	os.Exit(0)
 }
 
@@ -119,13 +119,13 @@ func (a *migrateNewArgs) validatePaths() {
 		return
 	}
 
-	fmt.Println("engine: no database specified")
+	fmt.Println("engine:migrate: no database specified")
 }
 
 func (a *migrateNewArgs) validateMongoPaths() {
 	if utils.PathNotExists(currentDir + "/migrations/mongo/migrate") {
 		if err := utils.CreateFolder(currentDir + "/migrations/mongo/migrate"); err != nil {
-			fmt.Printf("engine: can't create folder %s\n", err)
+			fmt.Printf("engine:migrate: %v\n", err)
 			os.Exit(1)
 		}
 	}
@@ -133,12 +133,12 @@ func (a *migrateNewArgs) validateMongoPaths() {
 	if utils.PathNotExists(currentDir + "/migrations/mongo/main.go") {
 		render, err := utils.RenderTemplate(tpl.MigrateMongoMainGo, a)
 		if err != nil {
-			fmt.Printf("engine: can't create /migrations/mongo/main.go - %s\n", err)
+			fmt.Printf("engine:migrate: %v\n", err)
 			os.Exit(1)
 		}
 
-		if err := utils.CreateFile(currentDir+"/migrations/mongo/main.go", render); err != nil {
-			fmt.Printf("engine: can't create /migrations/mongo/main.go - %s\n", err)
+		if err = utils.CreateFile(currentDir+"/migrations/mongo/main.go", render); err != nil {
+			fmt.Printf("engine:migrate: %v\n", err)
 			os.Exit(1)
 		}
 	}
@@ -147,7 +147,7 @@ func (a *migrateNewArgs) validateMongoPaths() {
 func (a *migrateNewArgs) validateQldbPaths() {
 	if utils.PathNotExists(currentDir + "/migrations/qldb/migrate") {
 		if err := utils.CreateFolder(currentDir + "/migrations/mongo"); err != nil {
-			fmt.Printf("engine: can't create folder %s\n", err)
+			fmt.Printf("engine:migrate: %v\n", err)
 			os.Exit(1)
 		}
 	}
@@ -155,12 +155,12 @@ func (a *migrateNewArgs) validateQldbPaths() {
 	if utils.PathNotExists(currentDir + "/migrations/qldb/main.go") {
 		render, err := utils.RenderTemplate(tpl.MigrateQLDBMainGo, a)
 		if err != nil {
-			fmt.Printf("engine: can't create /migrations/qldb/main.go - %s\n", err)
+			fmt.Printf("engine:migrate: %v\n", err)
 			os.Exit(1)
 		}
 
-		if err := utils.CreateFile(currentDir+"/migrations/qldb/main.go", render); err != nil {
-			fmt.Printf("engine: can't create /migrations/qldb/main.go - %s\n", err)
+		if err = utils.CreateFile(currentDir+"/migrations/qldb/main.go", render); err != nil {
+			fmt.Printf("engine:migrate: %v\n", err)
 			os.Exit(1)
 		}
 	}

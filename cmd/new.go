@@ -143,7 +143,9 @@ func (args *newArgs) createDirs() {
 
 	for _, dir := range dirs {
 		if err := os.MkdirAll(path+"/"+dir, 0755); err != nil {
-			fmt.Printf("engine: error creating directory %s: %s\n", path+"/"+dir, err.Error())
+			fmt.Printf("engine: error creating directory %s: \n", path+"/"+dir)
+			fmt.Printf("engine: %v\n", err)
+			os.Exit(1)
 		}
 	}
 }
@@ -201,14 +203,16 @@ func (args *newArgs) createFiles() {
 	for _, file := range files {
 		tmpl, err := utils.RenderTemplate(file[1], args)
 		if err != nil {
-			fmt.Printf("engine: error rendering template: %s\n", err.Error())
+			fmt.Printf("engine: error rendering template...\n")
+			fmt.Printf("engine: %v\n", err)
 			os.Exit(1)
 		}
 
 		fileName := path + "/" + file[0]
 
 		if err = utils.CreateFile(fileName, tmpl); err != nil {
-			fmt.Printf("engine: error writing file %s: %s\n", fileName, err.Error())
+			fmt.Printf("engine: error writing file %s\n", fileName)
+			fmt.Printf("engine: %v\n", err)
 			os.Exit(1)
 		}
 	}

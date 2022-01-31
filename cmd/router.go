@@ -27,12 +27,12 @@ import (
 )
 
 type routerArgs struct {
-	RawName        string
-	PackageName    string
-	CammelCaseName string
-	SnakeCaseName  string
-	Name           string
-	Namespace      string
+	RawName       string
+	PackageName   string
+	CamelCaseName string
+	SnakeCaseName string
+	Name          string
+	Namespace     string
 }
 
 // routerCmd represents the router command
@@ -69,12 +69,12 @@ func getRouterArgs(cmd *cobra.Command) *routerArgs {
 	}
 
 	return &routerArgs{
-		RawName:        name,
-		PackageName:    utils.ToPackageName(name),
-		CammelCaseName: utils.ToCammelCase(name),
-		SnakeCaseName:  utils.ToSnakeCase(name),
-		Name:           viper.GetString("name"),
-		Namespace:      viper.GetString("namespace"),
+		RawName:       name,
+		PackageName:   utils.ToPackageName(name),
+		CamelCaseName: utils.ToCamelCase(name),
+		SnakeCaseName: utils.ToSnakeCase(name),
+		Name:          viper.GetString("name"),
+		Namespace:     viper.GetString("namespace"),
 	}
 }
 
@@ -101,7 +101,7 @@ func (args *routerArgs) validatePaths() {
 	}
 
 	for _, path := range pathsNotExists {
-		if utils.PathNotExists(path) {
+		if utils.PathExists(path) {
 			fmt.Printf("engine: %s alredy exists.\n", path)
 			os.Exit(1)
 		}
