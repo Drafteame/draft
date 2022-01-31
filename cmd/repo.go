@@ -121,16 +121,27 @@ func (ra *repositoryArgs) createDirs() {
 }
 
 func (ra *repositoryArgs) createFiles() {
-	file := fmt.Sprintf("%s/internal/ports/repositories/%s/%s.go", currentDir, ra.PackageName, ra.PackageName)
-
-	content, err := utils.RenderTemplate(tpl.MongoRepository, ra)
-	if err != nil {
-		fmt.Println("engine: Error rendering repository template")
-		os.Exit(1)
+	files := [][]string{
+		{
+			fmt.Sprintf("%s/internal/ports/repositories/%s/repository.go", currentDir, ra.PackageName),
+			tpl.MongoRepository,
+		},
+		{
+			fmt.Sprintf("%s/internal/ports/repositories/%s/%s.go", currentDir, ra.PackageName, ra.PackageName),
+			tpl.MongoRepositoryInterface,
+		},
 	}
 
-	if err = utils.CreateFile(file, content); err != nil {
-		fmt.Printf("engine: %v\n", err)
-		os.Exit(1)
+	for _, file := range files {
+		content, err := utils.RenderTemplate(file[1], ra)
+		if err != nil {
+			fmt.Println("engine: Error rendering repository template")
+			os.Exit(1)
+		}
+
+		if err = utils.CreateFile(file[0], content); err != nil {
+			fmt.Printf("engine: %v\n", err)
+			os.Exit(1)
+		}
 	}
 }

@@ -24,7 +24,8 @@ type Handler interface {
 
 	// Find handler for GET /{{SnakeCaseName}} route
 	Find(ec echo.Context) error
-}`
+}
+`
 
 	HandlerStruct = `package {{PackageName}}
 
@@ -71,7 +72,8 @@ func (h *handler) Find(ec echo.Context) error {
 		"method": "find",
 		"resource": "{{SnakeCaseName}}",
 	})
-}`
+}
+`
 
 	JSONSchemas = `package schemas
 
@@ -79,15 +81,16 @@ import "github.com/Drafteame/framework/types"
 
 var (
 	Create{{CamelCaseName}} = types.JSONSchema{
-		Type: "object",
+		Type:                 "object",
 		AdditionalProperties: true,
 	}
 
 	Update{{CamelCaseName}} = types.JSONSchema{
-		Type: "object",
+		Type:                 "object",
 		AdditionalProperties: true,
 	}
-)`
+)
+`
 
 	Router = `package routes
 
@@ -106,5 +109,6 @@ func router{{CamelCaseName}}(app engine.App) {
 	app.PUT("/{{SnakeCaseName}}/:id", h.Update, middlewares.JSONSchema(schemas.Update{{CamelCaseName}}))
 	app.DELETE("/{{SnakeCaseName}}/:id", h.Delete)
 	app.GET("/{{SnakeCaseName}}/:id", h.FindOne)
-}`
+}
+`
 )
