@@ -1,3 +1,16 @@
+## v0.4.0 (2022-02-01)
+
+### Feat
+
+- add adapters cLI command
+- add repository inteface and fix imports
+
+### Fix
+
+- lambda imports and initialization
+- mongo migration package on templates
+- router error creation
+
 ## v0.3.0 (2022-01-13)
 
 ### Feat
