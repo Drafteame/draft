@@ -2,6 +2,12 @@
 
 This is a CLI tool to bootstrap projects with the Drafteame/framework package
 
+## Requirements
+
+Projects using this package should include the following:
+
+- `github.com/Drafteame/framework` >= v0.18.1
+
 ## Install
 
 To start building application with `engine` first you need to prepare your environment to download the package by
@@ -64,6 +70,15 @@ Also you can specify a custom entity (table or collection) name that should hand
 
 ```shell
 draft repo --name <repo_name> --entity <entity_name>
+```
+
+## Adapters
+
+Adapters are components that should be used to connect with all data ports and utils to process information.
+To create a simple adapter you need to have a previous created repository and a model.
+
+```shell
+draft adapter --name <adapter_name> --repo <repo_name> --model <model_name>
 ```
 
 ## Migrations
