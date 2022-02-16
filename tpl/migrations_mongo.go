@@ -11,8 +11,8 @@ import (
 )
 
 func init() {
-	name := "add_index_to_users"
-	version := "1642035425"
+	name := "{{SnakeCaseName}}"
+	version := "{{Version}}"
 
 	err := migrate.Register(
 		func(db *mongo.Database) error {
