@@ -1,3 +1,9 @@
+## v0.4.1 (2022-02-16)
+
+### Fix
+
+- hardcoded name and version for mongo migrations
+
 ## v0.4.0 (2022-02-01)
 
 ### Feat
