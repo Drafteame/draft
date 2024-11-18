@@ -1,0 +1,24 @@
+package handler
+
+import (
+    "github.com/Drafteame/api-draftea/projects/framev2/engine"
+    "github.com/Drafteame/api-draftea/projects/framev2/engine/decorators/datadog"
+    "github.com/Drafteame/api-draftea/projects/framev2/engine/lambda"
+    "github.com/Drafteame/api-draftea/projects/framev2/engine/lambda/middlewares"
+
+    _ "github.com/Drafteame/api-draftea/config/loaders" //revive:disable:blank-imports
+)
+
+// Bootstrap is the entrypoint of the lambda
+func Bootstrap() {
+    lambda.NewEngine(
+        engine.WithLambdaDecorator(datadog.Trace),
+    ).WithMiddleware(
+        middlewares.Recover(),
+    ).WithResolver(
+        New,
+    ).WithExecutionMode(
+        lambda.SqsMode,
+    ).Start()
+}
+

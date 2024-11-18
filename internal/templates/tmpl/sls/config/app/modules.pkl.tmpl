@@ -1,0 +1,70 @@
+module config.modules
+
+import "https://draftea-cdn-prod.s3.us-east-2.amazonaws.com/xb/pkl/sqs.pkl" as sqs
+import "https://draftea-cdn-prod.s3.us-east-2.amazonaws.com/xb/pkl/sns.pkl" as sns
+import "https://draftea-cdn-prod.s3.us-east-2.amazonaws.com/xb/pkl/s3.pkl" as s3
+import "https://draftea-cdn-prod.s3.us-east-2.amazonaws.com/xb/pkl/slack.pkl" as slack
+import "https://draftea-cdn-prod.s3.us-east-2.amazonaws.com/xb/pkl/lambda.pkl" as lambda
+import "https://draftea-cdn-prod.s3.us-east-2.amazonaws.com/xb/pkl/generic.pkl" as generic
+import "https://draftea-cdn-prod.s3.us-east-2.amazonaws.com/xb/pkl/classes.pkl" as classes
+
+/// SQS queues
+/// -------------------------------------------------------------------------------
+
+local queues: List<String> = List()
+
+/// SNS topics
+/// -------------------------------------------------------------------------------
+
+local topics: List<String> = List()
+
+/// Slack Webhooks
+/// -------------------------------------------------------------------------------
+
+local slackWebhooks: List<slack.Webhook> = List()
+
+/// Slack Channels
+/// -------------------------------------------------------------------------------
+
+local slackChannels: List<slack.Channel> = List()
+
+/// Lambdas
+/// -------------------------------------------------------------------------------
+
+local lambdas: List<lambda.Lambda> = List()
+
+/// S3
+/// -------------------------------------------------------------------------------
+
+local buckets: List<String> = List()
+
+/// Generic
+/// -------------------------------------------------------------------------------
+
+local generics: List<classes.ConfEnv> = List(
+  // Add your generic configurations here from generic.pkl
+  {{ if .CustomDomain }}
+  generic.cors,
+  {{ end }}
+)
+
+/// Service configurations
+/// -------------------------------------------------------------------------------
+
+local serviceConfigs: List<classes.ConfEnv> = List(
+  // Add your service configurations here
+)
+
+/// Merge modules config
+/// -------------------------------------------------------------------------------
+
+config {
+  ...sqs.getEnvs(queues)
+  ...sns.getEnvs(topics)
+  ...slack.getEnvs(slackWebhooks)
+  ...slack.getEnvs(slackChannels)
+  ...lambda.getEnvs(lambdas)
+  ...s3.getEnvs(buckets)
+  ...generic.getEnvs(generics)
+  ...generic.getEnvs(serviceConfigs)
+}

@@ -1,0 +1,7 @@
+function:
+  {{ .LambdaName }}:
+    handler: cmd/snssqs/{{ .LambdaName }}/handler/main.go
+    reservedConcurrency: 10
+    events:
+      - sqs:
+          arn: '{{ .QueueARN }}'

@@ -1,0 +1,23 @@
+.envs: &default
+  APP_NAME: ${self:service}
+  STAGE: ${env:STAGE}
+
+  PORT: 8080
+  CORS: true
+  API_KEY: ${ssm:/service/auth/${self:custom.stage}/API_KEY}
+
+feature:
+  environment:
+    <<: *default
+    DEBUG: true
+
+dev:
+  environment:
+    <<: *default
+    DEBUG: false
+
+prod:
+  environment:
+    <<: *default
+    DEBUG: false
+    # SENTRY_DSN: 'Set sentry DSN here'

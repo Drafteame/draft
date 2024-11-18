@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+. "$(dirname "$0")/_/husky.sh"
+
+sh ./.husky/commit-msg-scripts/commitizen.sh
+
+if [ $? -ne 0 ]; then
+  echo "[husky] commit validation error"
+  exit 1
+fi

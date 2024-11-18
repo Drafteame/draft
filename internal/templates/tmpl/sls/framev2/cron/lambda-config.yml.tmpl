@@ -1,0 +1,7 @@
+function:
+  {{ .LambdaName }}:
+    handler: cmd/cron/{{ .LambdaName }}/handler/main.go
+    reservedConcurrency: 1
+    events:
+      - schedule:
+          rate: '{{ .CronExpression }}'
