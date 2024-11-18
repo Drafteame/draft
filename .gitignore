@@ -30,3 +30,4 @@ config.yml
 # build
 dist/
 bin/
+examples/

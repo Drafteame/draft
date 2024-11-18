@@ -1,0 +1,16 @@
+package newlambda
+
+import (
+	"github.com/charmbracelet/huh"
+
+	"github.com/Drafteame/draft/internal/actions/dtos"
+)
+
+func cronForm(input *dtos.Input) error {
+	cronExpression := huh.NewInput().
+		Title("Set Cron Expression:").
+		Description("Enter the cron expression").
+		Value(&input.CronExpression)
+
+	return huh.NewForm(huh.NewGroup(cronExpression)).WithTheme(huh.ThemeCharm()).Run()
+}

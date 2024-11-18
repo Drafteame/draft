@@ -1,0 +1,39 @@
+package handler
+
+import (
+	"github.com/Drafteame/api-draftea/projects/framev2/engine"
+	"github.com/Drafteame/api-draftea/projects/framev2/engine/decorators/apigateway"
+	"github.com/Drafteame/api-draftea/projects/framev2/engine/decorators/datadog"
+	"github.com/Drafteame/api-draftea/projects/framev2/engine/http"
+	"github.com/Drafteame/api-draftea/projects/framev2/engine/http/middlewares"
+	"github.com/labstack/echo/v4/middleware"
+
+	_ "github.com/Drafteame/api-draftea/config/loaders" //revive:disable:blank-imports
+)
+
+var corsConfig middleware.CORSConfig
+
+func init() {
+	corsConfig = middlewares.DefaultCORSConfig()
+	corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, "X-Transaction-Id", "X-Forwarded-For")
+}
+
+func Bootstrap() {
+	http.NewEngine(
+		engine.WithAPIGatewayV2(),
+
+		engine.WithLambdaDecorator(apigateway.V2Trace),
+		engine.WithLambdaDecorator(datadog.Trace),
+	).WithMiddleware(
+		middlewares.Language(),
+		middlewares.LogRequest(),
+		middlewares.SkipWarmup(),
+		middleware.CORSWithConfig(corsConfig),
+	).WithResolver(
+		Resolver,
+	).Start()
+}
+
+func Resolver(h Handler) {
+	h.Register()
+}

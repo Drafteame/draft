@@ -1,0 +1,42 @@
+package handler
+
+import (
+	"net/http"
+
+	"github.com/labstack/echo/v4"
+
+	ehttp "github.com/Drafteame/api-draftea/projects/framev2/engine/http"
+	"github.com/Drafteame/api-draftea/projects/framev2/engine/http/middlewares"
+	"github.com/Drafteame/api-draftea/projects/framev2/pkg/inject"
+)
+
+func init() {
+	if err := inject.Get().Provide(New); err != nil {
+		panic(err)
+	}
+}
+
+const path = "{{ .HTTPPath }}"
+
+type Handler struct {
+	router ehttp.Router
+}
+
+func New(router ehttp.Router) Handler {
+	return Handler{
+		router: router,
+	}
+}
+
+func (h Handler) Register() {
+	h.router.{{ .HTTPMethod }}(
+		path,
+		h.handle,
+		middlewares.AuthAPIKey(),
+	)
+}
+
+func (h Handler) handle(ec echo.Context) error {
+    // TODO: Implement your logic here
+	return ec.JSON(http.StatusOK, map[string]any{"message": "Hello, World!"})
+}

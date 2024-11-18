@@ -6,16 +6,19 @@ before:
     - go mod tidy
 
 builds:
-  -
-    main: ./main.go
-    env:
+  - env:
       - CGO_ENABLED=0
+    main: cmd/main.go
     goos:
-      - "linux"
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
 
 archives:
-  - replacements:
-      linux: Linux
+  - name_template: >-
+      {{ .ProjectName }}_{{ .Os }}_{{ .Arch }}_{{ .Version }}
 
 checksum:
   name_template: 'checksums.txt'
@@ -29,16 +32,3 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
-
-announce:
-  slack:
-    # Whether its enabled or not.
-    # Defaults to false.
-    enabled: true
-
-    # Message template to use while publishing.
-    # Defaults to `{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}`
-    message_template: 'New draft CLI {{.Tag}} is out!'
-
-    # The name of the channel that the user selected as a destination for webhook messages.
-    channel: '#engineering'

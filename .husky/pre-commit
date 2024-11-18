@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+
+. "$(dirname "$0")/_/husky.sh"
+
+MOD_VERSION="1.23"
+
+sh ./.husky/pre-commit-scripts/go-mod-tidy.sh && \
+sh ./.husky/pre-commit-scripts/force-mod-version.sh "$MOD_VERSION" && \
+sh ./.husky/pre-commit-scripts/goimports-reviser.sh && \
+sh ./.husky/pre-commit-scripts/go-vet.sh && \
+sh ./.husky/pre-commit-scripts/revive.sh
+
+if [ $? -ne 0 ]; then
+  echo "[husky] commit validation error"
+  exit 1
+fi

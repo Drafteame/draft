@@ -1,0 +1,7 @@
+package {{ .ServiceName }}
+
+// revive:disable:blank-imports
+import (
+    _ "github.com/Drafteame/api-draftea/services/{{ .ServiceName }}/cmd/plain/{{ .LambdaName }}/handler"
+    //:next
+)

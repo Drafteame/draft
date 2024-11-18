@@ -1,0 +1,53 @@
+service: {{ .ServiceName }}
+
+frameworkVersion: '3'
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  datadog: ${file(../../../config/sls/datadog.yml):datadog}
+  {{ if .WarmupEnabled }}warmup: ${file(../../../config/sls/concurrency.yml):${self:custom.stage}.warmup}{{ end }}
+  {{ if .CustomDomain }}customDomain: ${file(../../../config/sls/domain.yml):${self:custom.stage}.customDomain}
+  domain:
+    basePath: '{{ .DomainPath }}'{{ end }}
+
+  lambdaInsights:
+    defaultLambdaInsights: true
+
+  prune:
+    automatic: true
+    number: 5
+
+  go:
+    cmd: 'go build -ldflags="-s -w" -tags lambda.norpc'
+
+provider:
+  name: aws
+  architecture: arm64
+  runtime: provided.al2
+  timeout: 30
+  stage: ${opt:stage, "dev"}
+  region: ${opt:region, "us-east-2"}
+  environment: ${file(./config/sls/environment.yml):${self:custom.stage}.environment}
+  iam: ${file(./config/sls/iam.yml):${self:custom.stage}.roles}
+  vpc: ${file(../../config/sls/vpc.yml):${self:custom.stage}.vpc}
+
+  httpApi:
+    metrics: true
+
+  tracing:
+    apiGateway: true
+    lambda: true
+
+functions:
+  - ${file(cmd/plain/{{ .LambdaName }}/lambda-config.yml):function}
+  #:next
+
+plugins:
+  - serverless-plugin-go
+  - serverless-plugin-pkl
+  - serverless-plugin-lambda-insights
+  - serverless-prune-plugin
+  - serverless-plugin-s3-remover
+  - serverless-plugin-datadog
+  {{ if .WarmupEnabled }}- serverless-plugin-warmup{{ end }}
+  {{ if .CustomDomain }}- serverless-domain-manager{{ end }}

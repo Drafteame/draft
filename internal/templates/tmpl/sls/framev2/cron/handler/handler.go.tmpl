@@ -1,0 +1,18 @@
+package handler
+
+import (
+    "github.com/Drafteame/api-draftea/projects/framev2/engine/lambda"
+)
+
+type handler struct{}
+
+func New() lambda.Resolver {
+    return &handler{}
+}
+
+func (h *handler) Handler() lambda.Handler {
+    return func(lc lambda.Context) {
+        // TODO: Implement your logic here
+        lc.Success(nil)
+    }
+}
