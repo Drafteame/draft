@@ -7,9 +7,6 @@ import (
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"github.com/mgechev/revive/cli"
-	"github.com/mgechev/revive/lint"
-	"github.com/mgechev/revive/revivelib"
-	"magefiles/reviveextrarules"
 )
 
 // Vet execute `go vet` checks.
@@ -50,8 +47,5 @@ func Format() error {
 // Revive runs revive checks over the code.
 func Revive() {
 	os.Args = []string{"revive", "-config=revive.toml", "-formatter=friendly", "./..."}
-	extraRules := []revivelib.ExtraRule{
-		{Rule: &reviveextrarules.IncorrectConfigImport{}, DefaultConfig: lint.RuleConfig{}},
-	}
-	cli.RunRevive(extraRules...)
+	cli.RunRevive()
 }
