@@ -4,11 +4,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const VERSION = "dev"
+const VERSION = "unversioned"
 
 var rootCmd = &cobra.Command{
-	Use:     "back <command>",
-	Example: "back some-command",
+	Use:     "draft <command>",
+	Example: "draft new:service",
 	Version: VERSION,
 	Run:     run,
 }
