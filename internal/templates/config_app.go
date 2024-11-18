@@ -1,10 +1,5 @@
 package templates
 
-import (
-	"bytes"
-	"text/template"
-)
-
 type SLSConfigApp struct {
 	AppPkl     []byte
 	ModulesPkl []byte
@@ -19,45 +14,29 @@ func loadConfigApp(v *SLS, data any) error {
 }
 
 func loadConfigAppAppPkl(v *SLS, data any) error {
-	content, err := sls.ReadFile("tmpl/sls/config/app/app.pkl.tmpl")
+	name := "config/app/app.pkl"
+	path := "tmpl/sls/config/app/app.pkl.tmpl"
+
+	content, err := loadTemplate(name, path, data)
 	if err != nil {
 		return err
 	}
 
-	tmpl, err := template.New("config/app/app.pkl").Parse(string(content))
-	if err != nil {
-		return err
-	}
-
-	buff := new(bytes.Buffer)
-
-	if errExec := tmpl.Execute(buff, data); errExec != nil {
-		return errExec
-	}
-
-	v.Config.App.AppPkl = buff.Bytes()
+	v.Config.App.AppPkl = content
 
 	return nil
 }
 
 func loadConfigAppModulesPkl(v *SLS, data any) error {
-	content, err := sls.ReadFile("tmpl/sls/config/app/modules.pkl.tmpl")
+	name := "config/app/modules.pkl"
+	path := "tmpl/sls/config/app/modules.pkl.tmpl"
+
+	content, err := loadTemplate(name, path, data)
 	if err != nil {
 		return err
 	}
 
-	tmpl, err := template.New("config/app/modules.pkl").Parse(string(content))
-	if err != nil {
-		return err
-	}
-
-	buff := new(bytes.Buffer)
-
-	if errExec := tmpl.Execute(buff, data); errExec != nil {
-		return errExec
-	}
-
-	v.Config.App.ModulesPkl = buff.Bytes()
+	v.Config.App.ModulesPkl = content
 
 	return nil
 }
