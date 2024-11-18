@@ -17,15 +17,15 @@ type NewLambda struct {
 	lambdaPath string
 }
 
-func GetAction() *NewLambda {
-	return &NewLambda{}
+func GetAction(input dtos.Input) *NewLambda {
+	return &NewLambda{
+		input:      input,
+		tmpl:       templates.NewSLS(input),
+		lambdaPath: input.ServicePath + "/cmd/" + input.LambdaType + "/" + input.LambdaName,
+	}
 }
 
 func (nl *NewLambda) Exec(input dtos.Input) error {
-	nl.tmpl = templates.NewSLS(input)
-	nl.input = input
-	nl.lambdaPath = input.ServicePath + "/cmd/" + input.LambdaType + "/" + input.LambdaName
-
 	var err error
 
 	switch input.LambdaType {

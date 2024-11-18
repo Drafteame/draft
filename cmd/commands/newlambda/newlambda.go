@@ -31,7 +31,9 @@ func run(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	if err := newlambda.GetAction().Exec(input); err != nil {
+	action := newlambda.GetAction(input)
+
+	if err := action.Exec(input); err != nil {
 		panic(err)
 	}
 }
