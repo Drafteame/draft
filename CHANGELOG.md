@@ -1,0 +1,50 @@
+## v1.0.0 (2024-11-18)
+
+
+- break: change structure to work with monorepo (#10)
+
+## v0.4.1 (2022-02-16)
+
+
+- bump: version 0.4.0 → 0.4.1
+- fix: hardcoded name and version for mongo migrations
+
+## v0.4.0 (2022-02-01)
+
+
+- bump: version 0.3.0 → 0.4.0
+- feat: add adapters cLI command
+- fix: lambda imports and initialization
+- feat: add repository inteface and fix imports
+- fix: mongo migration package on templates
+- fix: router error creation
+
+## v0.3.0 (2022-01-13)
+
+
+- bump: version 0.2.1 → 0.3.0
+- chore: update precommit versions
+- feat: add migration commands
+
+## v0.2.1 (2022-01-04)
+
+
+- bump: version 0.2.0 → 0.2.1
+- fix: release webhook config
+
+## v0.2.0 (2022-01-04)
+
+
+- bump: version 0.1.0 → 0.2.0
+- feat: add release webhook
+- feat: add new lambda actions
+- fix: release version format
+- chore: update dependencies
+- update readme install
+- chore: add format command to make file
+- bump: version 0.0.0 → 0.1.0
+- fix: release action
+- fix: test and lint stages
+- feat: add documentation
+- fix: git ignore list
+- feat: initial commit
