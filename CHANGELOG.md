@@ -1,3 +1,8 @@
+## v1.0.3 (2024-11-26)
+
+
+- fix: template paths and conditions (#18)
+
 ## v1.0.2 (2024-11-26)
 
 
