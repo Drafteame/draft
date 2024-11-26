@@ -36,6 +36,8 @@ func run(_ *cobra.Command, _ []string) {
 	if err := action.Exec(input); err != nil {
 		panic(err)
 	}
+
+	println("Lambda created successfully")
 }
 
 func GetCmd() *cobra.Command {
