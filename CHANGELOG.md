@@ -1,3 +1,12 @@
+## v1.0.1 (2024-11-26)
+
+
+- fix: bad flags use and install entry point (#16)
+- docs: fix install command (#15)
+- docs: add images to doc examples (#14)
+- ci: skip bump for ci changes (#13)
+- ci: update release config (#12)
+
 ## v1.0.0 (2024-11-18)
 
 
