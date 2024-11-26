@@ -11,7 +11,7 @@ CLI tool to hel create Service and Lambda folder structures for Draftea Backend 
 ## Installation
 
 ```bash
-go install github.com/draftea/draft/cmd
+go install github.com/draftea/draft@latest
 ```
 
 ## Usage
