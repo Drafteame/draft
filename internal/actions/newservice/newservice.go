@@ -18,6 +18,10 @@ func GetAction(input dtos.Input) *NewService {
 	input.LambdaName = "helloworld"
 	input.LambdaType = "plain"
 
+	if input.ServicePath == "" {
+		input.ServicePath = input.ServiceName
+	}
+
 	return &NewService{
 		tmpl:  templates.NewSLS(input),
 		input: input,

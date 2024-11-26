@@ -18,6 +18,10 @@ type NewLambda struct {
 }
 
 func GetAction(input dtos.Input) *NewLambda {
+	if input.ServicePath == "" {
+		input.ServicePath = "."
+	}
+
 	return &NewLambda{
 		input:      input,
 		tmpl:       templates.NewSLS(input),

@@ -1,6 +1,8 @@
 package newservice
 
 import (
+	"errors"
+
 	"github.com/charmbracelet/huh"
 
 	"github.com/Drafteame/draft/internal/actions/dtos"
@@ -19,13 +21,20 @@ func newServiceDetails(input *dtos.Input) error {
 		Title("Select service framework:").
 		Options(
 			huh.NewOption("Serverless", "sls"),
-			huh.NewOption("CDK", "cdk"),
+			// huh.NewOption("CDK", "cdk"),
 		).
 		Value(&input.ServiceFramework)
 
 	serviceName := huh.NewInput().
 		Title("Service Name:").
-		Value(&input.ServiceName)
+		Value(&input.ServiceName).
+		Validate(func(s string) error {
+			if s == "" {
+				return errors.New("service name cannot be empty")
+			}
+
+			return nil
+		})
 
 	ServicePath := huh.NewInput().
 		Title("Service Folder:").
@@ -36,7 +45,7 @@ func newServiceDetails(input *dtos.Input) error {
 		Title("Select Framework version:").
 		Options(
 			huh.NewOption("Framework V2", "v2"),
-			huh.NewOption("Experimental Engine", "exp-engine"),
+			// huh.NewOption("Experimental Engine", "exp-engine"),
 		).
 		Value(&input.FrameVersion)
 
@@ -74,7 +83,14 @@ func newServiceFrameDetails(input *dtos.Input) error {
 	if input.CustomDomain {
 		domainPath := huh.NewInput().
 			Title("Specify domain base path:").
-			Value(&input.DomainPath)
+			Value(&input.DomainPath).
+			Validate(func(s string) error {
+				if s == "" {
+					return errors.New("domain path cannot be empty")
+				}
+
+				return nil
+			})
 
 		if err := huh.NewForm(huh.NewGroup(domainPath)).WithTheme(huh.ThemeCharm()).Run(); err != nil {
 			return err

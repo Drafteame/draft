@@ -1,6 +1,8 @@
 package newlambda
 
 import (
+	"errors"
+
 	"github.com/charmbracelet/huh"
 
 	"github.com/Drafteame/draft/internal/actions/dtos"
@@ -9,13 +11,20 @@ import (
 func baseForm(input *dtos.Input) error {
 	servicePath := huh.NewInput().
 		Title("Service Path:").
-		Description("Enter the path to the service").
+		Description("Enter the path to the service. If empty will use the current directory").
 		Value(&input.ServicePath)
 
 	lambdaName := huh.NewInput().
 		Title("Lambda Name:").
 		Description("Enter the name of the new lambda").
-		Value(&input.LambdaName)
+		Value(&input.LambdaName).
+		Validate(func(s string) error {
+			if s == "" {
+				return errors.New("lambda name cannot be empty")
+			}
+
+			return nil
+		})
 
 	lambdaType := huh.NewSelect[string]().
 		Title("Select lambda type:").

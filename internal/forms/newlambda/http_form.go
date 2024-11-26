@@ -1,6 +1,8 @@
 package newlambda
 
 import (
+	"errors"
+
 	"github.com/charmbracelet/huh"
 
 	"github.com/Drafteame/draft/internal/actions/dtos"
@@ -19,7 +21,14 @@ func httpForm(input *dtos.Input) error {
 	httpPath := huh.NewInput().
 		Title("Set HTTP Path:").
 		Description("Enter the path to the service").
-		Value(&input.HTTPPath)
+		Value(&input.HTTPPath).
+		Validate(func(s string) error {
+			if s == "" {
+				return errors.New("path cannot be empty")
+			}
+
+			return nil
+		})
 
 	group := huh.NewGroup(
 		httpMethod,
