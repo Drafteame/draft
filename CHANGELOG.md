@@ -1,3 +1,8 @@
+## v1.0.4 (2024-11-26)
+
+
+- chore: change iam roles reference (#19)
+
 ## v1.0.3 (2024-11-26)
 
 
