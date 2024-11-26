@@ -2,15 +2,21 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/Drafteame/draft/internal/flags"
 )
 
-const VERSION = "unversioned"
+var version = "unversioned"
 
 var rootCmd = &cobra.Command{
 	Use:     "draft <command>",
 	Example: "draft new:service",
-	Version: VERSION,
+	Version: version,
 	Run:     run,
+}
+
+func init() {
+	rootCmd.PersistentFlags().StringVarP(&flags.Flags.WorkingDir, "working-dir", "w", "", "Working directory")
 }
 
 func run(cmd *cobra.Command, _ []string) {

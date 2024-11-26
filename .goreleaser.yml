@@ -6,12 +6,12 @@ version: 2
 before:
   hooks:
     # You may remove this if you don't use go modules.
-    - go mod tidy
+    - go mod download
 
 builds:
   - env:
       - CGO_ENABLED=0
-    main: cmd/main.go
+    main: main.go
     goos:
       - linux
       - darwin
