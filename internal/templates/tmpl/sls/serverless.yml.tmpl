@@ -4,9 +4,10 @@ frameworkVersion: '3'
 
 custom:
   stage: ${opt:stage, self:provider.stage}
-  datadog: ${file(../../../config/sls/datadog.yml):datadog}
-  {{ if .WarmupEnabled }}warmup: ${file(../../../config/sls/concurrency.yml):${self:custom.stage}.warmup}{{ end }}
-  {{ if .CustomDomain }}customDomain: ${file(../../../config/sls/domain.yml):${self:custom.stage}.customDomain}
+  datadog: ${file(../../config/sls/datadog.yml):datadog}
+  pklConfig: ${file(../../config/sls/pkl-config.yml):config}
+  {{ if .WarmupEnabled }}warmup: ${file(../../config/sls/concurrency.yml):${self:custom.stage}.warmup}{{ end }}
+  {{ if .CustomDomain }}customDomain: ${file(../../config/sls/domain.yml):${self:custom.stage}.customDomain}
   domain:
     basePath: '{{ .DomainPath }}'{{ end }}
 

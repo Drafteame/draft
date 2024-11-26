@@ -43,9 +43,7 @@ local buckets: List<String> = List()
 
 local generics: List<classes.ConfEnv> = List(
   // Add your generic configurations here from generic.pkl
-  {{ if .CustomDomain }}
-  generic.cors,
-  {{ end }}
+  {{ if .CustomDomain }}generic.cors{{ end }}
 )
 
 /// Service configurations
