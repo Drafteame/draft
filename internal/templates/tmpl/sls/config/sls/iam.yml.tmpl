@@ -3,26 +3,7 @@
 
   # Service level permissions
   #
-  role:
-    statements:
-      - Effect: Allow
-        Action: lambda:InvokeFunction
-        Resource: "*"
-      - Effect: Allow
-        Action: sqs:*
-        Resource: "*"
-      - Effect: Allow
-        Action: events:PutRule
-        Resource: "*"
-      - Effect: Allow
-        Action: secretsmanager:*
-        Resource: "*"
-      - Effect: Allow
-        Action: s3:*
-        Resource: "*"
-      - Effect: Allow
-        Action: sns:*
-        Resource: "*"
+  role: ${file(../../config/sls/lambda-role.yml):role}
 
 feature:
   roles:
