@@ -12,6 +12,8 @@ builds:
   - env:
       - CGO_ENABLED=0
     main: main.go
+    ldflags:
+      - "-X cmd/commands.version={{.Version}}"
     goos:
       - linux
       - darwin

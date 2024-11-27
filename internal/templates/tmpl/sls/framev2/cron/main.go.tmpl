@@ -1,9 +1,10 @@
 package main
 
 import (
-    "github.com/Drafteame/api-draftea/services/{{ .ServicePath }}/cmd/cron/{{ .LambdaName }}/handler"
+    "{{ .PackageName }}/{{ .ServicePath }}/cmd/cron/{{ .LambdaName }}/handler"
 )
 
 func main() {
     handler.Bootstrap()
 }
+    

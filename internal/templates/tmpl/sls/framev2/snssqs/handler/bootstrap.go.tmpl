@@ -1,12 +1,12 @@
 package handler
 
 import (
-    "github.com/Drafteame/api-draftea/projects/framev2/engine"
-    "github.com/Drafteame/api-draftea/projects/framev2/engine/decorators/datadog"
-    "github.com/Drafteame/api-draftea/projects/framev2/engine/lambda"
-    "github.com/Drafteame/api-draftea/projects/framev2/engine/lambda/middlewares"
+    "{{ .PackageName }}/projects/framev2/engine"
+    "{{ .PackageName }}/projects/framev2/engine/decorators/datadog"
+    "{{ .PackageName }}/projects/framev2/engine/lambda"
+    "{{ .PackageName }}/projects/framev2/engine/lambda/middlewares"
 
-    _ "github.com/Drafteame/api-draftea/config/loaders" //revive:disable:blank-imports
+    _ "{{ .PackageName }}/config/loaders" //revive:disable:blank-imports
 )
 
 // Bootstrap is the entrypoint of the lambda

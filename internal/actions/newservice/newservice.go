@@ -5,7 +5,9 @@ import (
 	"os"
 
 	"github.com/Drafteame/draft/internal/actions/dtos"
+	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dirs"
+	"github.com/Drafteame/draft/internal/project"
 	"github.com/Drafteame/draft/internal/templates"
 )
 
@@ -17,24 +19,27 @@ type NewService struct {
 func GetAction(input dtos.Input) *NewService {
 	input.LambdaName = "helloworld"
 	input.LambdaType = "plain"
+	input.PackageName = data.Meta.PackageName
+	input.NormalizedServiceName = project.NormalizeServiceName(input.ServiceName)
 
 	if input.ServicePath == "" {
 		input.ServicePath = input.ServiceName
 	}
 
-	return &NewService{
+	input.ServicePath = "services/" + input.ServicePath
+
+	s := &NewService{
 		tmpl:  templates.NewSLS(input),
 		input: input,
 	}
+
+	return s
 }
 
 func (css *NewService) Exec() error {
 	switch css.input.ServiceFramework {
 	case "sls":
 		return css.createServerless()
-	case "cdk":
-		println("CDK is not supported yet")
-		return nil
 	default:
 		return errors.New("unsupported service framework")
 	}

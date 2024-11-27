@@ -5,9 +5,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	ehttp "github.com/Drafteame/api-draftea/projects/framev2/engine/http"
-	"github.com/Drafteame/api-draftea/projects/framev2/engine/http/middlewares"
-	"github.com/Drafteame/api-draftea/projects/framev2/pkg/inject"
+	ehttp "{{ .PackageName }}/projects/framev2/engine/http"
+	"{{ .PackageName }}/projects/framev2/engine/http/middlewares"
+	"{{ .PackageName }}/projects/framev2/pkg/inject"
 )
 
 func init() {

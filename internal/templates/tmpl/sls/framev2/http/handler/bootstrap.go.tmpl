@@ -1,14 +1,15 @@
 package handler
 
 import (
-	"github.com/Drafteame/api-draftea/projects/framev2/engine"
-	"github.com/Drafteame/api-draftea/projects/framev2/engine/decorators/apigateway"
-	"github.com/Drafteame/api-draftea/projects/framev2/engine/decorators/datadog"
-	"github.com/Drafteame/api-draftea/projects/framev2/engine/http"
-	"github.com/Drafteame/api-draftea/projects/framev2/engine/http/middlewares"
-	"github.com/labstack/echo/v4/middleware"
+    "github.com/labstack/echo/v4/middleware"
 
-	_ "github.com/Drafteame/api-draftea/config/loaders" //revive:disable:blank-imports
+	"{{ .PackageName }}/projects/framev2/engine"
+	"{{ .PackageName }}/projects/framev2/engine/decorators/apigateway"
+	"{{ .PackageName }}/projects/framev2/engine/decorators/datadog"
+	"{{ .PackageName }}/projects/framev2/engine/http"
+	"{{ .PackageName }}/projects/framev2/engine/http/middlewares"
+
+	_ "{{ .PackageName }}/config/loaders" //revive:disable:blank-imports
 )
 
 var corsConfig middleware.CORSConfig

@@ -11,12 +11,19 @@ import (
 func baseForm(input *dtos.Input) error {
 	servicePath := huh.NewInput().
 		Title("Service Path:").
-		Description("Enter the path to the service. If empty will use the current directory").
-		Value(&input.ServicePath)
+		Description("Enter the path to the service excluding 'services' folder.").
+		Value(&input.ServicePath).
+		Validate(func(s string) error {
+			if s == "" {
+				return errors.New("service path cannot be empty")
+			}
+
+			return nil
+		})
 
 	lambdaName := huh.NewInput().
 		Title("Lambda Name:").
-		Description("Enter the name of the new lambda").
+		Description("Enter the name of the new lambda.").
 		Value(&input.LambdaName).
 		Validate(func(s string) error {
 			if s == "" {
