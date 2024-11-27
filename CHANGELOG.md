@@ -1,3 +1,8 @@
+## v1.1.0 (2024-11-27)
+
+
+- feat: load package name from root go.mod file (#20)
+
 ## v1.0.4 (2024-11-26)
 
 
