@@ -3,7 +3,7 @@ package commands
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/Drafteame/draft/internal/flags"
+	"github.com/Drafteame/draft/internal/data"
 )
 
 var version = "unversioned"
@@ -16,7 +16,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&flags.Flags.WorkingDir, "working-dir", "w", "", "Working directory")
+	rootCmd.PersistentFlags().StringVarP(&data.Flags.WorkingDir, "working-dir", "w", "", "Working directory")
 }
 
 func run(cmd *cobra.Command, _ []string) {

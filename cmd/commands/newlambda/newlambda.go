@@ -7,7 +7,7 @@ import (
 
 	"github.com/Drafteame/draft/internal/actions/dtos"
 	"github.com/Drafteame/draft/internal/actions/newlambda"
-	"github.com/Drafteame/draft/internal/flags"
+	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/forms"
 )
 
@@ -19,11 +19,13 @@ var newLambdaCmd = &cobra.Command{
 }
 
 func run(_ *cobra.Command, _ []string) {
-	if flags.Flags.WorkingDir != "" {
-		if err := os.Chdir(flags.Flags.WorkingDir); err != nil {
+	if data.Flags.WorkingDir != "" {
+		if err := os.Chdir(data.Flags.WorkingDir); err != nil {
 			panic(err)
 		}
 	}
+
+	data.LoadMeta()
 
 	input := dtos.Input{}
 
@@ -33,7 +35,7 @@ func run(_ *cobra.Command, _ []string) {
 
 	action := newlambda.GetAction(input)
 
-	if err := action.Exec(input); err != nil {
+	if err := action.Exec(); err != nil {
 		panic(err)
 	}
 

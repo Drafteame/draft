@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Drafteame/draft/internal/actions/dtos"
+	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/files"
 	"github.com/Drafteame/draft/internal/templates"
 )
@@ -18,9 +19,8 @@ type NewLambda struct {
 }
 
 func GetAction(input dtos.Input) *NewLambda {
-	if input.ServicePath == "" {
-		input.ServicePath = "."
-	}
+	input.PackageName = data.Meta.PackageName
+	input.ServicePath = "services/" + input.ServicePath
 
 	return &NewLambda{
 		input:      input,
@@ -29,10 +29,14 @@ func GetAction(input dtos.Input) *NewLambda {
 	}
 }
 
-func (nl *NewLambda) Exec(input dtos.Input) error {
+func (nl *NewLambda) Exec() error {
+	if !files.Exists(nl.input.ServicePath) {
+		return fmt.Errorf("service %s not found", nl.input.ServicePath)
+	}
+
 	var err error
 
-	switch input.LambdaType {
+	switch nl.input.LambdaType {
 	case "plain":
 		err = nl.createPlain()
 	case "sqs":
@@ -60,7 +64,9 @@ func (nl *NewLambda) Exec(input dtos.Input) error {
 
 func (nl *NewLambda) createFiles(files ...dtos.FileEntry) error {
 	for _, file := range files {
-		if err := os.WriteFile(nl.input.ServicePath+file.Path, file.Data, 0755); err != nil {
+		path := nl.lambdaPath + file.Path
+
+		if err := os.WriteFile(path, file.Data, 0755); err != nil {
 			return err
 		}
 	}
@@ -75,10 +81,10 @@ func (nl *NewLambda) addToServerlessYAML() error {
 		return err
 	}
 
-	data := "- ${file(cmd/%s/%s/lambda-config.yml):function}\n  #:next"
-	data = fmt.Sprintf(data, nl.input.LambdaType, nl.input.LambdaName)
+	line := "- ${file(cmd/%s/%s/lambda-config.yml):function}\n  #:next"
+	line = fmt.Sprintf(line, nl.input.LambdaType, nl.input.LambdaName)
 
-	newContent := strings.ReplaceAll(string(content), "#:next", data)
+	newContent := strings.ReplaceAll(string(content), "#:next", line)
 
 	return files.Create(path, []byte(newContent))
 }
@@ -90,10 +96,10 @@ func (nl *NewLambda) addToDepsGo() error {
 		return err
 	}
 
-	data := "_ \"github.com/Drafteame/api-draftea/services/%s/cmd/%s/%s/handler\"\n\t//:next"
-	data = fmt.Sprintf(data, nl.input.ServicePath, nl.input.LambdaType, nl.input.LambdaName)
+	line := "_ \"github.com/Drafteame/api-draftea/services/%s/cmd/%s/%s/handler\"\n\t//:next"
+	line = fmt.Sprintf(line, nl.input.ServicePath, nl.input.LambdaType, nl.input.LambdaName)
 
-	newContent := strings.ReplaceAll(string(content), "//:next", data)
+	newContent := strings.ReplaceAll(string(content), "//:next", line)
 
 	return files.Create(path, []byte(newContent))
 }

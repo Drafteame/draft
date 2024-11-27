@@ -7,7 +7,7 @@ import (
 
 	"github.com/Drafteame/draft/internal/actions/dtos"
 	"github.com/Drafteame/draft/internal/actions/newservice"
-	"github.com/Drafteame/draft/internal/flags"
+	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/forms"
 )
 
@@ -19,11 +19,13 @@ var newServiceCmd = &cobra.Command{
 }
 
 func run(_ *cobra.Command, _ []string) {
-	if flags.Flags.WorkingDir != "" {
-		if err := os.Chdir(flags.Flags.WorkingDir); err != nil {
+	if data.Flags.WorkingDir != "" {
+		if err := os.Chdir(data.Flags.WorkingDir); err != nil {
 			panic(err)
 		}
 	}
+
+	data.LoadMeta()
 
 	input := dtos.Input{}
 

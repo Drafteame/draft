@@ -1,4 +1,4 @@
-package flags
+package data
 
 type flags struct {
 	WorkingDir string

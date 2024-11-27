@@ -3,7 +3,7 @@ package handler
 import (
     "context"
 
-    "github.com/Drafteame/api-draftea/projects/framev2/pkg/publisher/types"
+    "{{ .PackageName }}/projects/framev2/pkg/publisher/types"
 )
 
 func (h *handler) worker(ctx context.Context, evt types.Event[Event]) error {

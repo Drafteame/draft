@@ -1,9 +1,11 @@
 package handler
 
 import (
-    "github.com/Drafteame/api-draftea/projects/framev2/engine/lambda"
-    "github.com/Drafteame/api-draftea/projects/framev2/pkg/consumer/v2/sqs"
+    "{{ .PackageName }}/projects/framev2/engine/lambda"
+    "{{ .PackageName }}/projects/framev2/pkg/consumer/v2/sqs"
 )
+
+type Event struct {}
 
 type handler struct{}
 

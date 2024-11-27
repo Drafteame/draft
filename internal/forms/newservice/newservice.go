@@ -17,13 +17,7 @@ func GetForm(input *dtos.Input) error {
 }
 
 func newServiceDetails(input *dtos.Input) error {
-	serviceTypes := huh.NewSelect[string]().
-		Title("Select service framework:").
-		Options(
-			huh.NewOption("Serverless", "sls"),
-			// huh.NewOption("CDK", "cdk"),
-		).
-		Value(&input.ServiceFramework)
+	input.ServiceFramework = "sls"
 
 	serviceName := huh.NewInput().
 		Title("Service Name:").
@@ -36,24 +30,17 @@ func newServiceDetails(input *dtos.Input) error {
 			return nil
 		})
 
-	ServicePath := huh.NewInput().
+	servicePath := huh.NewInput().
 		Title("Service Folder:").
-		Description("Enter the folder name where should be placed the service content").
+		Placeholder(input.ServiceName).
+		Description("Enter the folder name where should be placed the service content. If not defined will be the same as service name").
 		Value(&input.ServicePath)
 
-	frameworkVersion := huh.NewSelect[string]().
-		Title("Select Framework version:").
-		Options(
-			huh.NewOption("Framework V2", "v2"),
-			// huh.NewOption("Experimental Engine", "exp-engine"),
-		).
-		Value(&input.FrameVersion)
+	input.FrameVersion = "v2"
 
 	group1 := huh.NewGroup(
-		serviceTypes,
 		serviceName,
-		ServicePath,
-		frameworkVersion,
+		servicePath,
 	).Title("Service Details")
 
 	return huh.NewForm(group1).WithTheme(huh.ThemeCharm()).Run()
@@ -62,17 +49,15 @@ func newServiceDetails(input *dtos.Input) error {
 func newServiceFrameDetails(input *dtos.Input) error {
 	inputs := make([]huh.Field, 0)
 
-	if input.ServiceFramework == "sls" {
-		warmupEnabled := huh.NewConfirm().
-			Title("Enable warmup?").
-			Value(&input.WarmupEnabled)
+	warmupEnabled := huh.NewConfirm().
+		Title("Enable warmup?").
+		Value(&input.WarmupEnabled)
 
-		customDomain := huh.NewConfirm().
-			Title("Configure custom domain?").
-			Value(&input.CustomDomain)
+	customDomain := huh.NewConfirm().
+		Title("Configure custom domain?").
+		Value(&input.CustomDomain)
 
-		inputs = append(inputs, warmupEnabled, customDomain)
-	}
+	inputs = append(inputs, warmupEnabled, customDomain)
 
 	group := huh.NewGroup(inputs...).Title("Service Configs")
 
