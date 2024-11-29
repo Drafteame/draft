@@ -1,3 +1,9 @@
+## v1.2.0 (2024-11-29)
+
+
+- feat: sentry support (#21)
+- Co-authored-by: Eduardo Aguilar <dante.aguilar41@gmail.com>
+
 ## v1.1.0 (2024-11-27)
 
 
