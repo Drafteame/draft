@@ -39,10 +39,6 @@ func run(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	if err := action.PostCreate(); err != nil {
-		panic(err)
-	}
-
 	println("Service created successfully")
 }
 

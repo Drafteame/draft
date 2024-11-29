@@ -16,4 +16,6 @@ type Input struct {
 	HTTPPath              string
 	HTTPMethod            string
 	CronExpression        string
+	HasSentry             bool
+	SentryDSN             string
 }

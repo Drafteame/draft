@@ -20,4 +20,4 @@ prod:
   environment:
     <<: *default
     DEBUG: false
-    # SENTRY_DSN: 'Set sentry DSN here'
+    {{ if .HasSentry }}SENTRY_DSN: '{{ .SentryDSN }}'{{end}}{{ if not .HasSentry }}# SENTRY_DSN: 'Set sentry DSN here' {{ end }}

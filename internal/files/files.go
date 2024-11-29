@@ -6,7 +6,8 @@ import (
 )
 
 func Read(path string) ([]byte, error) {
-	file, err := os.Open(path)
+	path = os.ExpandEnv(path)
+	file, err := os.OpenFile(path, os.O_RDONLY, 0755)
 	if err != nil {
 		return nil, err
 	}
@@ -19,6 +20,7 @@ func Create(path string, newContent []byte) error {
 }
 
 func Exists(path string) bool {
+	path = os.ExpandEnv(path)
 	_, err := os.Stat(path)
 	return !os.IsNotExist(err)
 }

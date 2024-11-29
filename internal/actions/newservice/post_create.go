@@ -8,7 +8,7 @@ import (
 	"github.com/Drafteame/draft/internal/exec"
 )
 
-func (css *NewService) PostCreate() error {
+func (css *NewService) postCreate() error {
 	if css.input.ServiceFramework == "sls" {
 		css.postCreateSls()
 		return nil

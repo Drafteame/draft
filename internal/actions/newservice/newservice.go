@@ -28,15 +28,24 @@ func GetAction(input dtos.Input) *NewService {
 
 	input.ServicePath = "services/" + input.ServicePath
 
-	s := &NewService{
-		tmpl:  templates.NewSLS(input),
-		input: input,
-	}
-
-	return s
+	return &NewService{input: input}
 }
 
 func (css *NewService) Exec() error {
+	if err := css.preCreate(); err != nil {
+		return err
+	}
+
+	if err := css.exec(); err != nil {
+		return err
+	}
+
+	return css.postCreate()
+}
+
+func (css *NewService) exec() error {
+	css.tmpl = templates.NewSLS(css.input)
+
 	switch css.input.ServiceFramework {
 	case "sls":
 		return css.createServerless()
