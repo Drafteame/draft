@@ -6,7 +6,11 @@ import (
 )
 
 func (css *NewService) preCreate() error {
-	return css.createSentryProject()
+	if err := css.createSentryProject(); err != nil {
+		return err
+	}
+
+	return css.setupSentryStages()
 }
 
 func (css *NewService) createSentryProject() error {
@@ -35,4 +39,15 @@ func (css *NewService) createSentryProject() error {
 	println("Sentry DSN:", css.input.SentryDSN)
 
 	return nil
+}
+
+func (css *NewService) setupSentryStages() error {
+	if !css.input.HasSentry {
+		return nil
+	}
+
+	dsn := css.input.SentryDSN
+	serviceName := css.input.ServiceName
+
+	return sentry.CreateStages(serviceName, dsn)
 }

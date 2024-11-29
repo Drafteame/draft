@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"time"
+
+	"github.com/getsentry/sentry-go"
 
 	"github.com/Drafteame/draft/internal/config"
 	"github.com/Drafteame/draft/internal/http"
@@ -107,4 +110,41 @@ func GetClientKeys(projectID string) (map[string]string, error) {
 	}
 
 	return keys, nil
+}
+
+func CreateStages(serviceName, dsn string) error {
+	transport := sentry.NewHTTPSyncTransport()
+	transport.Timeout = time.Second * 1
+
+	c, err := sentry.NewClient(sentry.ClientOptions{
+		ServerName:  serviceName,
+		Dsn:         dsn,
+		Environment: "dev",
+		Transport:   transport,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < 5; i++ {
+		c.CaptureException(errors.New("test error"), nil, nil)
+	}
+
+	c, err = sentry.NewClient(sentry.ClientOptions{
+		ServerName:  serviceName,
+		Dsn:         dsn,
+		Environment: "prod",
+		Transport:   transport,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < 5; i++ {
+		c.CaptureException(errors.New("test error"), nil, nil)
+	}
+
+	return nil
 }
