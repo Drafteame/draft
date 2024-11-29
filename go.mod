@@ -3,6 +3,7 @@ module github.com/Drafteame/draft
 go 1.23
 
 require (
+	github.com/BurntSushi/toml v1.4.0
 	github.com/charmbracelet/huh v0.6.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20241115180544-690ffa453397
 	github.com/spf13/cobra v1.8.1
