@@ -15,13 +15,6 @@ var configCmd = &cobra.Command{
 }
 
 func run(_ *cobra.Command, _ []string) {
-	//content, err := files.Read("$HOME/.draftea/draft/config.toml")
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	//println(string(content))
-
 	cfg := config.Get()
 
 	tb, err := toml.Marshal(cfg)
