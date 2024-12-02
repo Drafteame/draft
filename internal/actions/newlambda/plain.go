@@ -11,10 +11,10 @@ func (nl *NewLambda) createPlain() error {
 	}
 
 	filesEntries := []dtos.FileEntry{
-		{Path: "/cmd/plain/" + nl.input.LambdaName + "/main.go", Data: nl.tmpl.FrameV2.Plain.MainGo},
-		{Path: "/cmd/plain/" + nl.input.LambdaName + "/lambda-config.yml", Data: nl.tmpl.FrameV2.Plain.LambdaConfigYAML},
-		{Path: "/cmd/plain/" + nl.input.LambdaName + "/handler/handler.go", Data: nl.tmpl.FrameV2.Plain.Handler.HandlerGo},
-		{Path: "/cmd/plain/" + nl.input.LambdaName + "/handler/bootstrap.go", Data: nl.tmpl.FrameV2.Plain.Handler.BootstrapGo},
+		{Path: "/main.go", Data: nl.tmpl.FrameV2.Plain.MainGo},
+		{Path: "/lambda-config.yml", Data: nl.tmpl.FrameV2.Plain.LambdaConfigYAML},
+		{Path: "/handler/handler.go", Data: nl.tmpl.FrameV2.Plain.Handler.HandlerGo},
+		{Path: "/handler/bootstrap.go", Data: nl.tmpl.FrameV2.Plain.Handler.BootstrapGo},
 	}
 
 	return nl.createFiles(filesEntries...)

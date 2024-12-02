@@ -96,8 +96,8 @@ func (nl *NewLambda) addToDepsGo() error {
 		return err
 	}
 
-	line := "_ \"github.com/Drafteame/api-draftea/services/%s/cmd/%s/%s/handler\"\n\t//:next"
-	line = fmt.Sprintf(line, nl.input.ServicePath, nl.input.LambdaType, nl.input.LambdaName)
+	line := "_ \"%s/%s/cmd/%s/%s/handler\"\n\t//:next"
+	line = fmt.Sprintf(line, nl.input.PackageName, nl.input.ServicePath, nl.input.LambdaType, nl.input.LambdaName)
 
 	newContent := strings.ReplaceAll(string(content), "//:next", line)
 
