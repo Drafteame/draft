@@ -1,3 +1,8 @@
+## v1.2.1 (2024-12-02)
+
+
+- fix: wrong build of new lambda file paths (#22)
+
 ## v1.2.0 (2024-11-29)
 
 
