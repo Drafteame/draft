@@ -1,3 +1,15 @@
+## v1.2.3 (2024-12-17)
+
+
+- deps: bump github.com/getsentry/sentry-go from 0.29.1 to 0.30.0 (#23)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Co-authored-by: Eduardo Aguilar Yépez <dante.aguilar41@gmail.com>
+- ci: bump commitizen-tools/commitizen-action from 0.22.0 to 0.23.0 (#24)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Co-authored-by: Eduardo Aguilar Yépez <dante.aguilar41@gmail.com>
+
 ## v1.2.2 (2024-12-17)
 
 
