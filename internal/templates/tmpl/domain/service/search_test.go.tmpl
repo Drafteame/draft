@@ -1,0 +1,158 @@
+package service_test
+
+import (
+	"context"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+	prv{{.DomainNameLower}} "{{.PackageName}}/domains/{{.DomainPath}}/providers"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+	"{{.PackageName}}/domains/{{.DomainPath}}/service/mocks"
+	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
+)
+
+func (ts *testSuite) TestSearchSuccess() {
+	t := ts.T()
+	t.Parallel()
+
+	repo := mocks.NewMockRepository(t)
+
+	w := newTestWrapper(t, withMocks(map[string]any{
+		prv{{.DomainNameLower}}.PrvRepository: repo,
+	}))
+
+	data := []daos.{{.DomainNamePascal}}{
+		{ID: "someid-1"},
+		{ID: "someid-2"},
+		{ID: "someid-3"},
+	}
+
+	opts := options.NewSearchOptions().
+		Limit(10)
+
+	repo.On("Search", mock.MatchedBy(tmock.AnyContextMatcher()), opts).
+		Return(data, int64(3), nil)
+
+	got, total, err := w.service.Search(context.TODO(), opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, got, 3)
+	assert.Equal(t, int64(3), total)
+}
+
+func (ts *testSuite) TestSearchWhenLimitIsZeroShouldAppliedTheDefaultLimit() {
+	t := ts.T()
+	t.Parallel()
+
+	repo := mocks.NewMockRepository(t)
+
+	w := newTestWrapper(t, withMocks(map[string]any{
+		prv{{.DomainNameLower}}.PrvRepository: repo,
+	}))
+
+	data := []daos.{{.DomainNamePascal}}{
+		{ID: "someid-1"},
+		{ID: "someid-2"},
+		{ID: "someid-3"},
+	}
+
+	optsWithDefaultLimit := options.NewSearchOptions().Limit(options.DefaultPaginationLimit)
+	repo.On("Search", mock.MatchedBy(tmock.AnyContextMatcher()), optsWithDefaultLimit).
+		Return(data, int64(3), nil)
+
+	opts := options.NewSearchOptions()
+	got, total, err := w.service.Search(context.TODO(), opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, got, 3)
+	assert.Equal(t, int64(3), total)
+}
+
+func (ts *testSuite) TestSearchWhenLimitIsGreaterThanTheMaxShouldAppliedTheMaxLimit() {
+	t := ts.T()
+	t.Parallel()
+
+	repo := mocks.NewMockRepository(t)
+
+	w := newTestWrapper(t, withMocks(map[string]any{
+		prv{{.DomainNameLower}}.PrvRepository: repo,
+	}))
+
+	data := []daos.{{.DomainNamePascal}}{
+		{ID: "someid-1"},
+		{ID: "someid-2"},
+		{ID: "someid-3"},
+	}
+
+	optsWithMaxLimit := options.NewSearchOptions().Limit(options.MaxPaginationLimit)
+	repo.On("Search", context.TODO(), optsWithMaxLimit).Return(data, int64(3), nil)
+
+	opts := options.NewSearchOptions().Limit(9999)
+	got, total, err := w.service.Search(context.TODO(), opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, got, 3)
+	assert.Equal(t, int64(3), total)
+}
+
+func (ts *testSuite) TestSearchWhenOffsetIsLowerThanZeroShouldBeZero() {
+	t := ts.T()
+	t.Parallel()
+
+	repo := mocks.NewMockRepository(t)
+
+	w := newTestWrapper(t, withMocks(map[string]any{
+		prv{{.DomainNameLower}}.PrvRepository: repo,
+	}))
+
+	data := []daos.{{.DomainNamePascal}}{
+		{ID: "someid-1"},
+		{ID: "someid-2"},
+		{ID: "someid-3"},
+	}
+
+	optsWithMaxLimit := options.NewSearchOptions().Offset(0)
+	repo.On("Search", mock.MatchedBy(tmock.AnyContextMatcher()), optsWithMaxLimit).
+		Return(data, int64(3), nil)
+
+	opts := options.NewSearchOptions().Offset(-1)
+	got, total, err := w.service.Search(context.TODO(), opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, got, 3)
+	assert.Equal(t, int64(3), total)
+}
+
+func (ts *testSuite) TestSearchWhenRepositoryErrorShouldReturnError() {
+	t := ts.T()
+	t.Parallel()
+
+	repo := mocks.NewMockRepository(t)
+
+	w := newTestWrapper(t, withMocks(map[string]any{
+		prv{{.DomainNameLower}}.PrvRepository: repo,
+	}))
+
+	opts := options.NewSearchOptions()
+	repo.On("Search", mock.MatchedBy(tmock.AnyContextMatcher()), opts).
+		Return(nil, int64(0), assert.AnError)
+
+	got, total, err := w.service.Search(context.TODO(), opts)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	assert.ErrorIs(t, err, assert.AnError)
+	assert.Len(t, got, 0)
+	assert.Equal(t, int64(0), total)
+}

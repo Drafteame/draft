@@ -1,0 +1,28 @@
+package builders
+
+import (
+	"gorm.io/gorm"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+)
+
+type searchFilterBuilder func(*gorm.DB, options.SearchFilters) *gorm.DB
+
+func buildSearchFilters(gormDB *gorm.DB, filters options.SearchFilters) *gorm.DB {
+	builders := []searchFilterBuilder{
+	    buildNotDeletedFilter,
+		// TODO: add filter builders
+	}
+
+	for _, build := range builders {
+		gormDB = build(gormDB, filters)
+	}
+
+	return gormDB
+}
+
+func buildNotDeletedFilter(query *gorm.DB, filters options.SearchFilters) *gorm.DB {
+    return query.Where("deleted_at IS NULL")
+}
+
+// TODO: add filter builders functions

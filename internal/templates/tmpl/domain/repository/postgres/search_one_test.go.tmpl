@@ -1,0 +1,59 @@
+package repository_test
+
+import (
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+)
+
+func TestSearchOne(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		name          string
+		searchFilters options.SearchFilters
+		data          []daos.{{.DomainNamePascal}}
+		expected      daos.{{.DomainNamePascal}}
+		err           error
+	}
+
+	cases := []testCase{
+		// TODO: [generated] Add test cases
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			tw := newTestWrapper(t)
+
+			for _, item := range tc.data {
+				if _, err := tw.repo.Create(context.TODO(), item); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			entity, err := tw.repo.SearchOne(context.TODO(), tc.searchFilters)
+			if err != nil {
+				if tc.err == nil {
+					t.Fatal(err)
+				}
+
+				assert.ErrorIs(t, err, tc.err)
+			}
+
+			if tc.expected.ID == "" {
+				assert.Empty(t, entity)
+			} else {
+				assert.NotEmpty(t, entity)
+				assert.Equal(t, tc.expected.ID, entity.ID)
+
+				// TODO: [generated] Add assertions
+			}
+		})
+	}
+}

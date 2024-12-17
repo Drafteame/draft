@@ -1,0 +1,15 @@
+package builders
+
+import (
+	"gorm.io/gorm"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+)
+
+func SearchOptions(gormDB *gorm.DB, opts options.SearchOptions) *gorm.DB {
+	gormDB = buildSearchFilters(gormDB, opts.Filters)
+	gormDB = buildSearchOrders(gormDB, opts.Orders)
+	gormDB = buildSearchPagination(gormDB, opts.Pagination)
+
+	return gormDB
+}

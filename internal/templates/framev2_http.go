@@ -31,7 +31,7 @@ func loadFrameV2HTTPMainGo(v *SLS, data any) error {
 	name := "framev2/http/main.go"
 	path := "tmpl/sls/framev2/http/main.go.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func loadFrameV2HTTPLambdaConfigYAML(v *SLS, data any) error {
 	name := "framev2/http/lambda-config.yml"
 	path := "tmpl/sls/framev2/http/lambda-config.yml.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func loadFrameV2HTTPHandlerBootstrapGo(v *SLS, data any) error {
 	name := "framev2/http/handler/bootstrap.go"
 	path := "tmpl/sls/framev2/http/handler/bootstrap.go.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func loadFrameV2HTTPHandlerHandlerGo(v *SLS, data any) error {
 	name := "framev2/http/handler/handler.go"
 	path := "tmpl/sls/framev2/http/handler/handler.go.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}

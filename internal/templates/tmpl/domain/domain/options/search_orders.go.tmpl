@@ -1,0 +1,11 @@
+package options
+
+type SearchOrders struct {
+	CreatedAt *string
+}
+
+func (so SearchOrders) SetCreatedAt(order string) SearchOrders {
+	so.CreatedAt = &order
+
+	return so
+}

@@ -2,13 +2,12 @@ package newlambda
 
 import (
 	"errors"
+	"github.com/Drafteame/draft/internal/dtos"
 
 	"github.com/charmbracelet/huh"
-
-	"github.com/Drafteame/draft/internal/actions/dtos"
 )
 
-func baseForm(input *dtos.Input) error {
+func baseForm(input *dtos.ServiceInput) error {
 	servicePath := huh.NewInput().
 		Title("Service Path:").
 		Description("Enter the path to the service excluding 'services' folder.").

@@ -2,7 +2,7 @@ package newservice
 
 import (
 	"github.com/Drafteame/draft/internal/config"
-	"github.com/Drafteame/draft/internal/sentry"
+	"github.com/Drafteame/draft/internal/pkg/sentry"
 )
 
 func (css *NewService) preCreate() error {

@@ -2,13 +2,12 @@ package newlambda
 
 import (
 	"errors"
+	"github.com/Drafteame/draft/internal/dtos"
 
 	"github.com/charmbracelet/huh"
-
-	"github.com/Drafteame/draft/internal/actions/dtos"
 )
 
-func cronForm(input *dtos.Input) error {
+func cronForm(input *dtos.ServiceInput) error {
 	cronExpression := huh.NewInput().
 		Title("Set Cron Expression:").
 		Description("Enter the cron expression").

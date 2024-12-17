@@ -1,0 +1,29 @@
+package repository
+
+import (
+	"context"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository/builders"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+)
+
+// Search finds records for the search options.
+func (r *Repository) Search(ctx context.Context, opts options.SearchOptions) ([]daos.{{.DomainNamePascal}}, int64, error) {
+	var dao []daos.{{.DomainNamePascal}}
+	client := r.driver.GetClient().Model(&dao)
+
+	client = builders.SearchOptions(client, opts)
+
+	err := client.WithContext(ctx).Find(&dao).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var total int64
+	if opts.Pagination.Limit != 1 {
+		client.Offset(-1).Count(&total)
+	}
+
+	return dao, total, nil
+}

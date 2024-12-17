@@ -1,6 +1,6 @@
 package dtos
 
-type Input struct {
+type ServiceInput struct {
 	PackageName           string
 	ServiceFramework      string
 	ServiceName           string

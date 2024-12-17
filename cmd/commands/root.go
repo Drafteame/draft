@@ -17,6 +17,7 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&data.Flags.WorkingDir, "working-dir", "w", "", "Working directory")
+	rootCmd.PersistentFlags().BoolVarP(&data.Flags.Debug, "debug", "d", false, "Debug mode")
 }
 
 func run(cmd *cobra.Command, _ []string) {

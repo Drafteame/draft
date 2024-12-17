@@ -1,0 +1,23 @@
+package repository
+
+import (
+	"context"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+)
+
+func (r *Repository) Update(ctx context.Context, id string, fields options.UpdateFields) (daos.{{.DomainNamePascal}}, error) {
+	entity, err := r.Get(ctx, id)
+	if err != nil {
+		return daos.{{.DomainNamePascal}}{}, err
+	}
+
+	updated := daos.ToUpdateDAO(id, fields)
+
+	if err := r.driver.GetClient().Model(&entity).Updates(updated).Error; err != nil {
+		return daos.{{.DomainNamePascal}}{}, err
+	}
+
+	return entity, nil
+}

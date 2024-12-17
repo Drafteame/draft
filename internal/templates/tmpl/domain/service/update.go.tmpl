@@ -1,0 +1,23 @@
+package service
+
+import (
+	"context"
+	"errors"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+)
+
+func (s *Service) Update(ctx context.Context, id string, fields options.UpdateFields) (domain.{{.DomainNamePascal}}, error) {
+	got, err := s.repo.Update(ctx, id, fields)
+	if err != nil {
+		return domain.{{.DomainNamePascal}}{}, err
+	}
+
+	model, err := domain.ToModel(got)
+	if err != nil {
+		return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrDAOConvertion, err)
+	}
+
+	return model, nil
+}

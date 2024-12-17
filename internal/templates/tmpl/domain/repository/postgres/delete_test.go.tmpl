@@ -1,0 +1,50 @@
+package repository_test
+
+import (
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	rposome "{{.PackageName}}/domains/{{.DomainPath}}/domain"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+)
+
+func TestDelete(t *testing.T) {
+	t.Parallel()
+
+	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
+		tw := newTestWrapper(t)
+
+		data, err := tw.repo.Create(context.TODO(), daos.{{.DomainNamePascal}}{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		got, err := tw.repo.Delete(context.TODO(), data.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, data.ID, got.ID)
+		assert.NotEmpty(t, got.CreatedAt)
+
+		// TODO: [generated] assert other constraints
+	})
+
+	t.Run("delete inexistent record", func(t *testing.T) {
+		t.Parallel()
+
+		tw := newTestWrapper(t)
+
+		_, err := tw.repo.Delete(context.TODO(), "not-found")
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, rposome.ErrRecordNotFound)
+	})
+}

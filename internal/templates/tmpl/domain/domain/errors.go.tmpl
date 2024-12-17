@@ -1,0 +1,12 @@
+package domain
+
+import "errors"
+
+var (
+	ErrUnexpected       = errors.New("dmn-some: unexpected error")
+	ErrRecordNotFound   = errors.New("dmn-some: record not found")
+	ErrDuplicatedRecord = errors.New("dmn-some: duplicated record")
+	ErrDeleteRecord     = errors.New("dmn-some: error deleting record")
+	ErrDAOConvertion    = errors.New("dmn-some: error converting dao to model")
+	ErrModelConvertion  = errors.New("dmn-some: error converting model to dao")
+)

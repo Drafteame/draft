@@ -2,13 +2,12 @@ package newlambda
 
 import (
 	"errors"
+	"github.com/Drafteame/draft/internal/dtos"
 
 	"github.com/charmbracelet/huh"
-
-	"github.com/Drafteame/draft/internal/actions/dtos"
 )
 
-func queueForm(input *dtos.Input) error {
+func queueForm(input *dtos.ServiceInput) error {
 	queueArn := huh.NewInput().
 		Title("Set Queue ARN:").
 		Description("Enter the ARN of the queue or some replacer that works on lambda-config.yml").

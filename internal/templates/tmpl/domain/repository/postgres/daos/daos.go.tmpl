@@ -1,0 +1,21 @@
+package daos
+
+import (
+	"time"
+)
+
+const DBPrefix = "{{.DBPrefix}}"
+
+type {{.DomainNamePascal}} struct {
+	ID string `gorm:"primaryKey;column:id"`
+
+	// TODO: [generated] Add fields
+
+	CreatedAt time.Time  `gorm:"column:created_at"`
+	UpdatedAt time.Time  `gorm:"column:updated_at"`
+	DeletedAt *time.Time `gorm:"column:deleted_at"`
+}
+
+func (t {{.DomainNamePascal}}) TableName() string {
+	return "{{.TableName}}"
+}

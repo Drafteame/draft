@@ -1,8 +1,8 @@
 package newlambda
 
 import (
-	"github.com/Drafteame/draft/internal/actions/dtos"
-	"github.com/Drafteame/draft/internal/dirs"
+	"github.com/Drafteame/draft/internal/dtos"
+	"github.com/Drafteame/draft/internal/pkg/dirs"
 )
 
 func (nl *NewLambda) createHttp() error {

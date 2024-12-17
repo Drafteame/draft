@@ -1,0 +1,33 @@
+package repository
+
+import (
+	"context"
+	"errors"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+)
+
+func (r *Repository) Delete(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error) {
+	entity, err := r.Get(ctx, id)
+	if err != nil {
+		return daos.{{.DomainNamePascal}}{}, err
+	}
+
+	now := r.clock.Now()
+
+	update := daos.DeleteSome{
+		ID:        id,
+		DeletedAt: &now,
+	}
+
+	if err := r.driver.GetClient().Model(&update).WithContext(ctx).Updates(update).Error; err != nil {
+		return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrDeleteRecord, err)
+	}
+
+	if err := r.driver.GetClient().Unscoped().Find(&entity).Error; err != nil {
+		return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
+	}
+
+	return entity, nil
+}

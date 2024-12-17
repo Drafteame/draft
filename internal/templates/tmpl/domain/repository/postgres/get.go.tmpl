@@ -1,0 +1,33 @@
+package repository
+
+import (
+	"context"
+	"errors"
+
+	"gorm.io/gorm"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+)
+
+func (r *Repository) Get(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error) {
+	gormDB := r.driver.GetClient()
+
+	dao := daos.{{.DomainNamePascal}}{}
+
+	err := gormDB.WithContext(ctx).
+		Model(daos.{{.DomainNamePascal}}{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		First(&dao).
+		Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrRecordNotFound, err)
+		}
+
+		return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
+	}
+
+	return dao, nil
+}

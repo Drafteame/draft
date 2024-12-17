@@ -1,0 +1,23 @@
+package service
+
+import (
+	"context"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+	"{{.PackageName}}/projects/framev2/pkg/structs"
+)
+
+func (s *Service) Search(ctx context.Context, so options.SearchOptions) ([]domain.{{.DomainNamePascal}}, int64, error) {
+	got, total, err := s.repo.Search(ctx, so)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	models, err := structs.MapOrError(got, domain.ToModel)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return models, total, nil
+}

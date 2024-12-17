@@ -12,7 +12,7 @@ func loadConfigSlsEnvironmentYAML(v *SLS, data any) error {
 	name := "config/sls/environment.yml"
 	path := "tmpl/sls/config/sls/environment.yml.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
@@ -26,7 +26,7 @@ func loadConfigSlsIamYAML(v *SLS, data any) error {
 	name := "config/sls/iam.yml"
 	path := "tmpl/sls/config/sls/iam.yml.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}

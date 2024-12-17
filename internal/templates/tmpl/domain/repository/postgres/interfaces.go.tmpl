@@ -1,0 +1,11 @@
+package repository
+
+import "time"
+
+type GeneratorID interface {
+	Generate() (string, error)
+}
+
+type Clock interface {
+	Now() time.Time
+}

@@ -1,0 +1,41 @@
+package domain
+
+import (
+	"time"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+)
+
+type Some struct {
+	ID string
+
+	// TODO: Add fields
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+}
+
+func ToModel(m daos.{{.DomainNamePascal}}) (Some, error) {
+	return Some{
+		ID: m.ID,
+
+		// TODO: [generated] add fields
+
+		CreatedAt: m.CreatedAt,
+		UpdatedAt: m.UpdatedAt,
+		DeletedAt: m.DeletedAt,
+	}, nil
+}
+
+func ToDAO(m Some) (daos.{{.DomainNamePascal}}, error) {
+	return daos.{{.DomainNamePascal}}{
+		ID: m.ID,
+
+		// TODO: [generated] add fields
+
+		CreatedAt: m.CreatedAt,
+		UpdatedAt: m.UpdatedAt,
+		DeletedAt: m.DeletedAt,
+	}, nil
+}

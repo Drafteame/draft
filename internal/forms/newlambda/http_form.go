@@ -2,13 +2,12 @@ package newlambda
 
 import (
 	"errors"
+	"github.com/Drafteame/draft/internal/dtos"
 
 	"github.com/charmbracelet/huh"
-
-	"github.com/Drafteame/draft/internal/actions/dtos"
 )
 
-func httpForm(input *dtos.Input) error {
+func httpForm(input *dtos.ServiceInput) error {
 	httpMethod := huh.NewSelect[string]().
 		Title("Select HTTP Method:").
 		Options(

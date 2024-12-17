@@ -1,7 +1,7 @@
 package data
 
 import (
-	"github.com/Drafteame/draft/internal/files"
+	"github.com/Drafteame/draft/internal/pkg/files"
 	"github.com/Drafteame/draft/internal/project"
 )
 

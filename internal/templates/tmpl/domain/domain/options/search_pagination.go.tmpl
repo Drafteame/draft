@@ -1,0 +1,29 @@
+package options
+
+var (
+	DefaultPaginationLimit int64 = 50
+	MaxPaginationLimit     int64 = 100
+)
+
+type SearchPagination struct {
+	Limit  int64
+	Offset int64
+}
+
+func (so SearchPagination) SetLimit(limit int64) SearchPagination {
+	if limit > MaxPaginationLimit {
+		limit = MaxPaginationLimit
+	}
+
+	so.Limit = limit
+	return so
+}
+
+func (so SearchPagination) SetOffset(offset int64) SearchPagination {
+	if offset < 0 {
+		offset = 0
+	}
+
+	so.Offset = offset
+	return so
+}

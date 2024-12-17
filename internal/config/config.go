@@ -1,11 +1,10 @@
 package config
 
 import (
+	"github.com/Drafteame/draft/internal/pkg/files"
 	"os"
 
 	"github.com/BurntSushi/toml"
-
-	"github.com/Drafteame/draft/internal/files"
 )
 
 const configPath = "$HOME/.draftea/draft/config.toml"

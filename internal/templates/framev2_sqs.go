@@ -32,7 +32,7 @@ func loadFrameV2SqsMainGo(v *SLS, data any) error {
 	name := "framev2/sqs/main.go"
 	path := "tmpl/sls/framev2/sqs/main.go.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func loadFrameV2SqsLambdaConfigYAML(v *SLS, data any) error {
 	name := "framev2/sqs/lambda-config.yml"
 	path := "tmpl/sls/framev2/sqs/lambda-config.yml.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func loadFrameV2SqsHandlerBoostrapGo(v *SLS, data any) error {
 	name := "framev2/sqs/handler/bootstrap.go"
 	path := "tmpl/sls/framev2/sqs/handler/bootstrap.go.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func loadFrameV2SqsHandlerHandlerGo(v *SLS, data any) error {
 	name := "framev2/sqs/handler/handler.go"
 	path := "tmpl/sls/framev2/sqs/handler/handler.go.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func loadFrameV2SqsHandlerWorkerGo(v *SLS, data any) error {
 	name := "framev2/sqs/handler/worker.go"
 	path := "tmpl/sls/framev2/sqs/handler/worker.go.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}

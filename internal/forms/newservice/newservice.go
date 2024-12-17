@@ -2,13 +2,12 @@ package newservice
 
 import (
 	"errors"
+	"github.com/Drafteame/draft/internal/dtos"
 
 	"github.com/charmbracelet/huh"
-
-	"github.com/Drafteame/draft/internal/actions/dtos"
 )
 
-func GetForm(input *dtos.Input) error {
+func GetForm(input *dtos.ServiceInput) error {
 	if err := newServiceDetails(input); err != nil {
 		return err
 	}
@@ -16,7 +15,7 @@ func GetForm(input *dtos.Input) error {
 	return newServiceFrameDetails(input)
 }
 
-func newServiceDetails(input *dtos.Input) error {
+func newServiceDetails(input *dtos.ServiceInput) error {
 	input.ServiceFramework = "sls"
 
 	serviceName := huh.NewInput().
@@ -46,7 +45,7 @@ func newServiceDetails(input *dtos.Input) error {
 	return huh.NewForm(group1).WithTheme(huh.ThemeCharm()).Run()
 }
 
-func newServiceFrameDetails(input *dtos.Input) error {
+func newServiceFrameDetails(input *dtos.ServiceInput) error {
 	inputs := make([]huh.Field, 0)
 
 	warmupEnabled := huh.NewConfirm().

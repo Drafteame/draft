@@ -1,0 +1,22 @@
+package service
+
+import (
+	"context"
+	"errors"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
+)
+
+func (s *Service) Delete(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error) {
+	got, err := s.repo.Delete(ctx, id)
+	if err != nil {
+		return domain.DomainNamePascal{}, err
+	}
+
+	model, err := domain.ToModel(got)
+	if err != nil {
+		return domain.DomainNamePascal{}, errors.Join(domain.ErrDAOConvertion, err)
+	}
+
+	return model, nil
+}

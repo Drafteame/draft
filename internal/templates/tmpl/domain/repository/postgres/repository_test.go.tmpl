@@ -1,0 +1,64 @@
+package repository_test
+
+import (
+	"testing"
+	"time"
+
+	prv{{.DomainNameLower}} "{{.PackageName}}/domains/{{.DomainPath}}/providers"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository"
+	"{{.PackageName}}/pkg/datetime"
+	"{{.PackageName}}/pkg/providers"
+	"{{.PackageName}}/pkg/providers/test/container"
+)
+
+type testWrapper struct {
+	mu    *container.Container
+	clock datetime.Clock
+	repo  *repository.Repository
+}
+
+type testWrapperOptions struct {
+	mocks map[string]any
+}
+
+type testWrapperOption func(*testWrapperOptions)
+
+func withMocks(mocks map[string]any) testWrapperOption {
+	return func(o *testWrapperOptions) {
+		o.mocks = mocks
+	}
+}
+
+func newTestWrapper(t *testing.T, opts ...testWrapperOption) *testWrapper {
+	t.Helper()
+
+	options := testWrapperOptions{}
+
+    for _, opt := range opts {
+        opt(&options)
+    }
+
+    clock := datetime.NewTestClock(time.Now())
+
+    mu := container.New(t)
+
+    for key, value := range options.mocks {
+        mu.Override(key, value)
+    }
+
+	repo, err := prv{{.DomainNameLower}}.ProvideRepository(
+		providers.WithTestActor(t),
+		providers.WithClock(clock),
+		providers.WithContainer(mu),
+	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return &testWrapper{
+		mu:    mu,
+		clock: clock,
+		repo:  repo,
+	}
+}
