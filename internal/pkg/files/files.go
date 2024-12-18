@@ -27,7 +27,9 @@ func ScanAndWrite(path string, cb func(line string) (string, error)) error {
 			return err
 		}
 
-		newContent.WriteString(newLine)
+		if _, errWrite := newContent.WriteString(newLine); errWrite != nil {
+			return errWrite
+		}
 	}
 
 	return Create(path, []byte(newContent.String()))
