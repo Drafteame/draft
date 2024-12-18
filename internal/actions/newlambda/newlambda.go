@@ -3,12 +3,12 @@ package newlambda
 import (
 	"errors"
 	"fmt"
-	dtos2 "github.com/Drafteame/draft/internal/dtos"
-	"github.com/Drafteame/draft/internal/pkg/files"
 	"os"
 	"strings"
 
 	"github.com/Drafteame/draft/internal/data"
+	dtos2 "github.com/Drafteame/draft/internal/dtos"
+	"github.com/Drafteame/draft/internal/pkg/files"
 	"github.com/Drafteame/draft/internal/templates"
 )
 

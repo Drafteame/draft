@@ -2,8 +2,10 @@ package newdomain
 
 import (
 	"errors"
-	"github.com/Drafteame/draft/internal/dtos"
+
 	"github.com/charmbracelet/huh"
+
+	"github.com/Drafteame/draft/internal/dtos"
 )
 
 func postgresForm(input *dtos.DomainInput) error {

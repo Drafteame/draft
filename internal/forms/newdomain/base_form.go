@@ -2,12 +2,14 @@ package newdomain
 
 import (
 	"errors"
-	"github.com/Drafteame/draft/internal/dtos"
+	"strings"
+
 	"github.com/charmbracelet/huh"
 	"github.com/samber/lo"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"strings"
+
+	"github.com/Drafteame/draft/internal/dtos"
 )
 
 func baseForm(input *dtos.DomainInput) error {

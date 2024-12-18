@@ -1,13 +1,13 @@
 package newservice
 
 import (
-	"github.com/Drafteame/draft/internal/dtos"
 	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/Drafteame/draft/internal/actions/newservice"
 	"github.com/Drafteame/draft/internal/data"
+	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms"
 )
 

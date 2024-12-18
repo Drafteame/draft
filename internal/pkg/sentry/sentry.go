@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	http2 "github.com/Drafteame/draft/internal/pkg/http"
 	"io"
 	"time"
 
 	"github.com/getsentry/sentry-go"
 
 	"github.com/Drafteame/draft/internal/config"
+	http2 "github.com/Drafteame/draft/internal/pkg/http"
 )
 
 const baseURL = "https://sentry.io"

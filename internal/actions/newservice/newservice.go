@@ -2,11 +2,11 @@ package newservice
 
 import (
 	"errors"
-	dtos2 "github.com/Drafteame/draft/internal/dtos"
-	"github.com/Drafteame/draft/internal/pkg/dirs"
 	"os"
 
 	"github.com/Drafteame/draft/internal/data"
+	dtos2 "github.com/Drafteame/draft/internal/dtos"
+	"github.com/Drafteame/draft/internal/pkg/dirs"
 	"github.com/Drafteame/draft/internal/project"
 	"github.com/Drafteame/draft/internal/templates"
 )

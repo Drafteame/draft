@@ -1,10 +1,11 @@
 package newservice
 
 import (
-	"github.com/Drafteame/draft/internal/pkg/exec"
 	"os"
 
 	"github.com/charmbracelet/huh/spinner"
+
+	"github.com/Drafteame/draft/internal/pkg/exec"
 )
 
 func (css *NewService) postCreate() error {

@@ -1,15 +1,15 @@
 package newdomain
 
 import (
-	"github.com/Drafteame/draft/internal/actions/newdomain"
-	"github.com/Drafteame/draft/internal/dtos"
-	"github.com/Drafteame/draft/internal/templates"
 	"os"
 
 	"github.com/spf13/cobra"
 
+	"github.com/Drafteame/draft/internal/actions/newdomain"
 	"github.com/Drafteame/draft/internal/data"
+	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms"
+	"github.com/Drafteame/draft/internal/templates"
 )
 
 var cmd = &cobra.Command{

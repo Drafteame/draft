@@ -1,11 +1,13 @@
 package newdomain
 
 import (
-	"github.com/Drafteame/draft/internal/data"
-	"github.com/Drafteame/draft/internal/pkg/files"
+	"strings"
+
 	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
-	"strings"
+
+	"github.com/Drafteame/draft/internal/data"
+	"github.com/Drafteame/draft/internal/pkg/files"
 )
 
 func (nd *NewDomain) postCreate() error {

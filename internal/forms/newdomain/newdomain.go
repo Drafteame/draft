@@ -2,10 +2,11 @@ package newdomain
 
 import (
 	"fmt"
-	"github.com/Drafteame/draft/internal/data"
-	"github.com/Drafteame/draft/internal/dtos"
 	"regexp"
 	"strings"
+
+	"github.com/Drafteame/draft/internal/data"
+	"github.com/Drafteame/draft/internal/dtos"
 )
 
 func GetForm(input *dtos.DomainInput) error {
