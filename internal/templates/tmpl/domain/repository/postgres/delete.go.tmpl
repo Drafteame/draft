@@ -16,7 +16,7 @@ func (r *Repository) Delete(ctx context.Context, id string) (daos.{{.DomainNameP
 
 	now := r.clock.Now()
 
-	update := daos.DeleteSome{
+	update := daos.Delete{{.DomainNamePascal}}{
 		ID:        id,
 		DeletedAt: &now,
 	}

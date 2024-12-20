@@ -24,7 +24,7 @@ func loadDomainsDomain(v *Domain, data any) error {
 
 func loadDomainDomainGo(v *Domain, data any) error {
 	name := "domains/domain.go"
-	path := "tmpl/domain/domain.go.tmpl"
+	path := "tmpl/domain/domain/domain.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -38,7 +38,7 @@ func loadDomainDomainGo(v *Domain, data any) error {
 
 func loadDomainErrorsGo(v *Domain, data any) error {
 	name := "domains/errors.go"
-	path := "tmpl/domain/errors.go.tmpl"
+	path := "tmpl/domain/domain/errors.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -82,7 +82,7 @@ func loadDomainsDomainOptions(v *DomainOptions, data any) error {
 
 func loadDomainOptionsSearchGo(v *DomainOptions, data any) error {
 	name := "domains/options/search.go"
-	path := "tmpl/domain/options/search.go.tmpl"
+	path := "tmpl/domain/domain/options/search.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -96,7 +96,7 @@ func loadDomainOptionsSearchGo(v *DomainOptions, data any) error {
 
 func loadDomainOptionsSearchFiltersGo(v *DomainOptions, data any) error {
 	name := "domains/options/search_filters.go"
-	path := "tmpl/domain/options/search_filters.go.tmpl"
+	path := "tmpl/domain/domain/options/search_filters.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -110,7 +110,7 @@ func loadDomainOptionsSearchFiltersGo(v *DomainOptions, data any) error {
 
 func loadDomainOptionsSearchOrdersGo(v *DomainOptions, data any) error {
 	name := "domains/options/search_orders.go"
-	path := "tmpl/domain/options/search_orders.go.tmpl"
+	path := "tmpl/domain/domain/options/search_orders.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -124,7 +124,7 @@ func loadDomainOptionsSearchOrdersGo(v *DomainOptions, data any) error {
 
 func loadDomainOptionsSearchPaginationGo(v *DomainOptions, data any) error {
 	name := "domains/options/search_pagination.go"
-	path := "tmpl/domain/options/search_pagination.go.tmpl"
+	path := "tmpl/domain/domain/options/search_pagination.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -138,7 +138,7 @@ func loadDomainOptionsSearchPaginationGo(v *DomainOptions, data any) error {
 
 func loadDomainOptionsUpdateFieldsGo(v *DomainOptions, data any) error {
 	name := "domains/options/update_fields.go"
-	path := "tmpl/domain/options/update_fields.go.tmpl"
+	path := "tmpl/domain/domain/options/update_fields.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {

@@ -45,6 +45,15 @@ func Read(path string) ([]byte, error) {
 	return io.ReadAll(file)
 }
 
+func ReadString(path string) (string, error) {
+	content, err := Read(path)
+	if err != nil {
+		return "", err
+	}
+
+	return string(content), nil
+}
+
 func Create(path string, newContent []byte) error {
 	path = os.ExpandEnv(path)
 	return os.WriteFile(path, newContent, 0755)

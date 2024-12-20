@@ -18,10 +18,10 @@ func (s *Service) Create(ctx context.Context, m domain.{{.DomainNamePascal}}) (d
 		return domain.{{.DomainNamePascal}}{}, err
 	}
 
-	m, err = domain.ToModel(dao)
-	if err != nil {
-		return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
-	}
+	newModel, errToModel := domain.ToModel(dao)
+    	if errToModel != nil {
+    		return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, errToModel)
+    	}
 
-	return m, nil
+    	return newModel, nil
 }

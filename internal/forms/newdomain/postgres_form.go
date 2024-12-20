@@ -3,57 +3,60 @@ package newdomain
 import (
 	"errors"
 
-	"github.com/charmbracelet/huh"
-
 	"github.com/Drafteame/draft/internal/dtos"
+	"github.com/Drafteame/draft/internal/inputs"
 )
 
 func postgresForm(input *dtos.DomainInput) error {
-	err := huh.NewInput().
-		Title("Table Name:").
-		Description("Enter the name of the table to use on this domain (you can specify schema to by using 'schema.table' notation).").
-		Value(&input.TableName).
-		Validate(func(s string) error {
+	err := inputs.Text("Table Name:",
+		inputs.WithDescription[string]("Enter the name of the table to use on this domain (you can specify schema to by using 'schema.table' notation)."),
+		inputs.WithValue(&input.TableName),
+		inputs.WithValidation(func(s string) error {
 			if s == "" {
 				return errors.New("table name cannot be empty")
 			}
 
 			return nil
-		}).WithTheme(huh.ThemeCharm()).Run()
+		}),
+	)
 
 	if err != nil {
 		return err
 	}
 
-	err = huh.NewInput().
-		Title("Set ID prefix:").
-		Description("Enter the prefix to use for values on the ID field (length should be 3 chars)").
-		Value(&input.DBPrefix).
-		Validate(func(s string) error {
+	err = inputs.Text("Set ID Prefix:",
+		inputs.WithDescription[string]("Enter the prefix to use for values on the ID field (length should be 3 chars)"),
+		inputs.WithValue(&input.DBPrefix),
+		inputs.WithValidation(func(s string) error {
 			if len(s) != 3 {
 				return errors.New("prefix should be 3 characters long")
 			}
 
 			return nil
-		}).WithTheme(huh.ThemeCharm()).Run()
+		}),
+	)
 
 	if err != nil {
 		return err
 	}
 
-	err = huh.NewSelect[string]().
-		Title("Select an available database to connect:").
-		Description("Select the database that should be connected on the domain").
-		Value(&input.DBName).
-		Options(
-			huh.NewOption("General", "General"),
-			huh.NewOption("Turbo", "turbo"),
-			huh.NewOption("Kyc", "Kyc"),
-			huh.NewOption("Fraud", "Fraud"),
-			huh.NewOption("Audiences", "Audiences"),
-			huh.NewOption("Notification Engine", "NotificationEngine"),
-			huh.NewOption("User Audiences", "UserAudiences"),
-		).WithTheme(huh.ThemeCharm()).Run()
+	err = inputs.Select[string]("Select an available database to connect:",
+		inputs.WithDescription[string]("Select the database that should be connected on the domain"),
+		inputs.WithValue(&input.DBName),
+		inputs.WithOptions(map[string]string{
+			"Audiences":           "Audiences",
+			"Data Products":       "DataProducts",
+			"Fraud":               "fraud",
+			"Games Core":          "GamesCore",
+			"General":             "General",
+			"Kyc":                 "Kyc",
+			"Notification Engine": "NotificationEngine",
+			"Scores":              "Scores",
+			"Stats":               "Stats",
+			"Turbo":               "Turbo",
+			"User Preferences":    "UserPreferences",
+		}),
+	)
 
 	if err != nil {
 		return err

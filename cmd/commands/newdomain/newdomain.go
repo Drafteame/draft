@@ -9,7 +9,6 @@ import (
 	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms"
-	"github.com/Drafteame/draft/internal/templates"
 )
 
 var cmd = &cobra.Command{
@@ -24,10 +23,6 @@ func run(_ *cobra.Command, _ []string) {
 		if err := os.Chdir(data.Flags.WorkingDir); err != nil {
 			panic(err)
 		}
-	}
-
-	if data.Flags.Debug {
-		templates.PrintDomainFiles()
 	}
 
 	data.LoadMeta()

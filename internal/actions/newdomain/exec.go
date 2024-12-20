@@ -30,6 +30,8 @@ func (nd *NewDomain) createAllDirs() error {
 	dirList := []string{
 		"domains/" + nd.input.DomainPath + "/service",
 		"domains/" + nd.input.DomainPath + "/repository",
+		"domains/" + nd.input.DomainPath + "/repository/builders",
+		"domains/" + nd.input.DomainPath + "/repository/daos",
 		"domains/" + nd.input.DomainPath + "/providers",
 		"domains/" + nd.input.DomainPath + "/domain/options",
 	}

@@ -4,26 +4,26 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/charmbracelet/huh"
 	"github.com/samber/lo"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
 	"github.com/Drafteame/draft/internal/dtos"
+	"github.com/Drafteame/draft/internal/inputs"
 )
 
 func baseForm(input *dtos.DomainInput) error {
-	err := huh.NewInput().
-		Title("Domain Path:").
-		Description("Enter the path to the domain excluding 'domains' folder.").
-		Value(&input.DomainPath).
-		Validate(func(s string) error {
-			if s == "" {
+	err := inputs.Text("Domain Path:",
+		inputs.WithValue(&input.DomainPath),
+		inputs.WithDescription[string]("Enter the path to the domain excluding 'domains' folder."),
+		inputs.WithValidation(func(val string) error {
+			if val == "" {
 				return errors.New("domain path cannot be empty")
 			}
 
 			return nil
-		}).WithTheme(huh.ThemeCharm()).Run()
+		}),
+	)
 
 	if err != nil {
 		return err
@@ -37,14 +37,13 @@ func baseForm(input *dtos.DomainInput) error {
 	input.DomainNameLower = strings.ToLower(input.DomainName)
 	input.DomainNamePascal = cases.Title(language.English).String(input.DomainName)
 
-	err = huh.NewSelect[string]().
-		Title("Select DB Type:").
-		Description("Select the type of database you want to use").
-		Value(&input.DBType).
-		Options(
-			huh.NewOption("Postgres", "postgres"),
-			// huh.NewOption("Mongo", "mongo"),
-		).WithTheme(huh.ThemeCharm()).Run()
+	err = inputs.Select[string]("Select DB Type:",
+		inputs.WithDescription[string]("Select the type of database you want to use"),
+		inputs.WithValue(&input.DBType),
+		inputs.WithOptions(map[string]string{
+			"Postgres": "postgres",
+		}),
+	)
 
 	return err
 }

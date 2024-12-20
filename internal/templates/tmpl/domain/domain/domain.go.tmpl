@@ -6,7 +6,7 @@ import (
 	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
 )
 
-type Some struct {
+type {{.DomainNamePascal}} struct {
 	ID string
 
 	// TODO: Add fields
@@ -28,7 +28,7 @@ func ToModel(m daos.{{.DomainNamePascal}}) (Some, error) {
 	}, nil
 }
 
-func ToDAO(m Some) (daos.{{.DomainNamePascal}}, error) {
+func ToDAO(m {{.DomainNamePascal}}) (daos.{{.DomainNamePascal}}, error) {
 	return daos.{{.DomainNamePascal}}{
 		ID: m.ID,
 
