@@ -1,0 +1,42 @@
+package builders
+
+import (
+	"gorm.io/gorm"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+)
+
+type searchPaginationBuilder func(*gorm.DB, options.SearchPagination) *gorm.DB
+
+func buildSearchPagination(gormDB *gorm.DB, pag options.SearchPagination) *gorm.DB {
+	builders := []searchPaginationBuilder{
+		buildSearchPaginationLimit,
+		buildSearchPaginationOffset,
+	}
+
+	for _, build := range builders {
+		gormDB = build(gormDB, pag)
+	}
+
+	return gormDB
+}
+
+func buildSearchPaginationLimit(query *gorm.DB, pag options.SearchPagination) *gorm.DB {
+	if pag.Limit > 0 {
+		if pag.Limit > options.MaxPaginationLimit {
+			pag.Limit = options.MaxPaginationLimit
+		}
+
+		query = query.Limit(int(pag.Limit))
+	}
+
+	return query
+}
+
+func buildSearchPaginationOffset(query *gorm.DB, pag options.SearchPagination) *gorm.DB {
+	if pag.Offset > 0 {
+		query = query.Offset(int(pag.Offset))
+	}
+
+	return query
+}

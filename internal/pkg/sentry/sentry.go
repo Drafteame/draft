@@ -10,7 +10,7 @@ import (
 	"github.com/getsentry/sentry-go"
 
 	"github.com/Drafteame/draft/internal/config"
-	"github.com/Drafteame/draft/internal/http"
+	http2 "github.com/Drafteame/draft/internal/pkg/http"
 )
 
 const baseURL = "https://sentry.io"
@@ -39,7 +39,7 @@ func CreateProject(name string) (string, error) {
 		return "", err
 	}
 
-	res, errPost := http.Post(context.Background(), url, jb, headers)
+	res, errPost := http2.Post(context.Background(), url, jb, headers)
 	if errPost != nil {
 		return "", errPost
 	}
@@ -79,7 +79,7 @@ func GetClientKeys(projectID string) (map[string]string, error) {
 
 	url := baseURL + "/api/0/projects/" + org + "/" + projectID + "/keys/"
 
-	res, errGet := http.Get(context.Background(), url, headers)
+	res, errGet := http2.Get(context.Background(), url, headers)
 	if errGet != nil {
 		return nil, errGet
 	}

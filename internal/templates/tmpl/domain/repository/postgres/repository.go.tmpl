@@ -1,0 +1,19 @@
+package repository
+
+import (
+	"{{.PackageName}}/projects/framev2/pkg/drivers/gorm"
+)
+
+type Repository struct {
+	genID  GeneratorID
+	clock  Clock
+	driver gorm.Driver
+}
+
+func New(config gorm.Driver, clock Clock, genID GeneratorID) *Repository {
+	return &Repository{
+		genID:  genID,
+		clock:  clock,
+		driver: config,
+	}
+}

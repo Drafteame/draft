@@ -1,0 +1,46 @@
+package builders
+
+import (
+	"fmt"
+	"strings"
+
+	"gorm.io/gorm"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+)
+
+type searchOrdersBuilder func(options.SearchOrders) string
+
+func buildSearchOrders(gormDB *gorm.DB, orders options.SearchOrders) *gorm.DB {
+	builders := []searchOrdersBuilder{
+		buildCreatedAtOrder,
+		// TODO: [generated] add search orders
+	}
+
+	args := make([]string, 0)
+	for _, build := range builders {
+		arg := build(orders)
+		if arg != "" {
+			args = append(args, arg)
+		}
+	}
+
+	if len(args) == 0 {
+		return gormDB
+	}
+
+	query := strings.Join(args, ", ")
+	gormDB = gormDB.Order(query)
+
+	return gormDB
+}
+
+func buildCreatedAtOrder(orders options.SearchOrders) string {
+	if orders.CreatedAt == nil {
+		return ""
+	}
+
+	return fmt.Sprintf("created_at %s", *orders.CreatedAt)
+}
+
+// TODO: [generated] add search orders builder functions

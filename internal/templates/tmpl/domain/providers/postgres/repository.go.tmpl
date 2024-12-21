@@ -1,0 +1,53 @@
+package providers
+
+import (
+	"context"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+	"{{.PackageName}}/pkg/providers"
+	prvclock "{{.PackageName}}/pkg/providers/clock"
+	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
+)
+
+type Repository interface {
+	Get(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error)
+	Create(ctx context.Context, m daos.{{.DomainNamePascal}}) (daos.{{.DomainNamePascal}}, error)
+	Update(ctx context.Context, id string, fields options.UpdateFields) (daos.{{.DomainNamePascal}}, error)
+	Delete(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error)
+	Search(ctx context.Context, opts options.SearchOptions) ([]daos.{{.DomainNamePascal}}, int64, error)
+	SearchOne(ctx context.Context, filters options.SearchFilters) (daos.{{.DomainNamePascal}}, error)
+}
+
+func ProvideRepository(opts ...providers.Option) (Repository, error) {
+	gen, err := ProvideGeneratorID(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	buildOpts, err := providers.BuildOptions(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	if buildOpts.Container.Exists(PrvRepository) {
+		return buildOpts.Container.Get(PrvRepository).(Repository), nil
+	}
+
+	clock, err := prvclock.ProvideClock(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	driver, err := prvpostgres.Provide{{.DBProviderFuncName}}(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	repo := repository.New(driver, clock, gen)
+
+	buildOpts.Container.Set(PrvRepository, repo)
+
+	return repo, nil
+}

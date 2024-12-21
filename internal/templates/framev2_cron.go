@@ -31,7 +31,7 @@ func loadFrameV2CronMainGo(v *SLS, data any) error {
 	name := "framev2/cron/main.go"
 	path := "tmpl/sls/framev2/cron/main.go.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func loadFrameV2CronLambdaConfigYAML(v *SLS, data any) error {
 	name := "framev2/cron/lambda-config.yml"
 	path := "tmpl/sls/framev2/cron/lambda-config.yml.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func loadFrameV2CronHandlerBootstrapGo(v *SLS, data any) error {
 	name := "framev2/cron/handler/bootstrap.go"
 	path := "tmpl/sls/framev2/cron/handler/bootstrap.go.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func loadFrameV2CronHandlerHandlerGo(v *SLS, data any) error {
 	name := "framev2/cron/handler/handler.go"
 	path := "tmpl/sls/framev2/cron/handler/handler.go.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}

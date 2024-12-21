@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Drafteame/draft/internal/actions/dtos"
 	"github.com/Drafteame/draft/internal/actions/newlambda"
 	"github.com/Drafteame/draft/internal/data"
+	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms"
 )
 
@@ -27,7 +27,7 @@ func run(_ *cobra.Command, _ []string) {
 
 	data.LoadMeta()
 
-	input := dtos.Input{}
+	input := dtos.ServiceInput{}
 
 	if err := forms.NewLambda(&input); err != nil {
 		panic(err)

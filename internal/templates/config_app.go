@@ -17,7 +17,7 @@ func loadConfigAppAppPkl(v *SLS, data any) error {
 	name := "config/app/app.pkl"
 	path := "tmpl/sls/config/app/app.pkl.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func loadConfigAppModulesPkl(v *SLS, data any) error {
 	name := "config/app/modules.pkl"
 	path := "tmpl/sls/config/app/modules.pkl.tmpl"
 
-	content, err := loadTemplate(name, path, data)
+	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}

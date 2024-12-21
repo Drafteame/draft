@@ -1,0 +1,21 @@
+package service
+
+import (
+	"context"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
+)
+
+func (s *Service) Get(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error) {
+	item, err := s.repo.Get(ctx, id)
+	if err != nil {
+		return domain.{{.DomainNamePascal}}{}, err
+	}
+
+	model, err := domain.ToModel(item)
+	if err != nil {
+		return domain.{{.DomainNamePascal}}{}, err
+	}
+
+	return model, nil
+}

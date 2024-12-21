@@ -1,0 +1,27 @@
+package daos
+
+import (
+	"time"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+)
+
+type Update{{.DomainNamePascal}} struct {
+	ID string `gorm:"primaryKey;column:id"`
+
+	// TODO: [generated] add update fields
+
+	UpdatedAt time.Time `gorm:"column:updated_at"`
+}
+
+func (s Update{{.DomainNamePascal}}) TableName() string {
+	return "{{.TableName}}"
+}
+
+func ToUpdateDAO(id string, fields options.UpdateFields) Update{{.DomainNamePascal}} {
+	return Update{{.DomainNamePascal}}{
+		ID: id,
+
+		// TODO: [generated] assign update fields
+	}
+}

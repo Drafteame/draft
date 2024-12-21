@@ -1,0 +1,36 @@
+package repository
+
+import (
+	"context"
+	"errors"
+	"strings"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+)
+
+func (r *Repository) Create(ctx context.Context, entity daos.{{.DomainNamePascal}}) (daos.{{.DomainNamePascal}}, error) {
+	if entity.ID == "" {
+		id, err := r.genID.Generate()
+		if err != nil {
+			return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
+		}
+
+		entity.ID = id
+	}
+
+	if err := r.driver.GetClient().WithContext(ctx).Create(&entity).Error; err != nil {
+		if strings.Contains(err.Error(), "duplicate key") {
+			return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrDuplicatedRecord, err)
+		}
+
+		return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
+	}
+
+	createdEntity, err := r.Get(ctx, entity.ID)
+	if err != nil {
+		return daos.{{.DomainNamePascal}}{}, err
+	}
+
+	return createdEntity, nil
+}

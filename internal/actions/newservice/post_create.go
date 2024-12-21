@@ -5,7 +5,7 @@ import (
 
 	"github.com/charmbracelet/huh/spinner"
 
-	"github.com/Drafteame/draft/internal/exec"
+	"github.com/Drafteame/draft/internal/pkg/exec"
 )
 
 func (css *NewService) postCreate() error {

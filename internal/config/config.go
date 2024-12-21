@@ -5,7 +5,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"github.com/Drafteame/draft/internal/files"
+	"github.com/Drafteame/draft/internal/pkg/files"
 )
 
 const configPath = "$HOME/.draftea/draft/config.toml"

@@ -9,10 +9,13 @@ import (
 var (
 	//go:embed tmpl/sls
 	sls embed.FS
+
+	//go:embed tmpl/domain
+	domain embed.FS
 )
 
-func loadTemplate(name, path string, data any) ([]byte, error) {
-	content, err := sls.ReadFile(path)
+func loadTemplate(name, path string, data any, fs embed.FS) ([]byte, error) {
+	content, err := fs.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

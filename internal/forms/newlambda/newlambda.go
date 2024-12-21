@@ -1,10 +1,10 @@
 package newlambda
 
 import (
-	"github.com/Drafteame/draft/internal/actions/dtos"
+	"github.com/Drafteame/draft/internal/dtos"
 )
 
-func GetForm(input *dtos.Input) error {
+func GetForm(input *dtos.ServiceInput) error {
 	if err := baseForm(input); err != nil {
 		return err
 	}

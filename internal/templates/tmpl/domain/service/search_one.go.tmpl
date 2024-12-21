@@ -1,0 +1,22 @@
+package service
+
+import (
+	"context"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+)
+
+func (s *Service) SearchOne(ctx context.Context, filters options.SearchFilters) (domain.{{.DomainNamePascal}}, error) {
+	got, err := s.repo.SearchOne(ctx, filters)
+	if err != nil {
+		return domain.{{.DomainNamePascal}}{}, err
+	}
+
+	model, err := domain.ToModel(got)
+	if err != nil {
+		return domain.{{.DomainNamePascal}}{}, err
+	}
+
+	return model, nil
+}

@@ -6,19 +6,19 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Drafteame/draft/internal/actions/dtos"
 	"github.com/Drafteame/draft/internal/data"
-	"github.com/Drafteame/draft/internal/files"
+	dtos2 "github.com/Drafteame/draft/internal/dtos"
+	"github.com/Drafteame/draft/internal/pkg/files"
 	"github.com/Drafteame/draft/internal/templates"
 )
 
 type NewLambda struct {
 	tmpl       templates.SLS
-	input      dtos.Input
+	input      dtos2.ServiceInput
 	lambdaPath string
 }
 
-func GetAction(input dtos.Input) *NewLambda {
+func GetAction(input dtos2.ServiceInput) *NewLambda {
 	input.PackageName = data.Meta.PackageName
 	input.ServicePath = "services/" + input.ServicePath
 
@@ -62,7 +62,7 @@ func (nl *NewLambda) Exec() error {
 	return nl.addToDepsGo()
 }
 
-func (nl *NewLambda) createFiles(files ...dtos.FileEntry) error {
+func (nl *NewLambda) createFiles(files ...dtos2.FileEntry) error {
 	for _, file := range files {
 		path := nl.lambdaPath + file.Path
 

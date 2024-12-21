@@ -1,0 +1,15 @@
+package daos
+
+import "time"
+
+type Delete{{.DomainNamePascal}} struct {
+	ID string `gorm:"primaryKey;column:id"`
+
+	// TODO: Add fields
+
+	DeletedAt *time.Time `gorm:"column:deleted_at"`
+}
+
+func (s Delete{{.DomainNamePascal}}) TableName() string {
+	return "{{.TableName}}"
+}

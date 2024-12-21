@@ -1,0 +1,61 @@
+package options
+
+type SearchOptions struct {
+	Filters    SearchFilters
+	Orders     SearchOrders
+	Pagination SearchPagination
+}
+
+func NewSearchOptions() SearchOptions {
+	return SearchOptions{
+		Pagination: SearchPagination{Limit: DefaultPaginationLimit},
+	}
+}
+
+func (so SearchOptions) SetFilters(filters SearchFilters) SearchOptions {
+	so.Filters = filters
+	return so
+}
+
+func (so SearchOptions) SetOrders(orders SearchOrders) SearchOptions {
+	so.Orders = orders
+	return so
+}
+
+func (so SearchOptions) SetPagination(pagination SearchPagination) SearchOptions {
+	so.Pagination = pagination
+	return so
+}
+
+// Filters
+// -------------------------------------------------------------------
+
+// TODO: [generated] add filter methods
+//
+// Example:
+//
+// func (so SearchOptions) FilterUserID(userID string) SearchOptions {
+//     so.Filters = so.Filters.SetUserID(userID)
+//     return so
+// }
+
+// Orders
+// -------------------------------------------------------------------
+
+func (so SearchOptions) OrderByCreatedAt(order string) SearchOptions {
+	so.Orders = so.Orders.SetCreatedAt(order)
+	return so
+}
+
+// Pagination
+// -------------------------------------------------------------------
+
+func (so SearchOptions) Limit(limit int64) SearchOptions {
+	so.Pagination = so.Pagination.SetLimit(limit)
+	return so
+}
+
+func (so SearchOptions) Offset(offset int64) SearchOptions {
+	so.Pagination = so.Pagination.SetOffset(offset)
+	return so
+}

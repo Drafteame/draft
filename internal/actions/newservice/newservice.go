@@ -4,19 +4,19 @@ import (
 	"errors"
 	"os"
 
-	"github.com/Drafteame/draft/internal/actions/dtos"
 	"github.com/Drafteame/draft/internal/data"
-	"github.com/Drafteame/draft/internal/dirs"
+	dtos2 "github.com/Drafteame/draft/internal/dtos"
+	"github.com/Drafteame/draft/internal/pkg/dirs"
 	"github.com/Drafteame/draft/internal/project"
 	"github.com/Drafteame/draft/internal/templates"
 )
 
 type NewService struct {
 	tmpl  templates.SLS
-	input dtos.Input
+	input dtos2.ServiceInput
 }
 
-func GetAction(input dtos.Input) *NewService {
+func GetAction(input dtos2.ServiceInput) *NewService {
 	input.LambdaName = "helloworld"
 	input.LambdaType = "plain"
 	input.PackageName = data.Meta.PackageName
@@ -96,8 +96,8 @@ func (css *NewService) createFiles() error {
 	return nil
 }
 
-func (css *NewService) getFileList() []dtos.FileEntry {
-	entries := []dtos.FileEntry{
+func (css *NewService) getFileList() []dtos2.FileEntry {
+	entries := []dtos2.FileEntry{
 		{Path: "/serverless.yml", Data: css.tmpl.ServerlessYAML},
 		{Path: "/package.json", Data: css.tmpl.PackageJSON},
 		{Path: "/deps.go", Data: css.tmpl.DepsGo},
@@ -114,8 +114,8 @@ func (css *NewService) getFileList() []dtos.FileEntry {
 	return entries
 }
 
-func (css *NewService) getFrameV2Entries() []dtos.FileEntry {
-	return []dtos.FileEntry{
+func (css *NewService) getFrameV2Entries() []dtos2.FileEntry {
+	return []dtos2.FileEntry{
 		{Path: "/cmd/plain/" + css.input.LambdaName + "/main.go", Data: css.tmpl.FrameV2.Plain.MainGo},
 		{Path: "/cmd/plain/" + css.input.LambdaName + "/lambda-config.yml", Data: css.tmpl.FrameV2.Plain.LambdaConfigYAML},
 		{Path: "/cmd/plain/" + css.input.LambdaName + "/handler/handler.go", Data: css.tmpl.FrameV2.Plain.Handler.HandlerGo},

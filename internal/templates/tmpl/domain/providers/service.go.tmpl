@@ -1,0 +1,28 @@
+package providers
+
+import (
+	"{{.PackageName}}/domains/{{.DomainPath}}/service"
+	"{{.PackageName}}/pkg/providers"
+)
+
+func ProvideService(opts ...providers.Option) (*service.Service, error) {
+	options, err := providers.BuildOptions(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	if options.Container.Exists(PrvService) {
+		return options.Container.Get(PrvService).(*service.Service), nil
+	}
+
+	repo, err := ProvideRepository(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := service.New(repo)
+
+	options.Container.Set(PrvService, svc)
+
+	return svc, nil
+}

@@ -5,10 +5,10 @@ import (
 
 	"github.com/charmbracelet/huh"
 
-	"github.com/Drafteame/draft/internal/actions/dtos"
+	"github.com/Drafteame/draft/internal/dtos"
 )
 
-func httpForm(input *dtos.Input) error {
+func httpForm(input *dtos.ServiceInput) error {
 	httpMethod := huh.NewSelect[string]().
 		Title("Select HTTP Method:").
 		Options(

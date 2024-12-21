@@ -1,0 +1,76 @@
+package repository_test
+
+import (
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+)
+
+func TestCreate(t *testing.T) {
+	t.Parallel()
+
+	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
+		tw := newTestWrapper(t)
+
+		data := daos.{{.DomainNamePascal}}{
+			// TODO: set fields
+		}
+
+		got, err := tw.repo.Create(context.TODO(), data)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.NotEmpty(t, got.ID)
+		assert.NotEmpty(t, got.CreatedAt)
+		assert.NotEmpty(t, got.UpdatedAt)
+
+		// TODO: assert other fields
+	})
+
+	t.Run("success with not generated id", func(t *testing.T) {
+		t.Parallel()
+
+		tw := newTestWrapper(t)
+
+		data := daos.{{.DomainNamePascal}}{
+			ID: "some-id",
+		}
+
+		got, err := tw.repo.Create(context.TODO(), data)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, data.ID, got.ID)
+		assert.NotEmpty(t, got.CreatedAt)
+		assert.NotEmpty(t, got.UpdatedAt)
+
+		// TODO: assert other fields
+	})
+
+	t.Run("primary key constraint error", func(t *testing.T) {
+		t.Parallel()
+
+		tw := newTestWrapper(t)
+
+		data := daos.{{.DomainNamePascal}}{
+			ID: "some-id",
+		}
+
+		if _, err := tw.repo.Create(context.TODO(), data); err != nil {
+			t.Fatal(err)
+		}
+
+		_, err := tw.repo.Create(context.TODO(), data)
+
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, domain.ErrDuplicatedRecord)
+	})
+}

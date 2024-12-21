@@ -1,0 +1,53 @@
+package repository_test
+
+import (
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+)
+
+func TestSearch(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		name          string
+		searchOptions options.SearchOptions
+		data          []daos.{{.DomainNamePascal}}
+		expected      int
+		err           error
+	}
+
+	cases := []testCase{
+		// TODO: [generated] Add test cases
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			tw := newTestWrapper(t)
+
+			for _, item := range tc.data {
+				if _, err := tw.repo.Create(context.TODO(), item); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			result, total, err := tw.repo.Search(context.TODO(), tc.searchOptions)
+			if err != nil {
+				if tc.err == nil {
+					t.Fatal(err)
+				}
+
+				assert.ErrorIs(t, err, tc.err)
+			}
+
+			assert.Equal(t, tc.expected, total)
+			assert.Len(t, result, tc.expected)
+		})
+	}
+}

@@ -1,0 +1,27 @@
+package service
+
+import (
+	"context"
+	"errors"
+
+	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
+)
+
+func (s *Service) Create(ctx context.Context, m domain.{{.DomainNamePascal}}) (domain.{{.DomainNamePascal}}, error) {
+	dao, err := domain.ToDAO(m)
+	if err != nil {
+		return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
+	}
+
+	dao, err = s.repo.Create(ctx, dao)
+	if err != nil {
+		return domain.{{.DomainNamePascal}}{}, err
+	}
+
+	newModel, errToModel := domain.ToModel(dao)
+    	if errToModel != nil {
+    		return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, errToModel)
+    	}
+
+    	return newModel, nil
+}
