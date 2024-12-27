@@ -7,7 +7,7 @@ import (
 	"github.com/Drafteame/draft/internal/pkg/inputs"
 )
 
-func queueForm(input *dtos.ServiceInput) error {
+func queueForm(input *dtos.LambdaInput) error {
 	return inputs.Text("Queue ARN:",
 		inputs.WithDescription[string]("Enter the ARN of the queue or some replacer that works on lambda-config.yml"),
 		inputs.WithValue(&input.QueueARN),

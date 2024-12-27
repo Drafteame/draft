@@ -3,5 +3,5 @@ package {{ .NormalizedServiceName }}
 // revive:disable:blank-imports
 import (
     _ "{{ .PackageName }}/{{ .ServicePath }}/cmd/plain/{{ .LambdaName }}/handler"
-    //:next
+    {{.NextImportTag}}
 )

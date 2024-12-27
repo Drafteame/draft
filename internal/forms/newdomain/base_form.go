@@ -15,7 +15,7 @@ import (
 func baseForm(input *dtos.DomainInput) error {
 	err := inputs2.Text("Domain Path:",
 		inputs2.WithValue(&input.DomainPath),
-		inputs2.WithDescription[string]("Enter the path to the domain excluding 'domains' folder."),
+		inputs2.WithDescription[string]("Enter the path to the domain folder."),
 		inputs2.WithValidation(func(val string) error {
 			if val == "" {
 				return errors.New("domain path cannot be empty")
@@ -36,6 +36,10 @@ func baseForm(input *dtos.DomainInput) error {
 	input.DomainName = normalizeDomainName(domainName)
 	input.DomainNameLower = strings.ToLower(input.DomainName)
 	input.DomainNamePascal = cases.Title(language.English).String(input.DomainName)
+
+	if !strings.HasPrefix(input.DomainPath, "domains/") {
+		input.DomainPath = "domains/" + input.DomainPath
+	}
 
 	err = inputs2.Select[string]("Select DB Type:",
 		inputs2.WithDescription[string]("Select the type of database you want to use"),

@@ -8,7 +8,7 @@ import (
 	"github.com/Drafteame/draft/internal/pkg/inputs"
 )
 
-func cronForm(input *dtos.ServiceInput) error {
+func cronForm(input *dtos.LambdaInput) error {
 	return inputs.Text("Cron Expression:",
 		inputs.WithDescription[string]("Enter the cron expression:"),
 		inputs.WithValue(&input.CronExpression),

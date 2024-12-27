@@ -18,4 +18,6 @@ type ServiceInput struct {
 	CronExpression        string
 	HasSentry             bool
 	SentryDSN             string
+	NextImportTag         string
+	NextLambdaImportTag   string
 }

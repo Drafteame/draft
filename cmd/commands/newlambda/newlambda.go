@@ -27,13 +27,16 @@ func run(_ *cobra.Command, _ []string) {
 
 	data.LoadMeta()
 
-	input := dtos.ServiceInput{}
+	input := dtos.LambdaInput{}
 
 	if err := forms.NewLambda(&input); err != nil {
 		panic(err)
 	}
 
-	action := newlambda.GetAction(input)
+	action, err := newlambda.GetAction(input)
+	if err != nil {
+		panic(err)
+	}
 
 	if err := action.Exec(); err != nil {
 		panic(err)

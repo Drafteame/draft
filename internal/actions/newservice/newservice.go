@@ -10,12 +10,17 @@ import (
 )
 
 type NewService struct {
-	tmpl  templates.SLS
+	tmpl  *templates.ServiceTemplates
 	input dtos.ServiceInput
 }
 
-func GetAction(input dtos.ServiceInput) *NewService {
-	return &NewService{input: input}
+func GetAction(input dtos.ServiceInput) (*NewService, error) {
+	tmpl, err := templates.NewServiceTemplates(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return &NewService{input: input, tmpl: tmpl}, nil
 }
 
 func (ns *NewService) Exec() error {
@@ -31,8 +36,6 @@ func (ns *NewService) Exec() error {
 }
 
 func (ns *NewService) exec() error {
-	ns.tmpl = templates.NewSLS(ns.input)
-
 	switch ns.input.ServiceFramework {
 	case "sls":
 		return ns.createServerless()
@@ -103,9 +106,9 @@ func (ns *NewService) getFileList() []dtos.FileEntry {
 
 func (ns *NewService) getFrameV2Entries() []dtos.FileEntry {
 	return []dtos.FileEntry{
-		{Path: "/cmd/plain/" + ns.input.LambdaName + "/main.go", Data: ns.tmpl.FrameV2.Plain.MainGo},
-		{Path: "/cmd/plain/" + ns.input.LambdaName + "/lambda-config.yml", Data: ns.tmpl.FrameV2.Plain.LambdaConfigYAML},
-		{Path: "/cmd/plain/" + ns.input.LambdaName + "/handler/handler.go", Data: ns.tmpl.FrameV2.Plain.Handler.HandlerGo},
-		{Path: "/cmd/plain/" + ns.input.LambdaName + "/handler/bootstrap.go", Data: ns.tmpl.FrameV2.Plain.Handler.BootstrapGo},
+		{Path: "/cmd/plain/" + ns.input.LambdaName + "/main.go", Data: ns.tmpl.Lambda.Plain.MainGo},
+		{Path: "/cmd/plain/" + ns.input.LambdaName + "/lambda-config.yml", Data: ns.tmpl.Lambda.Plain.LambdaConfigYAML},
+		{Path: "/cmd/plain/" + ns.input.LambdaName + "/handler/handler.go", Data: ns.tmpl.Lambda.Plain.Handler.HandlerGo},
+		{Path: "/cmd/plain/" + ns.input.LambdaName + "/handler/bootstrap.go", Data: ns.tmpl.Lambda.Plain.Handler.BootstrapGo},
 	}
 }

@@ -11,10 +11,10 @@ func (nl *NewLambda) createHttp() error {
 	}
 
 	filesEntries := []dtos.FileEntry{
-		{Path: "/main.go", Data: nl.tmpl.FrameV2.HTTP.MainGo},
-		{Path: "/lambda-config.yml", Data: nl.tmpl.FrameV2.HTTP.LambdaConfigYAML},
-		{Path: "/handler/handler.go", Data: nl.tmpl.FrameV2.HTTP.Handler.HandlerGo},
-		{Path: "/handler/bootstrap.go", Data: nl.tmpl.FrameV2.HTTP.Handler.BootstrapGo},
+		{Path: "/main.go", Data: nl.tmpl.HTTP.MainGo},
+		{Path: "/lambda-config.yml", Data: nl.tmpl.HTTP.LambdaConfigYAML},
+		{Path: "/handler/handler.go", Data: nl.tmpl.HTTP.Handler.HandlerGo},
+		{Path: "/handler/bootstrap.go", Data: nl.tmpl.HTTP.Handler.BootstrapGo},
 	}
 
 	return nl.createFiles(filesEntries...)

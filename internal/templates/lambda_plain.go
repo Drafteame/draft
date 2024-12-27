@@ -1,33 +1,37 @@
 package templates
 
-type SLSFrameV2Plain struct {
+type LambdaPlain struct {
 	MainGo           []byte
 	LambdaConfigYAML []byte
-	Handler          SLSFrameV2PlainHandler
+	Handler          LambdaPlainHandler
 }
 
-type SLSFrameV2PlainHandler struct {
+type LambdaPlainHandler struct {
 	BootstrapGo []byte
 	HandlerGo   []byte
 }
 
-func loadFrameV2Plain(v *SLS, data any) error {
-	loaders := []func(*SLS, any) error{
-		loadFrameV2PlainMainGo,
-		loadFrameV2PlainLambdaConfigYAML,
-		loadFrameV2PlainHandler,
+func loadLambdaPlain(v PlainSetter, data any) error {
+	plain := LambdaPlain{}
+
+	loaders := []func(*LambdaPlain, any) error{
+		loadLambdaPlainMainGo,
+		loadLambdaPlainLambdaConfigYAML,
+		loadLambdaPlainHandler,
 	}
 
 	for _, loader := range loaders {
-		if err := loader(v, data); err != nil {
+		if err := loader(&plain, data); err != nil {
 			return err
 		}
 	}
 
+	v.SetPlain(plain)
+
 	return nil
 }
 
-func loadFrameV2PlainMainGo(v *SLS, data any) error {
+func loadLambdaPlainMainGo(v *LambdaPlain, data any) error {
 	name := "framev2/plain/main.go"
 	path := "tmpl/sls/framev2/plain/main.go.tmpl"
 
@@ -36,12 +40,12 @@ func loadFrameV2PlainMainGo(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.Plain.MainGo = content
+	v.MainGo = content
 
 	return nil
 }
 
-func loadFrameV2PlainLambdaConfigYAML(v *SLS, data any) error {
+func loadLambdaPlainLambdaConfigYAML(v *LambdaPlain, data any) error {
 	name := "framev2/plain/lambda-config.yml"
 	path := "tmpl/sls/framev2/plain/lambda-config.yml.tmpl"
 
@@ -50,20 +54,20 @@ func loadFrameV2PlainLambdaConfigYAML(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.Plain.LambdaConfigYAML = content
+	v.LambdaConfigYAML = content
 
 	return nil
 }
 
-func loadFrameV2PlainHandler(v *SLS, data any) error {
-	if err := loadFrameV2PlainHandlerBoostrapGo(v, data); err != nil {
+func loadLambdaPlainHandler(v *LambdaPlain, data any) error {
+	if err := loadLambdaPlainHandlerBoostrapGo(v, data); err != nil {
 		return err
 	}
 
-	return loadFrameV2PlainHandlerHandlerGo(v, data)
+	return loadLambdaPlainHandlerHandlerGo(v, data)
 }
 
-func loadFrameV2PlainHandlerBoostrapGo(v *SLS, data any) error {
+func loadLambdaPlainHandlerBoostrapGo(v *LambdaPlain, data any) error {
 	name := "framev2/plain/handler/bootstrap.go"
 	path := "tmpl/sls/framev2/plain/handler/bootstrap.go.tmpl"
 
@@ -72,12 +76,12 @@ func loadFrameV2PlainHandlerBoostrapGo(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.Plain.Handler.BootstrapGo = content
+	v.Handler.BootstrapGo = content
 
 	return nil
 }
 
-func loadFrameV2PlainHandlerHandlerGo(v *SLS, data any) error {
+func loadLambdaPlainHandlerHandlerGo(v *LambdaPlain, data any) error {
 	name := "framev2/plain/handler/handler.go"
 	path := "tmpl/sls/framev2/plain/handler/handler.go.tmpl"
 
@@ -86,7 +90,7 @@ func loadFrameV2PlainHandlerHandlerGo(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.Plain.Handler.HandlerGo = content
+	v.Handler.HandlerGo = content
 
 	return nil
 }

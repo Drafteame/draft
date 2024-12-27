@@ -1,33 +1,37 @@
 package templates
 
-type SLSFrameV2HTTP struct {
+type LambdaHTTP struct {
 	MainGo           []byte
 	LambdaConfigYAML []byte
-	Handler          SLSFrameV2HTTPHandler
+	Handler          LambdaHTTPHandler
 }
 
-type SLSFrameV2HTTPHandler struct {
+type LambdaHTTPHandler struct {
 	BootstrapGo []byte
 	HandlerGo   []byte
 }
 
-func loadFrameV2HTTP(v *SLS, data any) error {
-	loaders := []func(*SLS, any) error{
-		loadFrameV2HTTPMainGo,
-		loadFrameV2HTTPLambdaConfigYAML,
-		loadFrameV2HTTPHandler,
+func loadLambdaHTTP(v HTTPSetter, data any) error {
+	http := LambdaHTTP{}
+
+	loaders := []func(*LambdaHTTP, any) error{
+		loadLambdaHTTPMainGo,
+		loadLambdaHTTPLambdaConfigYAML,
+		loadLambdaHTTPHandler,
 	}
 
 	for _, loader := range loaders {
-		if err := loader(v, data); err != nil {
+		if err := loader(&http, data); err != nil {
 			return err
 		}
 	}
 
+	v.SetHTTP(http)
+
 	return nil
 }
 
-func loadFrameV2HTTPMainGo(v *SLS, data any) error {
+func loadLambdaHTTPMainGo(v *LambdaHTTP, data any) error {
 	name := "framev2/http/main.go"
 	path := "tmpl/sls/framev2/http/main.go.tmpl"
 
@@ -36,12 +40,12 @@ func loadFrameV2HTTPMainGo(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.HTTP.MainGo = content
+	v.MainGo = content
 
 	return nil
 }
 
-func loadFrameV2HTTPLambdaConfigYAML(v *SLS, data any) error {
+func loadLambdaHTTPLambdaConfigYAML(v *LambdaHTTP, data any) error {
 	name := "framev2/http/lambda-config.yml"
 	path := "tmpl/sls/framev2/http/lambda-config.yml.tmpl"
 
@@ -50,20 +54,20 @@ func loadFrameV2HTTPLambdaConfigYAML(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.HTTP.LambdaConfigYAML = content
+	v.LambdaConfigYAML = content
 
 	return nil
 }
 
-func loadFrameV2HTTPHandler(v *SLS, data any) error {
-	if err := loadFrameV2HTTPHandlerBootstrapGo(v, data); err != nil {
+func loadLambdaHTTPHandler(v *LambdaHTTP, data any) error {
+	if err := loadLambdaHTTPHandlerBootstrapGo(v, data); err != nil {
 		return err
 	}
 
-	return loadFrameV2HTTPHandlerHandlerGo(v, data)
+	return loadLambdaHTTPHandlerHandlerGo(v, data)
 }
 
-func loadFrameV2HTTPHandlerBootstrapGo(v *SLS, data any) error {
+func loadLambdaHTTPHandlerBootstrapGo(v *LambdaHTTP, data any) error {
 	name := "framev2/http/handler/bootstrap.go"
 	path := "tmpl/sls/framev2/http/handler/bootstrap.go.tmpl"
 
@@ -72,12 +76,12 @@ func loadFrameV2HTTPHandlerBootstrapGo(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.HTTP.Handler.BootstrapGo = content
+	v.Handler.BootstrapGo = content
 
 	return nil
 }
 
-func loadFrameV2HTTPHandlerHandlerGo(v *SLS, data any) error {
+func loadLambdaHTTPHandlerHandlerGo(v *LambdaHTTP, data any) error {
 	name := "framev2/http/handler/handler.go"
 	path := "tmpl/sls/framev2/http/handler/handler.go.tmpl"
 
@@ -86,7 +90,7 @@ func loadFrameV2HTTPHandlerHandlerGo(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.HTTP.Handler.HandlerGo = content
+	v.Handler.HandlerGo = content
 
 	return nil
 }

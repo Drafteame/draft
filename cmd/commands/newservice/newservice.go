@@ -37,10 +37,13 @@ func run(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	action := newservice.GetAction(input)
-
-	if err := action.Exec(); err != nil {
+	action, err := newservice.GetAction(input)
+	if err != nil {
 		panic(err)
+	}
+
+	if errExec := action.Exec(); errExec != nil {
+		panic(errExec)
 	}
 
 	println("Service created successfully")

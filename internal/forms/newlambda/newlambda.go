@@ -3,10 +3,14 @@ package newlambda
 import (
 	"fmt"
 
+	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 )
 
-func GetForm(input *dtos.ServiceInput) error {
+func GetForm(input *dtos.LambdaInput) error {
+	input.NextImportTag = data.NextImportTag
+	input.NextLambdaImportTag = data.NextLambdaImportTag
+
 	if err := baseForm(input); err != nil {
 		return err
 	}

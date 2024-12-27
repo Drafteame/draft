@@ -1,4 +1,4 @@
-service: {{ .ServiceName }}
+service: {{ .NormalizedServiceName }}
 
 frameworkVersion: '3'
 
@@ -41,7 +41,7 @@ provider:
 
 functions:
   - ${file(cmd/plain/{{ .LambdaName }}/lambda-config.yml):function}
-  #:next
+  {{.NextLambdaImportTag}}
 
 plugins:
   - serverless-plugin-go

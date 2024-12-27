@@ -3,5 +3,5 @@ function:
     handler: cmd/http/{{ .LambdaName }}/main.go
     events:
       - httpApi:
-          path: '{{ .HTTPPath }}'
+          path: '{{ .HTTPPathAPIGateway }}'
           method: '{{ .HTTPMethod }}'

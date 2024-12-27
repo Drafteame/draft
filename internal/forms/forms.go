@@ -11,7 +11,7 @@ func NewService(input *dtos.ServiceInput) error {
 	return newservice.GetForm(input)
 }
 
-func NewLambda(input *dtos.ServiceInput) error {
+func NewLambda(input *dtos.LambdaInput) error {
 	return newlambda.GetForm(input)
 }
 

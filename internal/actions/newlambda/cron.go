@@ -11,10 +11,10 @@ func (nl *NewLambda) createCron() error {
 	}
 
 	filesEntries := []dtos.FileEntry{
-		{Path: "/main.go", Data: nl.tmpl.FrameV2.Cron.MainGo},
-		{Path: "/lambda-config.yml", Data: nl.tmpl.FrameV2.Cron.LambdaConfigYAML},
-		{Path: "/handler/handler.go", Data: nl.tmpl.FrameV2.Cron.Handler.HandlerGo},
-		{Path: "/handler/bootstrap.go", Data: nl.tmpl.FrameV2.Cron.Handler.BootstrapGo},
+		{Path: "/main.go", Data: nl.tmpl.Cron.MainGo},
+		{Path: "/lambda-config.yml", Data: nl.tmpl.Cron.LambdaConfigYAML},
+		{Path: "/handler/handler.go", Data: nl.tmpl.Cron.Handler.HandlerGo},
+		{Path: "/handler/bootstrap.go", Data: nl.tmpl.Cron.Handler.BootstrapGo},
 	}
 
 	return nl.createFiles(filesEntries...)

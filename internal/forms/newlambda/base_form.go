@@ -9,7 +9,7 @@ import (
 	"github.com/Drafteame/draft/internal/pkg/inputs"
 )
 
-func baseForm(input *dtos.ServiceInput) error {
+func baseForm(input *dtos.LambdaInput) error {
 	err := inputs.Text("Service Path:",
 		inputs.WithDescription[string]("Enter the path to the service folder."),
 		inputs.WithValue(&input.ServicePath),

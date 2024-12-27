@@ -5,53 +5,61 @@ import (
 	"text/template"
 )
 
-type SLS struct {
+type ServiceTemplates struct {
 	ServerlessYAML []byte
 	PackageJSON    []byte
 	DepsGo         []byte
-	Config         SLSConfig
-	FrameV2        SLSFrameV2
+	Config         ServiceTemplatesConfig
+	Lambda         ServiceTemplatesLambda
 }
 
-type SLSConfig struct {
-	App SLSConfigApp
-	Sls SLSConfigSls
+func (s *ServiceTemplates) SetPlain(plain LambdaPlain) {
+	s.Lambda.Plain = plain
 }
 
-type SLSConfigSls struct {
+func (s *ServiceTemplates) SetConfigSls(v ConfigSls) {
+	s.Config.Sls = v
+}
+
+func (s *ServiceTemplates) SetConfigApp(v ConfigApp) {
+	s.Config.App = v
+}
+
+type ServiceTemplatesConfig struct {
+	App ConfigApp
+	Sls ConfigSls
+}
+
+type ServiceTemplatesConfigSls struct {
 	EnvironmentYAML []byte
 	IamYAML         []byte
 }
 
-type SLSFrameV2 struct {
-	Plain  SLSFrameV2Plain
-	Sqs    SSLSFrameV2Sqs
-	SnsSqs SLSFrameV2SnsSqs
-	HTTP   SLSFrameV2HTTP
-	Cron   SLSFrameV2Cron
+type ServiceTemplatesLambda struct {
+	Plain LambdaPlain
 }
 
-func NewSLS(data any) SLS {
-	s := SLS{}
+func NewServiceTemplates(data any) (*ServiceTemplates, error) {
+	s := new(ServiceTemplates)
 
-	loaders := []func(*SLS, any) error{
+	loaders := []func(*ServiceTemplates, any) error{
 		loadServerlessYAML,
 		loadPackageJSON,
 		loadDepsGo,
 		loadConfig,
-		loadFrameV2,
+		loadLambda,
 	}
 
 	for _, loader := range loaders {
-		if err := loader(&s, data); err != nil {
-			panic(err)
+		if err := loader(s, data); err != nil {
+			return nil, err
 		}
 	}
 
-	return s
+	return s, nil
 }
 
-func loadServerlessYAML(v *SLS, data any) error {
+func loadServerlessYAML(v *ServiceTemplates, data any) error {
 	content, err := sls.ReadFile("tmpl/sls/serverless.yml.tmpl")
 	if err != nil {
 		return err
@@ -73,7 +81,7 @@ func loadServerlessYAML(v *SLS, data any) error {
 	return nil
 }
 
-func loadPackageJSON(v *SLS, data any) error {
+func loadPackageJSON(v *ServiceTemplates, data any) error {
 	content, err := sls.ReadFile("tmpl/sls/package.json.tmpl")
 	if err != nil {
 		return err
@@ -95,7 +103,7 @@ func loadPackageJSON(v *SLS, data any) error {
 	return nil
 }
 
-func loadDepsGo(v *SLS, data any) error {
+func loadDepsGo(v *ServiceTemplates, data any) error {
 	content, err := sls.ReadFile("tmpl/sls/deps.go.tmpl")
 	if err != nil {
 		return err
@@ -117,7 +125,7 @@ func loadDepsGo(v *SLS, data any) error {
 	return nil
 }
 
-func loadConfig(v *SLS, data any) error {
+func loadConfig(v *ServiceTemplates, data any) error {
 	if err := loadConfigApp(v, data); err != nil {
 		return err
 	}
@@ -125,20 +133,6 @@ func loadConfig(v *SLS, data any) error {
 	return loadConfigSls(v, data)
 }
 
-func loadFrameV2(v *SLS, data any) error {
-	loaders := []func(*SLS, any) error{
-		loadFrameV2Plain,
-		loadFrameV2Sqs,
-		loadFrameV2SnsSqs,
-		loadFrameV2HTTP,
-		loadFrameV2Cron,
-	}
-
-	for _, loader := range loaders {
-		if err := loader(v, data); err != nil {
-			return err
-		}
-	}
-
-	return nil
+func loadLambda(v *ServiceTemplates, data any) error {
+	return loadLambdaPlain(v, data)
 }

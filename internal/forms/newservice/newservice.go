@@ -11,6 +11,8 @@ func GetForm(input *dtos.ServiceInput) error {
 	input.LambdaName = "helloworld"
 	input.LambdaType = "plain"
 	input.PackageName = data.Meta.PackageName
+	input.NextImportTag = data.NextImportTag
+	input.NextLambdaImportTag = data.NextLambdaImportTag
 
 	if err := baseForm(input); err != nil {
 		return err

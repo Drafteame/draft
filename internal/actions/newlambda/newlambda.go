@@ -9,17 +9,21 @@ import (
 )
 
 type NewLambda struct {
-	tmpl       templates.SLS
-	input      dtos.ServiceInput
+	tmpl       *templates.LambdaTemplates
+	input      dtos.LambdaInput
 	lambdaPath string
 }
 
-func GetAction(input dtos.ServiceInput) *NewLambda {
+func GetAction(input dtos.LambdaInput) (*NewLambda, error) {
+	tmpl, err := templates.NewLambdaTemplates(input)
+	if err != nil {
+		return nil, err
+	}
 	return &NewLambda{
 		input:      input,
-		tmpl:       templates.NewSLS(input),
+		tmpl:       tmpl,
 		lambdaPath: input.ServicePath + "/cmd/" + input.LambdaType + "/" + input.LambdaName,
-	}
+	}, nil
 }
 
 func (nl *NewLambda) Exec() error {
