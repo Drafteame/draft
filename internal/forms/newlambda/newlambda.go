@@ -1,6 +1,8 @@
 package newlambda
 
 import (
+	"fmt"
+
 	"github.com/Drafteame/draft/internal/dtos"
 )
 
@@ -9,23 +11,14 @@ func GetForm(input *dtos.ServiceInput) error {
 		return err
 	}
 
-	if input.LambdaType == "sqs" || input.LambdaType == "snssqs" {
-		if err := queueForm(input); err != nil {
-			return err
-		}
+	switch input.LambdaType {
+	case "sqs", "snssqs":
+		return queueForm(input)
+	case "http":
+		return httpForm(input)
+	case "cron":
+		return cronForm(input)
+	default:
+		return fmt.Errorf("unknown lambda type: %s", input.LambdaType)
 	}
-
-	if input.LambdaType == "http" {
-		if err := httpForm(input); err != nil {
-			return err
-		}
-	}
-
-	if input.LambdaType == "cron" {
-		if err := cronForm(input); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

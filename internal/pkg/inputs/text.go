@@ -25,5 +25,9 @@ func Text(title string, opts ...Option[string]) error {
 		input.Validate(inputOpts.validation)
 	}
 
+	if inputOpts.placeholder != "" {
+		input.Placeholder(inputOpts.placeholder)
+	}
+
 	return run(input)
 }

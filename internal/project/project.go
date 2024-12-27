@@ -38,5 +38,5 @@ func NormalizeServiceName(serviceName string) string {
 		serviceName = strings.ReplaceAll(serviceName, replacer, "_")
 	}
 
-	return serviceName
+	return strings.ToLower(serviceName)
 }
