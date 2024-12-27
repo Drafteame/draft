@@ -1,33 +1,37 @@
 package templates
 
-type SLSFrameV2Cron struct {
+type LambdaCron struct {
 	MainGo           []byte
 	LambdaConfigYAML []byte
-	Handler          SLSFrameV2CronHandler
+	Handler          LambdaCronHandler
 }
 
-type SLSFrameV2CronHandler struct {
+type LambdaCronHandler struct {
 	BootstrapGo []byte
 	HandlerGo   []byte
 }
 
-func loadFrameV2Cron(v *SLS, data any) error {
-	loaders := []func(*SLS, any) error{
-		loadFrameV2CronMainGo,
+func loadLambdaCron(v CronSetter, data any) error {
+	cron := LambdaCron{}
+
+	loaders := []func(cron *LambdaCron, data any) error{
+		loadLambdaCronMainGo,
 		loadFrameV2CronLambdaConfigYAML,
 		loadFrameV2CronHandler,
 	}
 
 	for _, loader := range loaders {
-		if err := loader(v, data); err != nil {
+		if err := loader(&cron, data); err != nil {
 			return err
 		}
 	}
 
+	v.SetCron(cron)
+
 	return nil
 }
 
-func loadFrameV2CronMainGo(v *SLS, data any) error {
+func loadLambdaCronMainGo(v *LambdaCron, data any) error {
 	name := "framev2/cron/main.go"
 	path := "tmpl/sls/framev2/cron/main.go.tmpl"
 
@@ -36,12 +40,12 @@ func loadFrameV2CronMainGo(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.Cron.MainGo = content
+	v.MainGo = content
 
 	return nil
 }
 
-func loadFrameV2CronLambdaConfigYAML(v *SLS, data any) error {
+func loadFrameV2CronLambdaConfigYAML(v *LambdaCron, data any) error {
 	name := "framev2/cron/lambda-config.yml"
 	path := "tmpl/sls/framev2/cron/lambda-config.yml.tmpl"
 
@@ -50,12 +54,12 @@ func loadFrameV2CronLambdaConfigYAML(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.Cron.LambdaConfigYAML = content
+	v.LambdaConfigYAML = content
 
 	return nil
 }
 
-func loadFrameV2CronHandler(v *SLS, data any) error {
+func loadFrameV2CronHandler(v *LambdaCron, data any) error {
 	if err := loadFrameV2CronHandlerBootstrapGo(v, data); err != nil {
 		return err
 	}
@@ -63,7 +67,7 @@ func loadFrameV2CronHandler(v *SLS, data any) error {
 	return loadFrameV2CronHandlerHandlerGo(v, data)
 }
 
-func loadFrameV2CronHandlerBootstrapGo(v *SLS, data any) error {
+func loadFrameV2CronHandlerBootstrapGo(v *LambdaCron, data any) error {
 	name := "framev2/cron/handler/bootstrap.go"
 	path := "tmpl/sls/framev2/cron/handler/bootstrap.go.tmpl"
 
@@ -72,12 +76,12 @@ func loadFrameV2CronHandlerBootstrapGo(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.Cron.Handler.BootstrapGo = content
+	v.Handler.BootstrapGo = content
 
 	return nil
 }
 
-func loadFrameV2CronHandlerHandlerGo(v *SLS, data any) error {
+func loadFrameV2CronHandlerHandlerGo(v *LambdaCron, data any) error {
 	name := "framev2/cron/handler/handler.go"
 	path := "tmpl/sls/framev2/cron/handler/handler.go.tmpl"
 
@@ -86,7 +90,7 @@ func loadFrameV2CronHandlerHandlerGo(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.Cron.Handler.HandlerGo = content
+	v.Handler.HandlerGo = content
 
 	return nil
 }

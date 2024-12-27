@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/Drafteame/draft/internal/dtos"
-	"github.com/Drafteame/draft/internal/inputs"
+	"github.com/Drafteame/draft/internal/pkg/inputs"
 )
 
 func postgresForm(input *dtos.DomainInput) error {

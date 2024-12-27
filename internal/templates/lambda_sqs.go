@@ -1,34 +1,38 @@
 package templates
 
-type SSLSFrameV2Sqs struct {
+type LambdaSqs struct {
 	MainGo           []byte
 	LambdaConfigYAML []byte
-	Handler          SLSFrameV2SqsHandler
+	Handler          LambdaSqsHandler
 }
 
-type SLSFrameV2SqsHandler struct {
+type LambdaSqsHandler struct {
 	BootstrapGo []byte
 	HandlerGo   []byte
 	WorkerGo    []byte
 }
 
-func loadFrameV2Sqs(v *SLS, data any) error {
-	loaders := []func(*SLS, any) error{
-		loadFrameV2SqsMainGo,
-		loadFrameV2SqsLambdaConfigYAML,
-		loadFrameV2SqsHandler,
+func loadLambdaSqs(v SqsSetter, data any) error {
+	sqs := LambdaSqs{}
+
+	loaders := []func(*LambdaSqs, any) error{
+		loadLambdaSqsMainGo,
+		loadLambdaSqsLambdaConfigYAML,
+		loadLambdaSqsHandler,
 	}
 
 	for _, loader := range loaders {
-		if err := loader(v, data); err != nil {
+		if err := loader(&sqs, data); err != nil {
 			return err
 		}
 	}
 
+	v.SetSqs(sqs)
+
 	return nil
 }
 
-func loadFrameV2SqsMainGo(v *SLS, data any) error {
+func loadLambdaSqsMainGo(v *LambdaSqs, data any) error {
 	name := "framev2/sqs/main.go"
 	path := "tmpl/sls/framev2/sqs/main.go.tmpl"
 
@@ -37,12 +41,12 @@ func loadFrameV2SqsMainGo(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.Sqs.MainGo = content
+	v.MainGo = content
 
 	return nil
 }
 
-func loadFrameV2SqsLambdaConfigYAML(v *SLS, data any) error {
+func loadLambdaSqsLambdaConfigYAML(v *LambdaSqs, data any) error {
 	name := "framev2/sqs/lambda-config.yml"
 	path := "tmpl/sls/framev2/sqs/lambda-config.yml.tmpl"
 
@@ -51,16 +55,16 @@ func loadFrameV2SqsLambdaConfigYAML(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.Sqs.LambdaConfigYAML = content
+	v.LambdaConfigYAML = content
 
 	return nil
 }
 
-func loadFrameV2SqsHandler(v *SLS, data any) error {
-	loaders := []func(*SLS, any) error{
-		loadFrameV2SqsHandlerBoostrapGo,
-		loadFrameV2SqsHandlerHandlerGo,
-		loadFrameV2SqsHandlerWorkerGo,
+func loadLambdaSqsHandler(v *LambdaSqs, data any) error {
+	loaders := []func(*LambdaSqs, any) error{
+		loadLambdaSqsHandlerBoostrapGo,
+		loadLambdaSqsHandlerHandlerGo,
+		loadLambdaSqsHandlerWorkerGo,
 	}
 
 	for _, loader := range loaders {
@@ -72,7 +76,7 @@ func loadFrameV2SqsHandler(v *SLS, data any) error {
 	return nil
 }
 
-func loadFrameV2SqsHandlerBoostrapGo(v *SLS, data any) error {
+func loadLambdaSqsHandlerBoostrapGo(v *LambdaSqs, data any) error {
 	name := "framev2/sqs/handler/bootstrap.go"
 	path := "tmpl/sls/framev2/sqs/handler/bootstrap.go.tmpl"
 
@@ -81,12 +85,12 @@ func loadFrameV2SqsHandlerBoostrapGo(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.Sqs.Handler.BootstrapGo = content
+	v.Handler.BootstrapGo = content
 
 	return nil
 }
 
-func loadFrameV2SqsHandlerHandlerGo(v *SLS, data any) error {
+func loadLambdaSqsHandlerHandlerGo(v *LambdaSqs, data any) error {
 	name := "framev2/sqs/handler/handler.go"
 	path := "tmpl/sls/framev2/sqs/handler/handler.go.tmpl"
 
@@ -95,12 +99,12 @@ func loadFrameV2SqsHandlerHandlerGo(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.Sqs.Handler.HandlerGo = content
+	v.Handler.HandlerGo = content
 
 	return nil
 }
 
-func loadFrameV2SqsHandlerWorkerGo(v *SLS, data any) error {
+func loadLambdaSqsHandlerWorkerGo(v *LambdaSqs, data any) error {
 	name := "framev2/sqs/handler/worker.go"
 	path := "tmpl/sls/framev2/sqs/handler/worker.go.tmpl"
 
@@ -109,7 +113,7 @@ func loadFrameV2SqsHandlerWorkerGo(v *SLS, data any) error {
 		return err
 	}
 
-	v.FrameV2.Sqs.Handler.WorkerGo = content
+	v.Handler.WorkerGo = content
 
 	return nil
 }

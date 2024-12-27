@@ -14,6 +14,34 @@ var (
 	domain embed.FS
 )
 
+type CronSetter interface {
+	SetCron(LambdaCron)
+}
+
+type HTTPSetter interface {
+	SetHTTP(LambdaHTTP)
+}
+
+type PlainSetter interface {
+	SetPlain(LambdaPlain)
+}
+
+type SnsSqsSetter interface {
+	SetSnsSqs(LambdaSnsSqs)
+}
+
+type SqsSetter interface {
+	SetSqs(LambdaSqs)
+}
+
+type ConfigAppSetter interface {
+	SetConfigApp(ConfigApp)
+}
+
+type ConfigSlsSetter interface {
+	SetConfigSls(ConfigSls)
+}
+
 func loadTemplate(name, path string, data any, fs embed.FS) ([]byte, error) {
 	content, err := fs.ReadFile(path)
 	if err != nil {

@@ -1,25 +1,26 @@
 package newlambda
 
 import (
-	"errors"
-
-	"github.com/charmbracelet/huh"
+	"fmt"
+	"regexp"
 
 	"github.com/Drafteame/draft/internal/dtos"
+	"github.com/Drafteame/draft/internal/pkg/inputs"
 )
 
-func cronForm(input *dtos.ServiceInput) error {
-	cronExpression := huh.NewInput().
-		Title("Set Cron Expression:").
-		Description("Enter the cron expression").
-		Value(&input.CronExpression).
-		Validate(func(s string) error {
-			if s == "" {
-				return errors.New("cron expression cannot be empty")
+func cronForm(input *dtos.LambdaInput) error {
+	return inputs.Text("Cron Expression:",
+		inputs.WithDescription[string]("Enter the cron expression:"),
+		inputs.WithValue(&input.CronExpression),
+		inputs.WithValidation(func(val string) error {
+			pattern := `^(rate\(\d+\s+(minute|minutes|hour|hours|day|days)\)|cron\((\*|\?|[\d\/,\-LW#]+)\s+(\*|\?|[\d\/,\-LW#]+)\s+(\*|\?|[\d\/,\-LW#]+)\s+(\*|\?|[\d\/,\-LW#]+)\s+(\*|\?|[\d\/,\-LW#]+)\s+(\*|\?|[\d\/,\-LW#]+)\))$`
+			regex := regexp.MustCompile(pattern)
+
+			if !regex.MatchString(val) {
+				return fmt.Errorf("invalid cron expression: %s\nshould match: %s", val, pattern)
 			}
 
 			return nil
-		})
-
-	return huh.NewForm(huh.NewGroup(cronExpression)).WithTheme(huh.ThemeCharm()).Run()
+		}),
+	)
 }

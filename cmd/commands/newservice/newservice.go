@@ -11,11 +11,15 @@ import (
 	"github.com/Drafteame/draft/internal/forms"
 )
 
-var newServiceCmd = &cobra.Command{
+var cmd = &cobra.Command{
 	Use:   "new:service",
 	Short: "Create a new service",
 	Long:  "Create a new service",
 	Run:   run,
+}
+
+func init() {
+	cmd.Flags().BoolVarP(&data.Flags.NoSentry, "no-sentry", "", data.Flags.NoSentry, "Disable sentry project creation")
 }
 
 func run(_ *cobra.Command, _ []string) {
@@ -33,15 +37,18 @@ func run(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	action := newservice.GetAction(input)
-
-	if err := action.Exec(); err != nil {
+	action, err := newservice.GetAction(input)
+	if err != nil {
 		panic(err)
+	}
+
+	if errExec := action.Exec(); errExec != nil {
+		panic(errExec)
 	}
 
 	println("Service created successfully")
 }
 
 func GetCmd() *cobra.Command {
-	return newServiceCmd
+	return cmd
 }

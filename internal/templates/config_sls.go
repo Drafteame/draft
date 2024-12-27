@@ -1,14 +1,30 @@
 package templates
 
-func loadConfigSls(v *SLS, data any) error {
-	if err := loadConfigSlsEnvironmentYAML(v, data); err != nil {
-		return err
-	}
-
-	return loadConfigSlsIamYAML(v, data)
+type ConfigSls struct {
+	EnvironmentYAML []byte
+	IamYAML         []byte
 }
 
-func loadConfigSlsEnvironmentYAML(v *SLS, data any) error {
+func loadConfigSls(v ConfigSlsSetter, data any) error {
+	configSls := ConfigSls{}
+
+	loaders := []func(*ConfigSls, any) error{
+		loadConfigSlsEnvironmentYAML,
+		loadConfigSlsIamYAML,
+	}
+
+	for _, loader := range loaders {
+		if err := loader(&configSls, data); err != nil {
+			return err
+		}
+	}
+
+	v.SetConfigSls(configSls)
+
+	return nil
+}
+
+func loadConfigSlsEnvironmentYAML(v *ConfigSls, data any) error {
 	name := "config/sls/environment.yml"
 	path := "tmpl/sls/config/sls/environment.yml.tmpl"
 
@@ -17,12 +33,12 @@ func loadConfigSlsEnvironmentYAML(v *SLS, data any) error {
 		return err
 	}
 
-	v.Config.Sls.EnvironmentYAML = content
+	v.EnvironmentYAML = content
 
 	return nil
 }
 
-func loadConfigSlsIamYAML(v *SLS, data any) error {
+func loadConfigSlsIamYAML(v *ConfigSls, data any) error {
 	name := "config/sls/iam.yml"
 	path := "tmpl/sls/config/sls/iam.yml.tmpl"
 
@@ -31,7 +47,7 @@ func loadConfigSlsIamYAML(v *SLS, data any) error {
 		return err
 	}
 
-	v.Config.Sls.IamYAML = content
+	v.IamYAML = content
 
 	return nil
 }
