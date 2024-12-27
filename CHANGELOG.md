@@ -1,3 +1,11 @@
+## v1.3.1 (2024-12-27)
+
+
+- refactor: inputs, froms and templates (#28)
+- ci: bump commitizen-tools/commitizen-action from 0.23.0 to 0.23.1 (#27)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+
 ## v1.3.0 (2024-12-21)
 
 
