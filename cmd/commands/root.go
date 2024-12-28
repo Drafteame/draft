@@ -6,12 +6,12 @@ import (
 	"github.com/Drafteame/draft/internal/data"
 )
 
-var version = "unversioned"
+var Version = "development"
 
 var rootCmd = &cobra.Command{
 	Use:     "draft <command>",
 	Example: "draft new:service",
-	Version: version,
+	Version: Version,
 	Run:     run,
 }
 
