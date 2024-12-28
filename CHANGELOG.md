@@ -1,3 +1,8 @@
+## v1.3.2 (2024-12-28)
+
+
+- chore: fix set version on build binary (#29)
+
 ## v1.3.1 (2024-12-27)
 
 
