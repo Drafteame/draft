@@ -1,3 +1,9 @@
+## v1.4.0 (2024-12-28)
+
+
+- feat: service list (#31)
+- ci: fix bump job condition (#30)
+
 ## v1.3.2 (2024-12-28)
 
 
