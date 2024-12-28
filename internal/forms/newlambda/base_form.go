@@ -7,19 +7,19 @@ import (
 	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/pkg/inputs"
+	"github.com/Drafteame/draft/internal/project"
 )
 
 func baseForm(input *dtos.LambdaInput) error {
-	err := inputs.Text("Service Path:",
-		inputs.WithDescription[string]("Enter the path to the service folder."),
-		inputs.WithValue(&input.ServicePath),
-		inputs.WithValidation(func(val string) error {
-			if val == "" {
-				return errors.New("service path cannot be empty")
-			}
+	services, err := project.GetServices()
+	if err != nil {
+		return err
+	}
 
-			return nil
-		}),
+	err = inputs.Select[string]("Service:",
+		inputs.WithDescription[string]("Select the service where the new lambda will be created."),
+		inputs.WithValue(&input.ServicePath),
+		inputs.WithOptions(services),
 	)
 
 	if err != nil {

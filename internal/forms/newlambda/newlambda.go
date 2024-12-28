@@ -15,6 +15,10 @@ func GetForm(input *dtos.LambdaInput) error {
 		return err
 	}
 
+	if input.LambdaType == "plain" {
+		return nil
+	}
+
 	switch input.LambdaType {
 	case "sqs", "snssqs":
 		return queueForm(input)
