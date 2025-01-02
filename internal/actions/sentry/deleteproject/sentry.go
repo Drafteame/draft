@@ -16,11 +16,7 @@ func (dl *DeleteProject) sentry() error {
 		return nil
 	}
 
-	if err := dl.deleteSentryProject(); err != nil {
-		return err
-	}
-
-	return nil
+	return dl.deleteSentryProject()
 }
 
 func (dl *DeleteProject) deleteSentryProject() error {
