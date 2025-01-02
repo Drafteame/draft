@@ -23,16 +23,12 @@ func run(_ *cobra.Command, _ []string) {
 		}
 	}
 
-	data.LoadMeta() // carga el nombre del paquete
-
 	input := dtos.DeleteProjectInput{}
 
-	//form
 	if err := forms.DeleteProject(&input); err != nil {
 		panic(err)
 	}
 
-	//Action
 	action, err := deleteproject.GetAction(input)
 	if err != nil {
 		panic(err)
