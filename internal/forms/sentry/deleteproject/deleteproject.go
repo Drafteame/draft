@@ -5,10 +5,5 @@ import (
 )
 
 func GetForm(input *dtos.DeleteProjectInput) error {
-
-	if err := baseForm(input); err != nil {
-		return err
-	}
-
-	return nil
+	return baseForm(input)
 }

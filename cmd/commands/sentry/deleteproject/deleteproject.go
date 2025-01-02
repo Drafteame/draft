@@ -37,7 +37,6 @@ func run(_ *cobra.Command, _ []string) {
 	if err = action.Exec(); err != nil {
 		panic(err)
 	}
-
 }
 
 func GetCmd() *cobra.Command {

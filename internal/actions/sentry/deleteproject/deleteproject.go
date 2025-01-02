@@ -15,8 +15,5 @@ func GetAction(input dtos.DeleteProjectInput) (*DeleteProject, error) {
 }
 
 func (dl *DeleteProject) Exec() error {
-	if err := dl.sentry(); err != nil {
-		return err
-	}
-	return nil
+	return dl.sentry()
 }

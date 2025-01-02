@@ -18,7 +18,6 @@ func Select[T comparable](title string, opts ...Option[T]) error {
 	selectOpts := make([]huh.Option[T], 0, len(opts))
 
 	for optKey, optVal := range inputOpts.options {
-
 		if inputOpts.saveKey {
 			selectOpts = append(selectOpts, huh.NewOption(optKey, any(optKey).(T)))
 		} else {
