@@ -18,6 +18,7 @@ func baseForm(input *dtos.DeleteProjectInput) error {
 	err = inputs.Select[string]("Sentry Project Name:",
 		inputs.WithDescription[string]("Select the sentry project you want to delete."),
 		inputs.WithValue(&input.ProjectName),
+		inputs.WithSaveKey[string](),
 		inputs.WithOptions(projects),
 	)
 
@@ -25,7 +26,7 @@ func baseForm(input *dtos.DeleteProjectInput) error {
 		return err
 	}
 
-	err = inputs.Confirm("Confirmation to delete:",
+	err = inputs.Confirm("Confirmation to delete project: "+input.ProjectName,
 		inputs.WithDescription[bool]("Are you sure you want to delete this project?"),
 		inputs.WithValue(&input.Confirmation),
 	)
@@ -46,7 +47,7 @@ func baseForm(input *dtos.DeleteProjectInput) error {
 				return errors.New("project id cannot be empty")
 			}
 			if projects[input.ProjectName] != input.ProjectID {
-				return errors.New("project id does not match with project")
+				return errors.New("project id does not match with project: ")
 			}
 			return nil
 		}),

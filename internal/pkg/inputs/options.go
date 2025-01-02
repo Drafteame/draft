@@ -6,6 +6,7 @@ type options[T any] struct {
 	validation  func(val T) error
 	description string
 	placeholder string
+	saveKey     bool
 }
 
 type Option[T any] func(*options[T])
@@ -37,5 +38,11 @@ func WithOptions[T any](opts map[string]T) Option[T] {
 func WithPlaceholder[T any](placeholder string) Option[T] {
 	return func(o *options[T]) {
 		o.placeholder = placeholder
+	}
+}
+
+func WithSaveKey[T any]() Option[T] {
+	return func(o *options[T]) {
+		o.saveKey = true
 	}
 }

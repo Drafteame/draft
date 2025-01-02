@@ -14,8 +14,9 @@ import (
 )
 
 type Project struct {
-	Name string `json:"name"`
-	ID   string `json:"id"`
+	Name     string `json:"name"`
+	ID       string `json:"id"`
+	Platform string `json:"platform"`
 }
 
 const baseURL = "https://sentry.io"
@@ -172,6 +173,9 @@ func DeleteProject(projectID string) error {
 	}
 
 	if res.StatusCode != 204 {
+		println("[sentry] error with status code", res.StatusCode)
+		println("[sentry] request url", url)
+		println("[sentry] request auth token", token)
 		return errors.New("sentry: failed to delete project")
 	}
 
@@ -180,14 +184,16 @@ func DeleteProject(projectID string) error {
 
 func ListProjects() (map[string]string, error) {
 	cfg := config.Get().Sentry
+
 	token := cfg.Token
 	org := cfg.Organization
+	team := cfg.Team
 
 	headers := map[string]string{
 		"Authorization": "Bearer " + token,
 	}
 
-	url := baseURL + "/api/0/projects/" + org + "/"
+	url := baseURL + "/api/0/teams/" + org + "/" + team + "/projects/"
 
 	res, err := http2.Get(context.Background(), url, headers)
 	if err != nil {
@@ -214,7 +220,9 @@ func ListProjects() (map[string]string, error) {
 
 	names := make(map[string]string, len(projects))
 	for _, p := range projects {
-		names[p.Name] = p.ID
+		if p.Platform == "go" {
+			names[p.Name] = p.ID
+		}
 	}
 
 	return names, nil

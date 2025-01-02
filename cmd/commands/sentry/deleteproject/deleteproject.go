@@ -34,11 +34,9 @@ func run(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	if err := action.Exec(); err != nil {
+	if err = action.Exec(); err != nil {
 		panic(err)
 	}
-
-	println("Sentry project deleted successfully")
 
 }
 
