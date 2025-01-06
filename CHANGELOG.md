@@ -1,3 +1,11 @@
+## v1.5.1 (2025-01-06)
+
+
+- deps: bump github.com/getsentry/sentry-go from 0.30.0 to 0.31.1 (#33)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Co-authored-by: Eduardo Aguilar Yépez <dante.aguilar41@gmail.com>
+
 ## v1.5.0 (2025-01-06)
 
 
