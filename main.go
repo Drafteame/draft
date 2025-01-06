@@ -6,6 +6,7 @@ import (
 	"github.com/Drafteame/draft/cmd/commands/newdomain"
 	"github.com/Drafteame/draft/cmd/commands/newlambda"
 	"github.com/Drafteame/draft/cmd/commands/newservice"
+	"github.com/Drafteame/draft/cmd/commands/sentry/deleteproject"
 )
 
 func main() {
@@ -15,6 +16,7 @@ func main() {
 	cmd.AddCommand(newservice.GetCmd())
 	cmd.AddCommand(newlambda.GetCmd())
 	cmd.AddCommand(newdomain.GetCmd())
+	cmd.AddCommand(deleteproject.GetCmd())
 
 	if err := cmd.Execute(); err != nil {
 		panic(err)
