@@ -13,6 +13,12 @@ import (
 	http2 "github.com/Drafteame/draft/internal/pkg/http"
 )
 
+type Project struct {
+	Name     string `json:"name"`
+	ID       string `json:"id"`
+	Platform string `json:"platform"`
+}
+
 const baseURL = "https://sentry.io"
 
 func CreateProject(name string) (string, error) {
@@ -147,4 +153,85 @@ func CreateStages(serviceName, dsn string) error {
 	}
 
 	return nil
+}
+
+func DeleteProject(projectID string) error {
+	cfg := config.Get().Sentry
+
+	if cfg.Token == "" {
+		return errors.New("sentry: sentry token not found")
+	}
+
+	token := cfg.Token
+	org := cfg.Organization
+
+	headers := map[string]string{
+		"Authorization": "Bearer " + token,
+	}
+
+	url := baseURL + "/api/0/projects/" + org + "/" + projectID + "/"
+
+	res, errDelete := http2.Delete(context.Background(), url, headers)
+	if errDelete != nil {
+		return errDelete
+	}
+
+	if res.StatusCode != 204 {
+		println("[sentry] error with status code", res.StatusCode)
+		println("[sentry] request url", url)
+		println("[sentry] request auth token", token)
+		return errors.New("sentry: failed to delete project")
+	}
+
+	return nil
+}
+
+func ListProjects() (map[string]string, error) {
+	cfg := config.Get().Sentry
+
+	if cfg.Token == "" {
+		return nil, errors.New("sentry: sentry token not found")
+	}
+
+	token := cfg.Token
+	org := cfg.Organization
+	team := cfg.Team
+
+	headers := map[string]string{
+		"Authorization": "Bearer " + token,
+	}
+
+	url := baseURL + "/api/0/teams/" + org + "/" + team + "/projects/"
+
+	res, err := http2.Get(context.Background(), url, headers)
+	if err != nil {
+		return nil, err
+	}
+
+	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode != 200 {
+		println("[sentry] error with status code", res.StatusCode)
+		println("[sentry] error body", string(resBody))
+		println("[sentry] request url", url)
+		println("[sentry] request auth token", token)
+		return nil, errors.New("sentry: failed to list projects")
+	}
+
+	var projects []Project
+	if err := json.Unmarshal(resBody, &projects); err != nil {
+		return nil, err
+	}
+
+	names := make(map[string]string, len(projects))
+	for _, p := range projects {
+		if p.Platform == "go" {
+			names[p.Name] = p.ID
+		}
+	}
+
+	return names, nil
 }
