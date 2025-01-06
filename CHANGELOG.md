@@ -1,3 +1,8 @@
+## v1.5.0 (2025-01-06)
+
+
+- feat: add command to delete projects (#32)
+
 ## v1.4.0 (2024-12-28)
 
 
