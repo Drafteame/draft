@@ -1,6 +1,7 @@
 package deleteproject
 
 import (
+	"fmt"
 	"github.com/Drafteame/draft/internal/actions/sentry/deleteproject"
 	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
@@ -26,6 +27,10 @@ func run(_ *cobra.Command, _ []string) {
 	input := dtos.DeleteProjectInput{}
 
 	if err := forms.DeleteProject(&input); err != nil {
+		if err.Error() == "operation cancelled by the user" {
+			fmt.Println("The operation was cancelled by the user.")
+			return
+		}
 		panic(err)
 	}
 

@@ -158,6 +158,10 @@ func CreateStages(serviceName, dsn string) error {
 func DeleteProject(projectID string) error {
 	cfg := config.Get().Sentry
 
+	if cfg.Token == "" {
+		return errors.New("sentry: sentry token not found")
+	}
+
 	token := cfg.Token
 	org := cfg.Organization
 
@@ -184,6 +188,10 @@ func DeleteProject(projectID string) error {
 
 func ListProjects() (map[string]string, error) {
 	cfg := config.Get().Sentry
+
+	if cfg.Token == "" {
+		return nil, errors.New("sentry: sentry token not found")
+	}
 
 	token := cfg.Token
 	org := cfg.Organization
