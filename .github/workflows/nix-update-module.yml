@@ -24,8 +24,10 @@ jobs:
       - name: Set up Nix
         uses: cachix/install-nix-action@v20
 
-      - name: Install nix-prefetch-git
+      - name: Config Nix Channel and Install nix-prefetch-git
         run: |
+          nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs
+          nix-channel --update
           nix-env -iA nixpkgs.nix-prefetch-git
 
       - name: Get tag version
