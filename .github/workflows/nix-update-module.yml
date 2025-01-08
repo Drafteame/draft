@@ -1,0 +1,110 @@
+name: Update nix-modules with new draft version
+
+on:
+  #push:
+  #  tags:
+  #    - 'v*.*.*'
+  workflow_dispatch:
+
+env:
+  ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+  GIT_USER_EMAIL: ${{ secrets.GIT_EMAIL }}
+  GIT_USER_NAME: ${{ secrets.GIT_NAME }}
+
+jobs:
+  update-nix-modules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: "${{ secrets.ACCESS_TOKEN }}"
+
+      - name: Set up Nix
+        uses: cachix/install-nix-action@v20
+
+      - name: Get tag version
+        id: get_version
+        run: |
+          #echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          echo "VERSION=1.4.0" >> $GITHUB_ENV
+
+      - name: Prefetch the new git sha
+        id: prefetch
+        run: |
+          nix-prefetch-git \
+            --quiet \
+            --url https://${{ env.ACCESS_TOKEN }}:x-oauth-basic@github.com/Drafteame/draft.git \
+            --rev v${{ steps.get_version.outputs.VERSION }} \
+            > prefetch.json
+          
+          echo "HASH_BASE64=$(jq -r '.hash' prefetch.json)" >> $GITHUB_OUTPUT
+
+      - name: Checkout nix-modules
+        uses: actions/checkout@v4
+        with:
+          repository: 'Drafteame/nix-modules'
+          path: 'nix-modules'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update source version and hash
+        run: |
+          cd nix-modules/modules/go-modules/packages
+          sed -i "s/version = \".*\";/version = \"${{ steps.get_version.outputs.VERSION }}\";/" draft.nix
+          sed -i "s|sha256 = \".*\";|sha256 = \"${{ steps.prefetch.outputs.HASH_BASE64 }}\";|" draft.nix
+
+      - name: Build to find the correct vendorHash
+        id: vendorhash
+        run: |
+          cd nix-modules/modules/go-modules
+          set +e
+          build_output=$(nix-build -E 'with import <nixpkgs> {}; (import default.nix {}).draft' 2>&1)
+          exit_code=$?
+          set -e
+
+          if [ $exit_code -ne 0 ]; then
+            new_vendor_hash=$(echo "$build_output" | grep -o 'got: sha256-[a-zA-Z0-9+/=]*' | sed 's/got: //')
+            echo "VENDOR_HASH=$new_vendor_hash" >> $GITHUB_ENV
+          fi
+
+      - name: Update vendorHash
+        run: |
+          if [[ ! -v $VENDOR_HASH ]]; then
+            exit 0
+          fi
+          
+          cd nix-modules/modules/go-modules/packages
+          
+          if [ -n $VENDOR_HASH ]; then
+            sed -i "s|vendorHash = \".*\";|vendorHash = \"$VENDOR_HASH\";|" draft.nix
+          else
+            echo "Error: Vendor hash is empty"
+            exit 1
+          fi
+
+      - name: Configure Git
+        run: |
+          git config --global user.name ${{ env.GIT_USER_NAME }}
+          git config --global user.email ${{ env.GIT_USER_EMAIL }}
+
+      - name: Commit and push changes
+        run: |
+          cd nix-modules
+          echo BRANCH_NAME="chore/update-draft-v${{ steps.get_version.outputs.VERSION }}" >> $GITHUB_ENV
+          git checkout -b "$BRANCH_NAME"
+          git add --all
+          git commit -m "chore: update draft-cli to v${{ steps.get_version.outputs.VERSION }}"
+          git push origin "$BRANCH_NAME"
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        run: |
+          cd nix-modules
+          gh pr create \
+            --title "chore: update-draft-v${{ steps.get_version.outputs.VERSION }}" \
+            --body "Draft-cli, sha256 and vendor hash are updated to v${{ steps.get_version.outputs.VERSION }}" \
+            --repo Drafteame/nix-modules \
+            --head $BRANCH_NAME \
+            --base main
