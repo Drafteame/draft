@@ -1,3 +1,10 @@
+## v1.6.0 (2025-01-08)
+
+
+- feat: new legacy lambda creation with new service structure (#37)
+- ci: add name workflow (#36)
+- ci: add file (#35)
+
 ## v1.5.1 (2025-01-06)
 
 
