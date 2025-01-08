@@ -2,12 +2,14 @@ package deleteproject
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+
 	"github.com/Drafteame/draft/internal/actions/sentry/deleteproject"
 	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms"
-	"github.com/spf13/cobra"
-	"os"
 )
 
 var cmd = &cobra.Command{

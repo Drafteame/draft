@@ -18,6 +18,12 @@ var newLambdaCmd = &cobra.Command{
 	Run:   run,
 }
 
+var legacyPath string
+
+func init() {
+	newLambdaCmd.Flags().StringVarP(&legacyPath, "legacy-path", "l", "", "Path to legacy service")
+}
+
 func run(_ *cobra.Command, _ []string) {
 	if data.Flags.WorkingDir != "" {
 		if err := os.Chdir(data.Flags.WorkingDir); err != nil {
@@ -28,6 +34,11 @@ func run(_ *cobra.Command, _ []string) {
 	data.LoadMeta()
 
 	input := dtos.LambdaInput{}
+
+	if legacyPath != "" {
+		input.IsLegacy = true
+		input.ServicePath = legacyPath
+	}
 
 	if err := forms.NewLambda(&input); err != nil {
 		panic(err)

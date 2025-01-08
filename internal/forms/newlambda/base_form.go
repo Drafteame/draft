@@ -11,22 +11,24 @@ import (
 )
 
 func baseForm(input *dtos.LambdaInput) error {
-	services, err := project.GetServices()
-	if err != nil {
-		return err
+	if !input.IsLegacy {
+		services, err := project.GetServices()
+		if err != nil {
+			return err
+		}
+
+		err = inputs.Select[string]("Service:",
+			inputs.WithDescription[string]("Select the service where the new lambda will be created."),
+			inputs.WithValue(&input.ServicePath),
+			inputs.WithOptions(services),
+		)
+
+		if err != nil {
+			return err
+		}
 	}
 
-	err = inputs.Select[string]("Service:",
-		inputs.WithDescription[string]("Select the service where the new lambda will be created."),
-		inputs.WithValue(&input.ServicePath),
-		inputs.WithOptions(services),
-	)
-
-	if err != nil {
-		return err
-	}
-
-	err = inputs.Text("Lambda Name:",
+	err := inputs.Text("Lambda Name:",
 		inputs.WithDescription[string]("Enter the name of the new lambda."),
 		inputs.WithValue(&input.LambdaName),
 		inputs.WithValidation(func(s string) error {
@@ -56,7 +58,7 @@ func baseForm(input *dtos.LambdaInput) error {
 
 	input.PackageName = data.Meta.PackageName
 
-	if !strings.HasPrefix(input.ServicePath, "services/") {
+	if !strings.HasPrefix(input.ServicePath, "services/") && !input.IsLegacy {
 		input.ServicePath = "services/" + input.ServicePath
 	}
 

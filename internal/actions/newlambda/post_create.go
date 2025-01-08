@@ -9,6 +9,12 @@ import (
 )
 
 func (nl *NewLambda) postCreate() error {
+	if nl.input.IsLegacy {
+		println("Command executed in legacy mode. No deps and serverless.yml changes created. Please add manually")
+
+		return nil
+	}
+
 	if err := nl.addToDepsGo(); err != nil {
 		return err
 	}

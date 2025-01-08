@@ -1,6 +1,6 @@
 function:
   {{ .LambdaName }}:
-    handler: cmd/snssqs/{{ .LambdaName }}/main.go
+    handler: {{if not .IsLegacy}}cmd/{{ end }}snssqs/{{ .LambdaName }}/main.go
     reservedConcurrency: 10
     events:
       - sqs:
