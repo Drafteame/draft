@@ -1,6 +1,6 @@
 function:
   {{ .LambdaName }}:
-    handler: cmd/http/{{ .LambdaName }}/main.go
+    handler: {{if not .IsLegacy}}cmd/{{ end }}http/{{ .LambdaName }}/main.go
     events:
       - httpApi:
           path: '{{ .HTTPPathAPIGateway }}'

@@ -1,13 +1,14 @@
 package deleteproject
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+
 	"github.com/Drafteame/draft/internal/actions/sentry/deleteproject"
 	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms"
-	"github.com/spf13/cobra"
-	"os"
 )
 
 var cmd = &cobra.Command{
@@ -28,7 +29,7 @@ func run(_ *cobra.Command, _ []string) {
 
 	if err := forms.DeleteProject(&input); err != nil {
 		if err.Error() == "operation cancelled by the user" {
-			fmt.Println("The operation was cancelled by the user.")
+			println("The operation was cancelled by the user.")
 			return
 		}
 		panic(err)

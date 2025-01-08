@@ -1,6 +1,6 @@
 function:
   {{ .LambdaName }}:
-    handler: cmd/cron/{{ .LambdaName }}/main.go
+    handler: {{if not .IsLegacy}}cmd/{{ end }}cron/{{ .LambdaName }}/main.go
     reservedConcurrency: 1
     events:
       - schedule:

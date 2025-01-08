@@ -15,4 +15,5 @@ type LambdaInput struct {
 	CronExpression      string
 	NextImportTag       string
 	NextLambdaImportTag string
+	IsLegacy            bool
 }

@@ -19,10 +19,16 @@ func GetAction(input dtos.LambdaInput) (*NewLambda, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	lambdaPath := input.ServicePath + "/cmd/" + input.LambdaType + "/" + input.LambdaName
+	if input.IsLegacy {
+		lambdaPath = input.ServicePath + "/" + input.LambdaType + "/" + input.LambdaName
+	}
+
 	return &NewLambda{
 		input:      input,
 		tmpl:       tmpl,
-		lambdaPath: input.ServicePath + "/cmd/" + input.LambdaType + "/" + input.LambdaName,
+		lambdaPath: lambdaPath,
 	}, nil
 }
 
