@@ -1,1 +1,4 @@
 name: Update nix-modules with new draft version
+
+on:
+  workflow_dispatch:
