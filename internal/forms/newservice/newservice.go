@@ -10,6 +10,7 @@ func GetForm(input *dtos.ServiceInput) error {
 	input.FrameVersion = "v2"
 	input.LambdaName = "helloworld"
 	input.LambdaType = "plain"
+	input.IsLegacy = false
 	input.PackageName = data.Meta.PackageName
 	input.NextImportTag = data.NextImportTag
 	input.NextLambdaImportTag = data.NextLambdaImportTag
