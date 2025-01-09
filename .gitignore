@@ -31,3 +31,4 @@ config.yml
 dist/
 bin/
 examples/
+result/
