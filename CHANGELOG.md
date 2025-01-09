@@ -1,3 +1,9 @@
+## v1.6.2 (2025-01-09)
+
+
+- chore(ci): update vendor hash for version 1.6.2
+- fix: new service command (#40)
+
 ## v1.6.1 (2025-01-09)
 
 
