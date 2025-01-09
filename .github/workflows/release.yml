@@ -15,7 +15,7 @@ permissions:
 jobs:
   bump_version:
     if: "!startsWith(github.event.head_commit.message, 'bump:') && !startsWith(github.event.head_commit.message, 'ci:')"
-    runs-on: blacksmith-2vcpu-ubuntu-2204
+    runs-on: ubuntu-22.04
     name: "Bump version"
     steps:
       - name: Check out
@@ -31,7 +31,7 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
 
       - name: Set up Python
-        uses: useblacksmith/setup-python@v5
+        uses: actions/setup-python@v5
         with:
           python-version: 3.13
 
@@ -80,7 +80,7 @@ jobs:
         run: echo "Bumped to version ${{ steps.bump.outputs.version }}"
 
   release:
-    runs-on: blacksmith-2vcpu-ubuntu-2204
+    runs-on: ubuntu-22.04
     name: "Release service"
     needs:
       - bump_version
@@ -93,7 +93,7 @@ jobs:
           ref: "main"
 
       - name: Setup Golang
-        uses: useblacksmith/setup-go@v5
+        uses: actions/setup-go@v5
         with:
           go-version: 1.23
 
