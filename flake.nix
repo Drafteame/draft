@@ -10,7 +10,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        draftVersion = "1.6.1";
+        draftVersion = "1.6.2";
       in
       {
         packages.default = pkgs.buildGoModule {
