@@ -20,4 +20,5 @@ type ServiceInput struct {
 	SentryDSN             string
 	NextImportTag         string
 	NextLambdaImportTag   string
+	IsLegacy              bool
 }
