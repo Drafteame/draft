@@ -1,3 +1,10 @@
+## v1.6.1 (2025-01-09)
+
+
+- chore(ci): update vendor hash for version 1.6.1
+- fix: change runners (#39)
+- chore: add flake project with hash auto cretion (#38)
+
 ## v1.6.0 (2025-01-08)
 
 
