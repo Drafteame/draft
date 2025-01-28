@@ -4,9 +4,11 @@ go 1.23
 
 require (
 	github.com/BurntSushi/toml v1.4.0
+	github.com/Masterminds/semver v1.5.0
 	github.com/charmbracelet/huh v0.6.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20241216182847-438e4f741435
 	github.com/getsentry/sentry-go v0.31.1
+	github.com/go-resty/resty/v2 v2.16.5
 	github.com/samber/lo v1.47.0
 	github.com/spf13/cobra v1.8.1
 	golang.org/x/sync v0.10.0
@@ -38,5 +40,7 @@ require (
 	github.com/muesli/termenv v0.15.3-0.20240618155329-98d742f6907a // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 )
