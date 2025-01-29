@@ -100,11 +100,11 @@ func encryptGithubToken(token string) (string, error) {
 		return "", fmt.Errorf("failed to get nix metadata: %w", err)
 	}
 
-	encryptedToken, err := crypto.Encrypt([]byte(token), nixMeta.SysUserName)
+	encryptedToken, err := crypto.Encrypt(token, nixMeta.SysUserName)
 	if err != nil {
 		return "", fmt.Errorf("failed to encrypt token: %w", err)
 	}
-	return string(encryptedToken), nil
+	return encryptedToken, nil
 }
 
 func decryptGithubToken(token []byte) (string, error) {
@@ -113,9 +113,9 @@ func decryptGithubToken(token []byte) (string, error) {
 		return "", fmt.Errorf("failed to get nix metadata: %w", err)
 	}
 
-	decryptedToken, err := crypto.Decrypt(token, nixMeta.SysUserName)
+	decryptedToken, err := crypto.Decrypt(string(token), nixMeta.SysUserName)
 	if err != nil {
 		return "", fmt.Errorf("failed to decrypt token: %w", err)
 	}
-	return string(decryptedToken), nil
+	return decryptedToken, nil
 }

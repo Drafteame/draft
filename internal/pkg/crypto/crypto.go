@@ -3,56 +3,85 @@ package crypto
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
 	"crypto/sha256"
-	"errors"
-	"io"
+	"encoding/base64"
+	"fmt"
+
+	"golang.org/x/crypto/pbkdf2"
 )
 
-func Encrypt(data []byte, passphrase string) ([]byte, error) {
-	key := sha256.Sum256([]byte(passphrase))
-	c, err := aes.NewCipher(key[:])
+const (
+	iterations = 10000
+	keySize    = 32
+	ivSize     = 16
+)
+
+func Encrypt(plaintext string, passphrase string) (string, error) {
+	key := pbkdf2.Key([]byte(passphrase), nil, iterations, keySize+ivSize, sha256.New)
+
+	aesKey := key[:keySize]
+	iv := key[keySize:]
+
+	block, err := aes.NewCipher(aesKey)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	gcm, err := cipher.NewGCM(c)
-	if err != nil {
-		return nil, err
-	}
+	cbc := cipher.NewCBCEncrypter(block, iv)
+	paddedPlaintext := pkcs7Pad([]byte(plaintext), aes.BlockSize)
+	ciphertext := make([]byte, len(paddedPlaintext))
+	cbc.CryptBlocks(ciphertext, paddedPlaintext)
 
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, err
-	}
-
-	ciphertext := gcm.Seal(nonce, nonce, data, nil)
-	return ciphertext, nil
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func Decrypt(ciphertext []byte, passphrase string) ([]byte, error) {
-	key := sha256.Sum256([]byte(passphrase))
-
-	c, err := aes.NewCipher(key[:])
+func Decrypt(encrypted string, passphrase string) (string, error) {
+	data, err := base64.StdEncoding.DecodeString(encrypted)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	gcm, err := cipher.NewGCM(c)
+	key := pbkdf2.Key([]byte(passphrase), nil, iterations, keySize+ivSize, sha256.New)
+
+	aesKey := key[:keySize]
+	iv := key[keySize:]
+
+	block, err := aes.NewCipher(aesKey)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	nonceSize := gcm.NonceSize()
-	if len(ciphertext) < nonceSize {
-		return nil, errors.New("ciphertext too short")
-	}
+	cbc := cipher.NewCBCDecrypter(block, iv)
+	plaintext := make([]byte, len(data))
+	cbc.CryptBlocks(plaintext, data)
 
-	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
-	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	unpaddedPlaintext, err := pkcs7Unpad(plaintext)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return plaintext, nil
+	return string(unpaddedPlaintext), nil
+}
+
+func pkcs7Pad(data []byte, blockSize int) []byte {
+	padding := blockSize - len(data)%blockSize
+	padtext := make([]byte, padding)
+	for i := range padtext {
+		padtext[i] = byte(padding)
+	}
+	return append(data, padtext...)
+}
+
+func pkcs7Unpad(data []byte) ([]byte, error) {
+	length := len(data)
+	if length == 0 {
+		return nil, fmt.Errorf("empty data")
+	}
+
+	padding := int(data[length-1])
+	if padding > length {
+		return nil, fmt.Errorf("invalid padding size")
+	}
+
+	return data[:length-padding], nil
 }
