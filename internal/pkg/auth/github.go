@@ -32,6 +32,10 @@ func GetGithubToken() (string, error) {
 	return readStoredToken()
 }
 
+func RefreshGithubToken() (string, error) {
+	return fetchAndStoreToken()
+}
+
 func fetchAndStoreToken() (string, error) {
 	token, err := getGithubTokenFromSSM()
 	if err != nil {
