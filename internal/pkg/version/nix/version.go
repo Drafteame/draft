@@ -13,22 +13,11 @@ import (
 
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms"
-	"github.com/Drafteame/draft/internal/pkg/files"
+	"github.com/Drafteame/draft/internal/pkg/auth"
 	nixmetadata "github.com/Drafteame/draft/internal/pkg/nix-metadata"
 )
 
 const nixModulesGithubURL = "https://api.github.com/repos/Drafteame/nix-modules/releases/latest"
-
-const ghToken = ""
-
-const cacheFile = "$HOME/.cache/draft/latest_nix_version.json"
-
-const cacheDuration = 6 * time.Hour
-
-type VersionCache struct {
-	LatestVersion string    `json:"latest_nix_version"`
-	FetchedAt     time.Time `json:"fetched_at"`
-}
 
 type UpdateType int
 
@@ -56,21 +45,27 @@ func CheckNixModulesVersion() {
 		return
 	}
 
-	handleUpdate(nixMetadata.CurrentVersion, latestVersion)
+	shouldUpdateLastNegativeResponse := handleUpdate(nixMetadata.CurrentVersion, latestVersion)
+	if !shouldUpdateLastNegativeResponse {
+		if err = nixMetadata.UpdateLastNegativeUpdatePrompt(); err != nil {
+			fmt.Printf("Error updating last negative update prompt: %v\n", err)
+		}
+	}
 }
 
-func handleUpdate(currentVersion, latestVersion *semver.Version) {
+func handleUpdate(currentVersion, latestVersion *semver.Version) (confirmedUpdate bool) {
 	switch updateType := getUpdateType(currentVersion, latestVersion); updateType {
-	case MajorUpdate:
-		return
-	case MinorUpdate:
-		if confirmUpdate(currentVersion, latestVersion) {
+	case MajorUpdate, MinorUpdate:
+		userResponseToUpdatePrompt := confirmUpdate(currentVersion, latestVersion)
+		if userResponseToUpdatePrompt {
 			performNixUpdate()
 		}
+		return userResponseToUpdatePrompt
 	case PatchUpdate:
 		go performNixUpdate()
+		return true
 	default:
-		return
+		return true
 	}
 }
 
@@ -117,50 +112,30 @@ func performNixUpdate() {
 }
 
 func getLatestVersion(nixMetadata nixmetadata.NixMetadata) (*semver.Version, error) {
-	if version, err := getVersionFromCache(); err == nil {
-		return version, nil
+	if nixMetadata.ShouldFetchNixVersion() {
+		version, err := fetchLatestVersion()
+		if err != nil {
+			return nil, err
+		}
+
+		nixMetadata.LastNixVersion = version.String()
+
+		if err := nixMetadata.UpdateLastNixVersionCheck(); err != nil {
+			// Best effort, if we can't update the nix-metadata, we still want to update the version
+			return version, err
+		}
 	}
-
-	version, err := fetchLatestVersion()
-	if err != nil {
-		return nil, err
-	}
-
-	if err := nixMetadata.UpdateLastNixVersionCheck(version.String()); err != nil {
-		// Best effort, if we can't update the nix-metadata, we still want to update the version
-		return version, err
-	}
-
-	return version, nil
-}
-
-func getVersionFromCache() (*semver.Version, error) {
-	if !files.Exists(cacheFile) {
-		return nil, fmt.Errorf("cache file not found")
-	}
-
-	content, err := files.Read(cacheFile)
-	if err != nil {
-		return nil, err
-	}
-
-	var cache VersionCache
-	if err := json.Unmarshal(content, &cache); err != nil {
-		return nil, err
-	}
-
-	if time.Since(cache.FetchedAt) > cacheDuration {
-		return nil, fmt.Errorf("cache expired")
-	}
-
-	return semver.NewVersion(cache.LatestVersion)
+	return semver.MustParse(nixMetadata.LastNixVersion), nil
 }
 
 func fetchLatestVersion() (*semver.Version, error) {
 	client := resty.New().
-		SetTimeout(2 * time.Second).
-		SetRetryCount(1).
-		SetRetryWaitTime(100 * time.Millisecond)
+		SetTimeout(2 * time.Second)
+
+	ghToken, err := auth.GetGithubToken()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get github token: %w", err)
+	}
 
 	response, err := client.R().
 		SetHeader("Authorization", fmt.Sprintf("token %s", ghToken)).
@@ -169,8 +144,17 @@ func fetchLatestVersion() (*semver.Version, error) {
 		return nil, fmt.Errorf("failed to get latest version: %w", err)
 	}
 
-	if response.IsError() {
+	if response == nil {
+		return nil, fmt.Errorf("response is nil")
+	}
+
+	if response.IsError() && response.StatusCode() != 401 {
 		return nil, fmt.Errorf("github API error: %s", response.Status())
+	} else if response.StatusCode() == 401 {
+		ghToken, err = auth.RefreshGithubToken()
+		response, err = client.R().
+			SetHeader("Authorization", fmt.Sprintf("token %s", ghToken)).
+			Get(nixModulesGithubURL)
 	}
 
 	var latestVersion struct {
