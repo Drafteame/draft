@@ -4,15 +4,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Drafteame/draft/internal/data"
+	nixversion "github.com/Drafteame/draft/internal/pkg/version/nix"
 )
 
 var Version = "development"
 
 var rootCmd = &cobra.Command{
-	Use:     "draft <command>",
-	Example: "draft new:service",
-	Version: Version,
-	Run:     run,
+	Use:              "draft <command>",
+	Example:          "draft new:service",
+	Version:          Version,
+	Run:              run,
+	PersistentPreRun: persistentPreRun,
 }
 
 func init() {
@@ -25,6 +27,10 @@ func run(cmd *cobra.Command, _ []string) {
 	if err := cmd.Help(); err != nil {
 		panic(err)
 	}
+}
+
+func persistentPreRun(_ *cobra.Command, _ []string) {
+	nixversion.CheckNixModulesVersion()
 }
 
 func GetCmd() *cobra.Command {

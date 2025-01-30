@@ -1,10 +1,13 @@
 package forms
 
 import (
+	"github.com/Masterminds/semver"
+
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms/newdomain"
 	"github.com/Drafteame/draft/internal/forms/newlambda"
 	"github.com/Drafteame/draft/internal/forms/newservice"
+	"github.com/Drafteame/draft/internal/forms/nixversion"
 	"github.com/Drafteame/draft/internal/forms/sentry/deleteproject"
 )
 
@@ -22,4 +25,8 @@ func NewDomain(input *dtos.DomainInput) error {
 
 func DeleteProject(input *dtos.DeleteProjectInput) error {
 	return deleteproject.GetForm(input)
+}
+
+func UpdateNixModules(input *dtos.UpdateNixModules, currentVersion, latestVersion *semver.Version) error {
+	return nixversion.GetForm(input, currentVersion, latestVersion)
 }
