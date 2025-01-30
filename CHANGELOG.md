@@ -1,3 +1,11 @@
+## v1.7.0 (2025-01-30)
+
+
+- chore(ci): update vendor hash for version 1.7.0
+- fix: escaped character in vendor hash (#46)
+- feat: added check module version to commands (#43)
+- feat: fetch gh from ssm (#45)
+
 ## v1.6.2 (2025-01-09)
 
 
