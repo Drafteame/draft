@@ -64,7 +64,7 @@ portable_sed 's/vendorHash = ".*"/vendorHash = ""/' flake.nix
 # Try to build the package to get the new hash
 log_info "Building package to compute new vendor hash"
 BUILD_OUTPUT=$(nix build 2>&1 || true)
-NEW_HASH=$(echo "$BUILD_OUTPUT" | grep 'got:.*sha256' | sed 's/.*got:\s*\(sha256-[A-Za-z0-9+\/]*=\).*/\1/' | grep -o 'sha256-[A-Za-z0-9+/]*=' | head -1)
+NEW_HASH=$(echo "$BUILD_OUTPUT" | grep 'got:.*sha256' | sed 's/.*got:\s*\(sha256-[A-Za-z0-9+\/]*=\).*/\1/' | grep -o 'sha256-[A-Za-z0-9+/]*=' | head -1 | sed 's/\//\\\//g')
 
 if [ -z "$NEW_HASH" ]; then
     log_error "Failed to extract new hash from nix build output"
