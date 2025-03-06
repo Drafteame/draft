@@ -39,24 +39,11 @@ func run(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	path := args[0]
+	path := getPath(args[0])
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		println("Failed to get current working directory:", err.Error())
-		os.Exit(1)
-	}
-
-	println("Current working directory:", cwd)
 	println("Getting AWS credentials...")
 
-	awsEnvs, err := aws.GetLocalCredentials()
-	if err != nil {
-		println("Failed to get AWS credentials:", err.Error())
-		os.Exit(1)
-	}
-
-	path = cwd + "/" + path
+	awsEnvs := getAWSEnvs()
 
 	println("Identifying service...")
 
@@ -66,17 +53,7 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	pklConfigFile := fmt.Sprintf("%s/config/app/app.pkl", parent)
-	pklOutFile := fmt.Sprintf("%s/.app-config.yaml", parent)
-
-	if files.Exists(pklConfigFile) {
-		println("Building pkl...")
-		_, errPkl := pkl.Build(pklConfigFile, pklOutFile, "yaml", pkl.WithEnvs(awsEnvs))
-		if errPkl != nil {
-			println("Failed to build pkl:", errPkl.Error())
-			os.Exit(1)
-		}
-	}
+	pklOutFile := buildPkl(parent, awsEnvs)
 
 	println("Building lambda...")
 
@@ -85,19 +62,7 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	execName := build.BinPath + path
-
-	binCmd := fmt.Sprintf("./%s --local --logger.colored --config %s", execName, pklOutFile)
-
-	body, err := getBody(cmd)
-	if err != nil {
-		println("Failed to get body:", err.Error())
-		os.Exit(1)
-	}
-
-	if body != "" {
-		binCmd = fmt.Sprintf("%s --body '%s'", binCmd, body)
-	}
+	binCmd := buildBinCmd(cmd, path, pklOutFile)
 
 	serviceEnvs := map[string]string{
 		"STAGE":    "dev",
@@ -121,7 +86,70 @@ func run(cmd *cobra.Command, args []string) {
 	}
 }
 
-func getBody(cmd *cobra.Command) (string, error) {
+func buildBinCmd(cmd *cobra.Command, path, pklOutFile string) string {
+	execName := build.BinPath + path
+
+	if pklOutFile != "" {
+		pklOutFile = fmt.Sprintf("--config %s", pklOutFile)
+	}
+
+	binCmd := fmt.Sprintf("./%s --local --logger.colored %s", execName, pklOutFile)
+
+	body := getBody(cmd)
+
+	if body != "" {
+		binCmd = fmt.Sprintf("%s --body '%s'", binCmd, body)
+	}
+
+	return binCmd
+}
+
+func buildPkl(parent string, awsEnvs map[string]string) string {
+	pklConfigFile := fmt.Sprintf("%s/config/app/app.pkl", parent)
+	pklOutFile := fmt.Sprintf("%s/.app-config.yaml", parent)
+
+	if !files.Exists(pklConfigFile) {
+		return ""
+	}
+
+	println("Building pkl...")
+
+	_, errPkl := pkl.Build(pklConfigFile, pklOutFile, "yaml", pkl.WithEnvs(awsEnvs))
+	if errPkl != nil {
+		println("Failed to build pkl:", errPkl.Error())
+		os.Exit(1)
+	}
+
+	return pklOutFile
+}
+
+func getPath(argPath string) string {
+	path := argPath
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		println("Failed to get current working directory:", err.Error())
+		os.Exit(1)
+	}
+
+	println("Current working directory:", cwd)
+
+	path = cwd + "/" + path
+
+	return path
+}
+
+func getAWSEnvs() map[string]string {
+	awsEnvs, err := aws.GetLocalCredentials()
+	if err != nil {
+		println("Failed to get AWS credentials:", err.Error())
+		os.Exit(1)
+	}
+
+	return awsEnvs
+}
+
+func getBody(cmd *cobra.Command) string {
 	bodyFile := cmd.Flag("body-file").Value.String()
 	if bodyFile != "" {
 		return readBodyFromFile(bodyFile)
@@ -129,22 +157,24 @@ func getBody(cmd *cobra.Command) (string, error) {
 
 	body := cmd.Flag("body").Value.String()
 
-	return body, nil
+	return body
 }
 
-func readBodyFromFile(file string) (string, error) {
+func readBodyFromFile(file string) string {
 	if !files.Exists(file) {
-		return "", fmt.Errorf("file not found: %s", file)
+		println("Failed to get body:", fmt.Errorf("file not found: %s", file).Error())
+		os.Exit(1)
 	}
 
 	body, err := files.Read(file)
 	if err != nil {
-		return "", err
+		println("Failed to read body:", err.Error())
+		os.Exit(1)
 	}
 
 	strBody := string(body)
 	strBody = strings.ReplaceAll(strBody, "\n", "")
 	strBody = strings.ReplaceAll(strBody, "\t", "")
 
-	return strBody, nil
+	return strBody
 }
