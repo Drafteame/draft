@@ -31,7 +31,7 @@ const (
 func CheckNixModulesVersion() {
 	nixMetadata, err := nixmetadata.Get()
 	if err != nil {
-		fmt.Printf("Error getting current version: %v\n", err)
+		_, _ = fmt.Printf("Error getting current version: %v\n", err)
 		return
 	}
 
@@ -41,14 +41,14 @@ func CheckNixModulesVersion() {
 
 	latestVersion, err := getLatestVersion(nixMetadata)
 	if err != nil {
-		fmt.Printf("Error getting latest version: %v\n", err)
+		_, _ = fmt.Printf("Error getting latest version: %v\n", err)
 		return
 	}
 
 	shouldUpdateLastNegativeResponse := handleUpdate(nixMetadata.CurrentVersion, latestVersion)
 	if !shouldUpdateLastNegativeResponse {
 		if err = nixMetadata.UpdateLastNegativeUpdatePrompt(); err != nil {
-			fmt.Printf("Error updating last negative update prompt: %v\n", err)
+			_, _ = fmt.Printf("Error updating last negative update prompt: %v\n", err)
 		}
 	}
 }
@@ -89,7 +89,7 @@ func confirmUpdate(current, latest *semver.Version) bool {
 	input := dtos.UpdateNixModules{}
 	err := forms.UpdateNixModules(&input, current, latest)
 	if err != nil {
-		fmt.Printf("Error reading user input: %v\n", err)
+		_, _ = fmt.Printf("Error reading user input: %v\n", err)
 		return false
 	}
 	return input.ShouldUpdateNixModules
@@ -100,15 +100,15 @@ func performNixUpdate() {
 
 	if err := spinner.New().Type(spinner.Dots).Title("Updating nix-modules...").Action(func() {
 		if err := cmd.Run(); err != nil {
-			fmt.Printf("Error updating nix-modules: %v\n", err)
+			_, _ = fmt.Printf("Error updating nix-modules: %v\n", err)
 			return
 		}
 	}).Run(); err != nil {
-		fmt.Printf("Error updating nix-modules: %v\n", err)
+		_, _ = fmt.Printf("Error updating nix-modules: %v\n", err)
 		return
 	}
 
-	fmt.Println("Nix modules update completed successfully")
+	println("Nix modules update completed successfully")
 }
 
 func getLatestVersion(nixMetadata nixmetadata.NixMetadata) (*semver.Version, error) {
@@ -151,10 +151,19 @@ func fetchLatestVersion() (*semver.Version, error) {
 	if response.IsError() && response.StatusCode() != 401 {
 		return nil, fmt.Errorf("github API error: %s", response.Status())
 	} else if response.StatusCode() == 401 {
-		ghToken, err = auth.RefreshGithubToken()
-		response, err = client.R().
+		ghToken, errToken := auth.RefreshGithubToken()
+		if errToken != nil {
+			return nil, fmt.Errorf("failed to refresh github token: %w", errToken)
+		}
+
+		var errRes error
+		response, errRes = client.R().
 			SetHeader("Authorization", fmt.Sprintf("token %s", ghToken)).
 			Get(nixModulesGithubURL)
+
+		if errRes != nil {
+			return nil, fmt.Errorf("failed to get latest version: %w", errRes)
+		}
 	}
 
 	var latestVersion struct {
