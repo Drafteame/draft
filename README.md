@@ -51,3 +51,18 @@ If you run the command outside the project root folder you can pass a flag to sp
 ```bash
 draft new:lambda -w path/to/project
 ```
+
+### Invoke Lambda
+
+First locate yourself inside the project root folder of the monorepo, the execute next command:
+
+```bash
+# Simple invoke useful for http lambdas
+draft invoke path/to/lambda
+
+# Invoke with event data
+draft invoke --body '{"some": "body"}' path/to/lambda
+
+# Invoke with event data from json file
+draft invoke --body-file path/to/body.json path/to/lambda
+```

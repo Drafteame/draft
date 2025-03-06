@@ -65,9 +65,9 @@ func (nd *NewDomain) addMockeryPackages() error {
 }
 
 func (nd *NewDomain) createMockeryFiles() error {
-	out, code, err := exec.Command("mockery")
+	_, err := exec.Command("mockery")
 	if err != nil {
-		return fmt.Errorf("%w - Command 'mockery' failed: code %d\n%s", err, code, out)
+		return fmt.Errorf("command 'mockery' failed: %w", err)
 	}
 
 	return nil

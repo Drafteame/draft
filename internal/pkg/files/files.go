@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 func ScanAndWrite(path string, cb func(line string) (string, error)) error {
@@ -63,4 +65,13 @@ func Exists(path string) bool {
 	path = os.ExpandEnv(path)
 	_, err := os.Stat(path)
 	return !os.IsNotExist(err)
+}
+
+func LoadYAML(path string, v any) error {
+	data, err := Read(path)
+	if err != nil {
+		return err
+	}
+
+	return yaml.Unmarshal(data, v)
 }

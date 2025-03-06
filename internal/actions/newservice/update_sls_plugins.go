@@ -21,9 +21,9 @@ func (ns *NewService) updateSlsPlugins() error {
 
 		cmd := "npx npm-check-updates '/serverless-.*/' -u && npm install"
 
-		out, code, errCmd := exec.Command(cmd)
+		_, errCmd := exec.Command(cmd)
 		if errCmd != nil {
-			err = fmt.Errorf("%w: cannot upgrade serverless plugins [code %d]: %s", errCmd, code, out)
+			err = fmt.Errorf("cannot upgrade serverless plugins: %w", errCmd)
 			return
 		}
 	}
