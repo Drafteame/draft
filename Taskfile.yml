@@ -1,0 +1,20 @@
+version: 3
+
+tasks:
+  hooks:
+    cmds:
+      - husky install
+    silent: true
+
+  format:
+    cmds:
+      - goimports-reviser ./...
+    silent: true
+
+  lint:
+    cmds:
+      - revive -config revive.toml -formatter friendly ./...
+      - go vet ./...
+    silent: true
+
+  

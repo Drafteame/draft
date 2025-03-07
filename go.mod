@@ -2,9 +2,6 @@ module github.com/Drafteame/draft
 
 go 1.23.0
 
-toolchain go1.23.5
-
-
 require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/Masterminds/semver v1.5.0
