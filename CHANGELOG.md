@@ -1,3 +1,10 @@
+## v1.8.0 (2025-03-07)
+
+
+- chore(ci): update vendor hash for version 1.8.0
+- fix: mod tidy (#70)
+- feat: [PLA-1] add invoke command to call lambdas locally (#69)
+
 ## v1.7.0 (2025-01-30)
 
 
