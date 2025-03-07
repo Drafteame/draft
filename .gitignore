@@ -26,6 +26,7 @@ node_modules/
 
 # Test local files
 config.yml
+body.json
 
 # build
 dist/

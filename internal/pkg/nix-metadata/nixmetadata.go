@@ -35,13 +35,13 @@ func (n *NixMetadata) ShouldRunUpdateScript() bool {
 
 func (n *NixMetadata) ParseCurrentVersion() {
 	if n.Version == "" {
-		fmt.Println("Current version not found in nix metadata")
+		println("Current version not found in nix metadata")
 		return
 	}
 
 	parsedVersion, err := semver.NewVersion(n.Version)
 	if err != nil {
-		fmt.Printf("Error parsing current version: %v\n", err)
+		_, _ = fmt.Printf("Error parsing current version: %v\n", err)
 		return
 	}
 
@@ -49,7 +49,7 @@ func (n *NixMetadata) ParseCurrentVersion() {
 }
 
 func (n *NixMetadata) ShouldFetchNixVersion() bool {
-	return time.Since(n.LastNixVersionCheckAt) > 3*time.Hour || n.LastNixVersionCheckAt == time.Time{} || n.LastNixVersion == ""
+	return time.Since(n.LastNixVersionCheckAt) > 3*time.Hour || n.LastNixVersionCheckAt.Equal(time.Time{}) || n.LastNixVersion == ""
 }
 
 func (n *NixMetadata) UpdateLastNixVersionCheck() error {
@@ -57,12 +57,12 @@ func (n *NixMetadata) UpdateLastNixVersionCheck() error {
 
 	metadata, err := json.MarshalIndent(n, "", "	")
 	if err != nil {
-		fmt.Printf("Error updating nix-metadata: %v\n", err)
+		_, _ = fmt.Printf("Error updating nix-metadata: %v\n", err)
 		return err
 	}
 
 	if err := files.Create(nixMetadataPath, metadata); err != nil {
-		fmt.Printf("Error updating nix-metadata: %v\n", err)
+		_, _ = fmt.Printf("Error updating nix-metadata: %v\n", err)
 		return err
 	}
 
@@ -74,12 +74,12 @@ func (n *NixMetadata) UpdateLastNegativeUpdatePrompt() error {
 
 	metadata, err := json.MarshalIndent(n, "", "	")
 	if err != nil {
-		fmt.Printf("Error updating nix-metadata: %v\n", err)
+		_, _ = fmt.Printf("Error updating nix-metadata: %v\n", err)
 		return err
 	}
 
 	if err := files.Create(nixMetadataPath, metadata); err != nil {
-		fmt.Printf("Error updating nix-metadata: %v\n", err)
+		_, _ = fmt.Printf("Error updating nix-metadata: %v\n", err)
 		return err
 	}
 
