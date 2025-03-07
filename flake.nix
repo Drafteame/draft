@@ -13,6 +13,15 @@
         draftVersion = "1.7.0";
       in
       {
+        devShell = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            go
+            goimports-reviser
+            revive
+            go-task
+          ];
+        };
+
         packages.default = pkgs.buildGoModule {
           pname = "draft";
           version = draftVersion;

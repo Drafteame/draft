@@ -1,7 +1,6 @@
 module github.com/Drafteame/draft
 
-go 1.23
-
+go 1.23.0
 
 require (
 	github.com/BurntSushi/toml v1.4.0
@@ -10,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.9
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.57.2
 	github.com/charmbracelet/huh v0.6.0
-	github.com/charmbracelet/huh/spinner v0.0.0-20250305131932-4a188eb1ecab
+	github.com/charmbracelet/huh/spinner v0.0.0-20250307140743-2f905c5e8f3d
 	github.com/getsentry/sentry-go v0.31.1
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/samber/lo v1.49.1
