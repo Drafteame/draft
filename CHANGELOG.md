@@ -1,3 +1,9 @@
+## v1.8.2 (2025-03-11)
+
+
+- chore(ci): update vendor hash for version 1.8.2
+- chore: [PLA-22] regrup invoke command as local:invoke (#75)
+
 ## v1.8.1 (2025-03-11)
 
 
