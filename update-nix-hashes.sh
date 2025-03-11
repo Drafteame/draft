@@ -55,11 +55,13 @@ fi
 
 # Update the version in the flake
 log_info "Updating version in flake.nix to $NEW_VERSION"
-portable_sed "s/draftVersion = \".*\"/draftVersion = \"$NEW_VERSION\"/" flake.nix
+#portable_sed "s/draftVersion = \".*\"/draftVersion = \"$NEW_VERSION\"/" flake.nix
+sd 'draftVersion = ".*"' "draftVersion = \"$NEW_VERSION\"" flake.nix
 
 # Set vendorHash to null to make Nix compute the new hash
 log_info "Setting vendorHash to null to compute new hash"
-portable_sed 's/vendorHash = ".*"/vendorHash = ""/' flake.nix
+#portable_sed 's/vendorHash = ".*"/vendorHash = ""/' flake.nix
+sd 'vendorHash = ".*"' 'vendorHash = ""' flake.nix
 
 # Try to build the package to get the new hash
 log_info "Building package to compute new vendor hash"
@@ -77,7 +79,8 @@ log_debug "New hash computed: $NEW_HASH"
 
 # Update the hash in the flake
 log_info "Updating flake.nix with new vendor hash"
-portable_sed "s/vendorHash = \"\"/vendorHash = \"$NEW_HASH\"/" flake.nix
+#portable_sed "s/vendorHash = \"\"/vendorHash = \"$NEW_HASH\"/" flake.nix
+sd 'vendorHash = ""' "vendorHash = \"$NEW_HASH\"" flake.nix
 
 # Clean up
 log_debug "Removing backup file"
