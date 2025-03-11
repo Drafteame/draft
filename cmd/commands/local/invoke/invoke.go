@@ -16,7 +16,7 @@ import (
 )
 
 var invokeCmd = cobra.Command{
-	Use:   "invoke [flags] <path-to-lambda>",
+	Use:   "local:invoke [flags] <path-to-lambda>",
 	Short: "Invoke a lambda",
 	Long:  "Invoke a lambda by compiling code and its configuration and running it locally",
 	Run:   run,
