@@ -35,6 +35,11 @@ jobs:
         with:
           python-version: 3.13
 
+      - name: Install sd
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sd
+
       - name: Config Git User
         run: |
           git config --local user.email "$GIT_USER_EMAIL"
