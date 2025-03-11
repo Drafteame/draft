@@ -1,3 +1,11 @@
+## v1.8.1 (2025-03-11)
+
+
+- chore(ci): update vendor hash for version 1.8.1
+- fix: extract (#74)
+- fix: install from tar (#73)
+- fix: script for hash generation (#72)
+
 ## v1.8.0 (2025-03-07)
 
 
