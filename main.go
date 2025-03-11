@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/Drafteame/draft/cmd/commands"
 	"github.com/Drafteame/draft/cmd/commands/config"
-	"github.com/Drafteame/draft/cmd/commands/invoke"
+	"github.com/Drafteame/draft/cmd/commands/local/invoke"
 	"github.com/Drafteame/draft/cmd/commands/newdomain"
 	"github.com/Drafteame/draft/cmd/commands/newlambda"
 	"github.com/Drafteame/draft/cmd/commands/newservice"
