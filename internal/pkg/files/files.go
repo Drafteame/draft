@@ -1,41 +1,11 @@
 package files
 
 import (
-	"bufio"
 	"io"
 	"os"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 )
-
-func ScanAndWrite(path string, cb func(line string) (string, error)) error {
-	path = os.ExpandEnv(path)
-
-	file, err := os.OpenFile(path, os.O_RDONLY, 0755)
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	newContent := strings.Builder{}
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		newLine, err := cb(line)
-		if err != nil {
-			return err
-		}
-
-		if _, errWrite := newContent.WriteString(newLine); errWrite != nil {
-			return errWrite
-		}
-	}
-
-	return Create(path, []byte(newContent.String()))
-}
 
 func Read(path string) ([]byte, error) {
 	path = os.ExpandEnv(path)
