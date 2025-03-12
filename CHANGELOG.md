@@ -1,3 +1,10 @@
+## v1.9.0 (2025-03-12)
+
+
+- chore(ci): update vendor hash for version 1.9.0
+- feat: [PLA-23] local migrate up (#76)
+- Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>
+
 ## v1.8.2 (2025-03-11)
 
 
