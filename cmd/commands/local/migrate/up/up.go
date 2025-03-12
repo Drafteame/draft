@@ -26,7 +26,7 @@ func init() {
 func run(cmd *cobra.Command, _ []string) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("%v\n", r)
+			_, _ = fmt.Printf("%v\n", r)
 			os.Exit(1)
 		}
 	}()
@@ -63,5 +63,5 @@ func run(cmd *cobra.Command, _ []string) {
 		panic(fmt.Sprintf("Failed to migrate database %s: %s\n", dbName, err.Error()))
 	}
 
-	fmt.Println("Migrations executed successfully")
+	_, _ = fmt.Println("Migrations executed successfully")
 }
