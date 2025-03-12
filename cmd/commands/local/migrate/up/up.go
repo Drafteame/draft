@@ -39,7 +39,7 @@ func run(cmd *cobra.Command, _ []string) {
 
 	config, err := loadConfig(cmd)
 	if err != nil {
-		panic(fmt.Sprintf("Faied to load local migrations config: %s\n", err.Error()))
+		panic(fmt.Sprintf("Failed to load local migrations config: %s\n", err.Error()))
 	}
 
 	dbName := cmd.Flag("database").Value.String()
