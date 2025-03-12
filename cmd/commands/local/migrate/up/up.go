@@ -9,7 +9,7 @@ import (
 
 var migrateUpCmd = cobra.Command{
 	Use:   "local:migrate:up [flags] ",
-	Short: "Execute migrate up command to",
+	Short: "Execute migrate up command to apply all pending migrations",
 	Long:  "Execute migrations using go migrate over all databases or a specific one",
 	Run:   run,
 }
