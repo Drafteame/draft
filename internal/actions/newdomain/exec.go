@@ -120,7 +120,6 @@ func (nd *NewDomain) createPostgresRepository() error {
 func (nd *NewDomain) createProviders() error {
 	fileList := []dtos.FileEntry{
 		{Path: nd.input.DomainPath + "/providers/generator.go", Data: nd.tmpl.Providers.GeneratorGo},
-		//{Path: nd.input.DomainPath + "/providers/providers.go", Data: nd.tmpl.Providers.ProvidersGo},
 		{Path: nd.input.DomainPath + "/providers/service.go", Data: nd.tmpl.Providers.ServiceGo},
 	}
 
