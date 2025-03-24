@@ -2,9 +2,11 @@ package providers
 
 import (
   "os"
+  "sync"
 
 	"{{.PackageName}}/{{ .DomainPath }}/service"
 	"{{.PackageName}}/pkg/providers"
+	"{{.PackageName}}/projects/framev2/pkg/logger"
 )
 
 const PrvService = "domains.{{ .DomainNameLower }}.service"
@@ -16,18 +18,17 @@ func ProvideService(opts ...providers.Option) (*service.Service, error) {
     return provideTestService(opts...)
   }
 
-	if serviceInstance != nil {
-    return serviceInstance, nil
-  }
+  sync.OnceFunc(func() {
+    srv, err := createServiceInstance(opts...)
+    if err != nil {
+      logger.Get().Err(err).Fields(map[string]any{"name": PrvService}).
+        Panic("error creating service instance")
+    }
 
-  srv, err := createServiceInstance(opts...)
-  if err != nil {
-    return nil, err
-  }
+    serviceInstance = srv
+  })
 
-  serviceInstance = srv
-
-  return srv, nil
+  return serviceInstance, nil
 }
 
 func provideTestService(opts ...providers.Option) (*service.Service, error) {
