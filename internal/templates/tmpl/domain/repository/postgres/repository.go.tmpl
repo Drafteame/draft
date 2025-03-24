@@ -10,10 +10,10 @@ type Repository struct {
 	driver gorm.Driver
 }
 
-func New(config gorm.Driver, clock Clock, genID GeneratorID) *Repository {
+func New(driver gorm.Driver, clock Clock, genID GeneratorID) *Repository {
 	return &Repository{
 		genID:  genID,
 		clock:  clock,
-		driver: config,
+		driver: driver,
 	}
 }

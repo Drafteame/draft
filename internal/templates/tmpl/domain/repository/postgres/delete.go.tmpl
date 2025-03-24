@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
 func (r *Repository) Delete(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error) {

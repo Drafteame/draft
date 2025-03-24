@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
 )
 
 func (s *Service) SearchOne(ctx context.Context, filters options.SearchFilters) (domain.{{.DomainNamePascal}}, error) {

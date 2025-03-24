@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
 func TestCreate(t *testing.T) {

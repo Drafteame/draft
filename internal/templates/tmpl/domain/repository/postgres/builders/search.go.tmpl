@@ -3,7 +3,7 @@ package builders
 import (
 	"gorm.io/gorm"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
 )
 
 func SearchOptions(gormDB *gorm.DB, opts options.SearchOptions) *gorm.DB {

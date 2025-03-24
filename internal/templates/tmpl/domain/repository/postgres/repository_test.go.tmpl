@@ -4,17 +4,16 @@ import (
 	"testing"
 	"time"
 
-	prv{{.DomainNameLower}} "{{.PackageName}}/domains/{{.DomainPath}}/providers"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository"
-	"{{.PackageName}}/pkg/datetime"
+	prv{{.DomainNameLower}} "{{.PackageName}}/{{ .DomainPath }}/providers"
 	"{{.PackageName}}/pkg/providers"
 	"{{.PackageName}}/pkg/providers/test/container"
+	"{{.PackageName}}/projects/framev2/pkg/datetime"
 )
 
 type testWrapper struct {
 	mu    *container.Container
 	clock datetime.Clock
-	repo  *repository.Repository
+	repo  prv{{.DomainNameLower}}.Repository
 }
 
 type testWrapperOptions struct {

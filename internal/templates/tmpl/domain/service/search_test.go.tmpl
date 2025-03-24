@@ -6,10 +6,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
-	prv{{.DomainNameLower}} "{{.PackageName}}/domains/{{.DomainPath}}/providers"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
-	"{{.PackageName}}/domains/{{.DomainPath}}/service/mocks"
+	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
+	prv{{.DomainNameLower}} "{{.PackageName}}/{{ .DomainPath }}/providers"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/service/mocks"
 	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
 )
 

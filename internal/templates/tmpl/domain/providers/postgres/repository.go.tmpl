@@ -1,53 +1,87 @@
 package providers
 
 import (
-	"context"
+  "context"
+	"os"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+  dmnoptions "{{.PackageName}}/{{ .DomainPath }}/domain/options"
+  "{{.PackageName}}/{{ .DomainPath }}/repository"
+  "{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 	"{{.PackageName}}/pkg/providers"
 	prvclock "{{.PackageName}}/pkg/providers/clock"
 	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
 )
 
 type Repository interface {
-	Get(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error)
-	Create(ctx context.Context, m daos.{{.DomainNamePascal}}) (daos.{{.DomainNamePascal}}, error)
-	Update(ctx context.Context, id string, fields options.UpdateFields) (daos.{{.DomainNamePascal}}, error)
-	Delete(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error)
-	Search(ctx context.Context, opts options.SearchOptions) ([]daos.{{.DomainNamePascal}}, int64, error)
-	SearchOne(ctx context.Context, filters options.SearchFilters) (daos.{{.DomainNamePascal}}, error)
+	Get(ctx context.Context, id string) (daos.Test, error)
+	Create(ctx context.Context, m daos.Test) (daos.Test, error)
+	Update(ctx context.Context, id string, fields dmnoptions.UpdateFields) (daos.Test, error)
+	Delete(ctx context.Context, id string) (daos.Test, error)
+	Search(ctx context.Context, opts dmnoptions.SearchOptions) ([]daos.Test, int64, error)
+	SearchOne(ctx context.Context, filters dmnoptions.SearchFilters) (daos.Test, error)
 }
 
+
+const PrvRepository = "domains.{{ .DomainNameLower }}.repository"
+
+var repoInstance Repository
+
 func ProvideRepository(opts ...providers.Option) (Repository, error) {
-	gen, err := ProvideGeneratorID(opts...)
-	if err != nil {
-		return nil, err
-	}
+  if os.Getenv("STAGE") == "" {
+    return provideTestRepository(opts...)
+  }
 
-	buildOpts, err := providers.BuildOptions(opts...)
-	if err != nil {
-		return nil, err
-	}
+	if repoInstance != nil {
+    return repoInstance, nil
+  }
 
-	if buildOpts.Container.Exists(PrvRepository) {
-		return buildOpts.Container.Get(PrvRepository).(Repository), nil
-	}
+  repo, err := createRepoInstance(opts...)
+  if err != nil {
+    return nil, err
+  }
 
-	clock, err := prvclock.ProvideClock(opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	driver, err := prvpostgres.Provide{{.DBProviderFuncName}}(opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	repo := repository.New(driver, clock, gen)
-
-	buildOpts.Container.Set(PrvRepository, repo)
+  repoInstance = repo
 
 	return repo, nil
+}
+
+func provideTestRepository(opts ...providers.Option) (Repository, error) {
+  options, err := providers.BuildOptions(opts...)
+  if err != nil {
+    return nil, err
+  }
+
+  if options.Container.Exists(PrvRepository) {
+    return options.Container.Get(PrvRepository).(Repository), nil
+  }
+
+  repo, err := createRepoInstance(opts...)
+  if err != nil {
+    return nil, err
+  }
+
+  options.Container.Set(PrvRepository, repo)
+
+  return repo, nil
+}
+
+func createRepoInstance(opts ...providers.Option) (*repository.Repository, error) {
+  gen, err := ProvideGeneratorID(opts...)
+  if err != nil {
+    return nil, err
+  }
+
+  clock, err := prvclock.ProvideClock(opts...)
+  if err != nil {
+    return nil, err
+  }
+
+  driver, err := prvpostgres.Provide{{.DBProviderFuncName}}(opts...)
+  if err != nil {
+    return nil, err
+  }
+
+  repo := repository.New(driver, clock, gen)
+
+  return repo, nil
 }

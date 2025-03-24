@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	prv{{.DomainNameLower}} "{{.PackageName}}/domains/{{.DomainPath}}/providers"
-	"{{.PackageName}}/domains/{{.DomainPath}}/service"
-	"{{.PackageName}}/pkg/datetime"
+	prv{{.DomainNameLower}} "{{.PackageName}}/{{ .DomainPath }}/providers"
+	"{{.PackageName}}/{{ .DomainPath }}/service"
 	"{{.PackageName}}/pkg/providers"
 	"{{.PackageName}}/pkg/providers/test/container"
+	"{{.PackageName}}/projects/framev2/pkg/datetime"
 )
 
 type testWrapper struct {

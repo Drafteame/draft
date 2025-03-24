@@ -1,28 +1,60 @@
 package providers
 
 import (
-	"{{.PackageName}}/domains/{{.DomainPath}}/service"
+  "os"
+
+	"{{.PackageName}}/{{ .DomainPath }}/service"
 	"{{.PackageName}}/pkg/providers"
 )
 
+const PrvService = "domains.{{ .DomainNameLower }}.service"
+
+var serviceInstance *service.Service
+
 func ProvideService(opts ...providers.Option) (*service.Service, error) {
-	options, err := providers.BuildOptions(opts...)
-	if err != nil {
-		return nil, err
-	}
+  if os.Getenv("STAGE") == "" {
+    return provideTestService(opts...)
+  }
 
-	if options.Container.Exists(PrvService) {
-		return options.Container.Get(PrvService).(*service.Service), nil
-	}
+	if serviceInstance != nil {
+    return serviceInstance, nil
+  }
 
-	repo, err := ProvideRepository(opts...)
-	if err != nil {
-		return nil, err
-	}
+  srv, err := createServiceInstance(opts...)
+  if err != nil {
+    return nil, err
+  }
 
-	svc := service.New(repo)
+  serviceInstance = srv
 
-	options.Container.Set(PrvService, svc)
+  return srv, nil
+}
 
-	return svc, nil
+func provideTestService(opts ...providers.Option) (*service.Service, error) {
+  options, err := providers.BuildOptions(opts...)
+  if err != nil {
+    return nil, err
+  }
+
+  if options.Container.Exists(PrvService) {
+    return options.Container.Get(PrvService).(*service.Service), nil
+  }
+
+  srv, err := createServiceInstance(opts...)
+  if err != nil {
+    return nil, err
+  }
+
+  options.Container.Set(PrvService, srv)
+
+  return srv, nil
+}
+
+func createServiceInstance(opts ...providers.Option) (*service.Service, error) {
+  repo, err := ProvideRepository(opts...)
+  if err != nil {
+    return nil, err
+  }
+
+  return service.New(repo), nil
 }

@@ -5,16 +5,17 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	ehttp "{{ .PackageName }}/projects/framev2/engine/http"
-	"{{ .PackageName }}/projects/framev2/engine/http/middlewares"
-	"{{ .PackageName }}/projects/framev2/pkg/inject"
+  {{ if not .UseDig }}"{{ .PackageName }}/pkg/providers"
+	{{ end }}ehttp "{{ .PackageName }}/projects/framev2/engine/http"
+	"{{ .PackageName }}/projects/framev2/engine/http/middlewares"{{ if .UseDig }}
+	"{{ .PackageName }}/projects/framev2/pkg/inject"{{ end }}
 )
 
-func init() {
+{{ if .UseDig }}func init() {
 	if err := inject.Get().Provide(New); err != nil {
 		panic(err)
 	}
-}
+}{{ end }}
 
 const path = "{{ .HTTPPathEcho }}"
 
@@ -22,7 +23,7 @@ type Handler struct {
 	router ehttp.Router
 }
 
-func New(router ehttp.Router) Handler {
+func New(router ehttp.Router{{ if not .UseDig }}, _ ...providers.Option{{ end }}) {{ if not .UseDig }}ehttp.{{ end }}Handler {
 	return Handler{
 		router: router,
 	}
