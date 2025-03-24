@@ -8,12 +8,13 @@ import (
   {{ if not .UseDig }}"{{ .PackageName }}/pkg/providers"
 	{{ end }}ehttp "{{ .PackageName }}/projects/framev2/engine/http"
 	"{{ .PackageName }}/projects/framev2/engine/http/middlewares"{{ if .UseDig }}
-	"{{ .PackageName }}/projects/framev2/pkg/inject"{{ end }}
+	"{{ .PackageName }}/projects/framev2/pkg/inject"
+	"{{ .PackageName }}/projects/framev2/pkg/logger"{{ end }}
 )
 
 {{ if .UseDig }}func init() {
 	if err := inject.Get().Provide(New); err != nil {
-		panic(err)
+		logger.Get().Err(err).Fatal("error providing handler")
 	}
 }{{ end }}
 
