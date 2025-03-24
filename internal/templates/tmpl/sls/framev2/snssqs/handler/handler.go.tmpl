@@ -1,8 +1,7 @@
 package handler
 
 import (
-    {{ if not .UseDig }}"{{ .PackageName }}/pkg/providers"
-    {{ end }}"{{ .PackageName }}/projects/framev2/engine/lambda"
+    "{{ .PackageName }}/projects/framev2/engine/lambda"
     "{{ .PackageName }}/projects/framev2/pkg/consumer/v2/sqs"
     "{{ .PackageName }}/projects/framev2/pkg/publisher/types"
 )
@@ -11,7 +10,7 @@ type Event struct {}
 
 type handler struct {}
 
-func New({{ if not .UseDig }}_ ...providers.Option{{ end }}) lambda.Resolver {
+func New() lambda.Resolver {
     return &handler{}
 }
 

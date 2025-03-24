@@ -31,7 +31,7 @@ func Bootstrap() {
 		middlewares.SkipWarmup(),
 		middleware.CORSWithConfig(corsConfig),
 	).{{ if not .UseDig }}SetProvider{{ end }}{{ if .UseDig }}WithResolver{{ end }}(
-		{{ if not .UseDig }}New{{ end }}{{ if .UseDig }}Resolver{{ end }},
+		{{ if not .UseDig }}Provide{{ end }}{{ if .UseDig }}Resolver{{ end }},
 	).Start()
 }
 {{ if .UseDig }}

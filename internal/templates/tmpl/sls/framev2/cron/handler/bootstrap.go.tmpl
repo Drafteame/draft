@@ -16,7 +16,7 @@ func Bootstrap() {
     ).WithMiddleware(
         middlewares.Recover(),
     ).{{ if not .UseDig }}SetProvider{{ end }}{{ if .UseDig }}WithResolver{{ end }}(
-        New,
+        {{ if not .UseDig }}Provide{{ end }}{{ if .UseDig }}New{{ end }},
     ).WithExecutionMode(
         lambda.PlainMode,
     ).Start()

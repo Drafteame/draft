@@ -9,6 +9,8 @@ type LambdaHTTP struct {
 type LambdaHTTPHandler struct {
 	BootstrapGo []byte
 	HandlerGo   []byte
+	ProviderGo  []byte
+	RouteGo     []byte
 }
 
 func loadLambdaHTTP(v HTTPSetter, data any) error {
@@ -60,11 +62,20 @@ func loadLambdaHTTPLambdaConfigYAML(v *LambdaHTTP, data any) error {
 }
 
 func loadLambdaHTTPHandler(v *LambdaHTTP, data any) error {
-	if err := loadLambdaHTTPHandlerBootstrapGo(v, data); err != nil {
-		return err
+	loaders := []func(*LambdaHTTP, any) error{
+		loadLambdaHTTPHandlerBootstrapGo,
+		loadLambdaHTTPHandlerHandlerGo,
+		loadLambdaHTTPHandlerProviderGo,
+		loadLambdaHTTPHandlerRouteGo,
 	}
 
-	return loadLambdaHTTPHandlerHandlerGo(v, data)
+	for _, loader := range loaders {
+		if err := loader(v, data); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func loadLambdaHTTPHandlerBootstrapGo(v *LambdaHTTP, data any) error {
@@ -91,6 +102,34 @@ func loadLambdaHTTPHandlerHandlerGo(v *LambdaHTTP, data any) error {
 	}
 
 	v.Handler.HandlerGo = content
+
+	return nil
+}
+
+func loadLambdaHTTPHandlerProviderGo(v *LambdaHTTP, data any) error {
+	name := "framev2/http/handler/provider.go"
+	path := "tmpl/sls/framev2/http/handler/provider.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.ProviderGo = content
+
+	return nil
+}
+
+func loadLambdaHTTPHandlerRouteGo(v *LambdaHTTP, data any) error {
+	name := "framev2/http/handler/route.go"
+	path := "tmpl/sls/framev2/http/handler/route.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.RouteGo = content
 
 	return nil
 }

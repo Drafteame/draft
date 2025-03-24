@@ -1,12 +1,7 @@
 package handler
 
 import (
-	"net/http"
-
-	"github.com/labstack/echo/v4"
-
-  {{ if not .UseDig }}"{{ .PackageName }}/pkg/providers"
-	{{ end }}ehttp "{{ .PackageName }}/projects/framev2/engine/http"
+	ehttp "{{ .PackageName }}/projects/framev2/engine/http"
 	"{{ .PackageName }}/projects/framev2/engine/http/middlewares"{{ if .UseDig }}
 	"{{ .PackageName }}/projects/framev2/pkg/inject"
 	"{{ .PackageName }}/projects/framev2/pkg/logger"{{ end }}
@@ -18,13 +13,11 @@ import (
 	}
 }{{ end }}
 
-const path = "{{ .HTTPPathEcho }}"
-
 type Handler struct {
 	router ehttp.Router
 }
 
-func New(router ehttp.Router{{ if not .UseDig }}, _ ...providers.Option{{ end }}) {{ if not .UseDig }}ehttp.{{ end }}Handler {
+func New(router ehttp.Router) {{ if not .UseDig }}ehttp.{{ end }}Handler {
 	return Handler{
 		router: router,
 	}
@@ -36,9 +29,4 @@ func (h Handler) Register() {
 		h.handle,
 		middlewares.AuthAPIKey(),
 	)
-}
-
-func (h Handler) handle(ec echo.Context) error {
-    // TODO: Implement your logic here
-	return ec.JSON(http.StatusOK, map[string]any{"message": "Hello, World!"})
 }

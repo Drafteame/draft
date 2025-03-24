@@ -1,0 +1,14 @@
+package handler
+
+import (
+	"{{.PackageName}}/pkg/providers"
+	ehttp "{{.PackageName}}/projects/framev2/engine/http"
+)
+
+func Provide(router ehttp.Router, opts ...providers.Option) (ehttp.Handler, error) {
+	// TODO: call providers for handler dependencies
+
+	h := New(router)
+
+	return h, nil
+}

@@ -9,6 +9,7 @@ type LambdaPlain struct {
 type LambdaPlainHandler struct {
 	BootstrapGo []byte
 	HandlerGo   []byte
+	ProviderGo  []byte
 }
 
 func loadLambdaPlain(v PlainSetter, data any) error {
@@ -60,11 +61,19 @@ func loadLambdaPlainLambdaConfigYAML(v *LambdaPlain, data any) error {
 }
 
 func loadLambdaPlainHandler(v *LambdaPlain, data any) error {
-	if err := loadLambdaPlainHandlerBoostrapGo(v, data); err != nil {
-		return err
+	loaders := []func(*LambdaPlain, any) error{
+		loadLambdaPlainHandlerBoostrapGo,
+		loadLambdaPlainHandlerHandlerGo,
+		loadLambdaPlainHandlerProviderGo,
 	}
 
-	return loadLambdaPlainHandlerHandlerGo(v, data)
+	for _, loader := range loaders {
+		if err := loader(v, data); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func loadLambdaPlainHandlerBoostrapGo(v *LambdaPlain, data any) error {
@@ -91,6 +100,20 @@ func loadLambdaPlainHandlerHandlerGo(v *LambdaPlain, data any) error {
 	}
 
 	v.Handler.HandlerGo = content
+
+	return nil
+}
+
+func loadLambdaPlainHandlerProviderGo(v *LambdaPlain, data any) error {
+	name := "framev2/plain/handler/provider.go"
+	path := "tmpl/sls/framev2/plain/handler/provider.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.ProviderGo = content
 
 	return nil
 }
