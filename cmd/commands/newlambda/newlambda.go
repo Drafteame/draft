@@ -34,8 +34,12 @@ func run(cmd *cobra.Command, _ []string) {
 
 	data.LoadMeta()
 
+	useDig, err := cmd.Flags().GetBool("use-dig")
+	if err != nil {
+		panic(err)
+	}
 	input := dtos.LambdaInput{
-		UseDig: cmd.Flag("use-dig").Value.String() == "true",
+		UseDig: useDig,
 	}
 
 	if legacyPath != "" {
