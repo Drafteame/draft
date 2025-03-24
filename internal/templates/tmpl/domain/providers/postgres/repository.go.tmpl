@@ -13,12 +13,12 @@ import (
 )
 
 type Repository interface {
-	Get(ctx context.Context, id string) (daos.Test, error)
-	Create(ctx context.Context, m daos.Test) (daos.Test, error)
-	Update(ctx context.Context, id string, fields dmnoptions.UpdateFields) (daos.Test, error)
-	Delete(ctx context.Context, id string) (daos.Test, error)
-	Search(ctx context.Context, opts dmnoptions.SearchOptions) ([]daos.Test, int64, error)
-	SearchOne(ctx context.Context, filters dmnoptions.SearchFilters) (daos.Test, error)
+	Get(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error)
+	Create(ctx context.Context, m daos.{{.DomainNamePascal}}) (daos.{{.DomainNamePascal}}, error)
+	Update(ctx context.Context, id string, fields dmnoptions.UpdateFields) (daos.{{.DomainNamePascal}}, error)
+	Delete(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error)
+	Search(ctx context.Context, opts dmnoptions.SearchOptions) ([]daos.{{.DomainNamePascal}}, int64, error)
+	SearchOne(ctx context.Context, filters dmnoptions.SearchFilters) (daos.{{.DomainNamePascal}}, error)
 }
 
 
