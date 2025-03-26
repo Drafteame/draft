@@ -4,7 +4,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
@@ -34,13 +33,13 @@ type Connection struct {
 	Database string `yaml:"database"`
 }
 
-func loadConfig(cmd *cobra.Command) (Config, error) {
+func (a *Action) loadConfig() (Config, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return Config{}, err
 	}
 
-	configPath := cwd + "/" + cmd.Flag("local-migrate-config").Value.String()
+	configPath := cwd + "/" + a.Input.LocalMigrateConfig
 
 	config := Config{}
 

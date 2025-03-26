@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"github.com/Drafteame/draft/internal/actions/local/migrate/up"
 )
 
 var migrateUpCmd = cobra.Command{
@@ -32,45 +34,35 @@ func run(cmd *cobra.Command, _ []string) {
 		}
 	}()
 
-	if workDir := cmd.Parent().Flag("working-dir").Value.String(); workDir != "" {
-		if err := os.Chdir(workDir); err != nil {
-			panic(err)
-		}
+	workingDir, err := cmd.Parent().Flags().GetString("working-dir")
+	if err != nil {
+		panic(err)
 	}
 
-	config, err := loadConfig(cmd)
+	database, err := cmd.Flags().GetString("database")
 	if err != nil {
-		panic(fmt.Sprintf("Failed to load local migrations config: %s\n", err.Error()))
+		panic(err)
+	}
+
+	localMigrateConfig, err := cmd.Flags().GetString("local-migrate-config")
+	if err != nil {
+		panic(err)
 	}
 
 	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
-		panic(fmt.Sprintf("Failed to get all flag: %s\n", err.Error()))
+		panic(err)
 	}
 
-	if all {
-		if err := migrateAll(config); err != nil {
-			panic(fmt.Sprintf("Failed to migrate all databases: %s\n", err.Error()))
-		}
-
-		_, _ = fmt.Println("Migrations executed successfully")
-		return
+	input := up.Input{
+		WorkingDir:         workingDir,
+		Database:           database,
+		LocalMigrateConfig: localMigrateConfig,
+		All:                all,
 	}
 
-	dbName := cmd.Flag("database").Value.String()
-
-	if dbName == "" {
-		name, err := promptSelectDD(config)
-		if err != nil {
-			panic(fmt.Sprintf("Failed to select database: %s\n", err.Error()))
-		}
-
-		dbName = name
+	errExec := up.New(input).Exec()
+	if errExec != nil {
+		panic(errExec)
 	}
-
-	if err := migrateOne(config, dbName); err != nil {
-		panic(fmt.Sprintf("Failed to migrate database %s: %s\n", dbName, err.Error()))
-	}
-
-	_, _ = fmt.Println("Migrations executed successfully")
 }

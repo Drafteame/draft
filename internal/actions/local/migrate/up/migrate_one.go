@@ -8,7 +8,7 @@ import (
 	"github.com/Drafteame/draft/internal/pkg/gomigrate"
 )
 
-func migrateOne(config Config, dbName string) error {
+func (a *Action) migrateOne(config Config, dbName string) error {
 	if dbName == "all" {
 		return nil
 	}
