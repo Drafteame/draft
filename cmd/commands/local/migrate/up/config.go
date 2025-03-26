@@ -59,8 +59,6 @@ func promptSelectDD(config Config) (string, error) {
 		dbs[cases.Title(language.English).String(title)] = key
 	}
 
-	dbs["All"] = "all"
-
 	var db string
 
 	errSelect := inputs.Select[string]("Select DB to migrate:",
