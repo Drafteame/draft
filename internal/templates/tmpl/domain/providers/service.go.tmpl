@@ -4,6 +4,7 @@ import (
   "context"
   "os"
   "sync"
+  "fmt"
 
   "{{.PackageName}}/{{ .DomainPath }}/domain"
   dmnoptions "{{.PackageName}}/{{ .DomainPath }}/domain/options"
@@ -34,15 +35,22 @@ func ProvideService(opts ...providers.Option) (Service, error) {
     return provideTestService(opts...)
   }
 
+  var initErr error
+
   sync.OnceFunc(func() {
     srv, err := createServiceInstance(opts...)
     if err != nil {
+      initErr = err
       logger.Get().Err(err).Fields(map[string]any{"name": PrvService}).
-        Panic("error creating service instance")
+        Error("error creating service instance")
     }
 
     serviceInstance = srv
   })
+
+  if initErr != nil {
+    return nil, initErr
+  }
 
   return serviceInstance, nil
 }
@@ -55,7 +63,11 @@ func provideTestService(opts ...providers.Option) (Service, error) {
   }
 
   if options.Container.Exists(PrvService) {
-    return options.Container.Get(PrvService).(Service), nil
+    svc, ok := options.Container.Get(PrvService).(Service)
+    if !ok {
+      return nil, fmt.Errorf("saved object in '%s' doesn't implement provider Service interface", PrvService)
+    }
+    return svc, nil
   }
 
   srv, err := createServiceInstance(opts...)

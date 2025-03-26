@@ -4,6 +4,7 @@ import (
   "context"
 	"os"
 	"sync"
+	"fmt"
 
   dmnoptions "{{.PackageName}}/{{ .DomainPath }}/domain/options"
   "{{.PackageName}}/{{ .DomainPath }}/repository"
@@ -36,17 +37,24 @@ func ProvideRepository(opts ...providers.Option) (Repository, error) {
     return provideTestRepository(opts...)
   }
 
+  var initErr error
+
 	sync.OnceFunc(func() {
-  		repo, err := createRepoInstance(opts...)
-  		if err != nil {
-  			logger.Get().Err(err).Fields(map[string]any{"name": PrvRepository}).
-  			  Panic("error creating repository instance")
-  		}
+  	repo, err := createRepoInstance(opts...)
+  	if err != nil {
+  		initErr = err
+  		logger.Get().Err(err).Fields(map[string]any{"name": PrvRepository}).
+  			Error("error creating repository instance")
+  	}
 
-  		repoInstance = repo
-  	})
+  	repoInstance = repo
+  })
 
-  	return repoInstance, nil
+  if initErr != nil {
+    return nil, initErr
+  }
+
+  return repoInstance, nil
 }
 
 // provideTestRepository returns a test Repository instance.
@@ -57,7 +65,11 @@ func provideTestRepository(opts ...providers.Option) (Repository, error) {
   }
 
   if options.Container.Exists(PrvRepository) {
-    return options.Container.Get(PrvRepository).(Repository), nil
+    svc, ok := options.Container.Get(PrvRepository).(Repository)
+    if !ok {
+      return nil, fmt.Errorf("saved object in '%s' doesn't implement provider Repository interface", PrvRepository)
+    }
+    return svc, nil
   }
 
   repo, err := createRepoInstance(opts...)
