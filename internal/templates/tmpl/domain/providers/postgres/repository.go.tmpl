@@ -14,6 +14,8 @@ import (
 	"{{.PackageName}}/projects/framev2/pkg/logger"
 )
 
+// Repository is an abstration of the Repository struct that allow to use a mock struct and the real struct at the same time
+// depending if the STAGE env indicates a test environment or not
 type Repository interface {
 	Get(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error)
 	Create(ctx context.Context, m daos.{{.DomainNamePascal}}) (daos.{{.DomainNamePascal}}, error)
@@ -23,11 +25,12 @@ type Repository interface {
 	SearchOne(ctx context.Context, filters dmnoptions.SearchFilters) (daos.{{.DomainNamePascal}}, error)
 }
 
-
 const PrvRepository = "domains.{{ .DomainNameLower }}.repository"
 
 var repoInstance Repository
 
+// ProvideRepository returns a Repository instance based on the environment.
+// If the STAGE environment variable is not set, it provides a test repository.
 func ProvideRepository(opts ...providers.Option) (Repository, error) {
   if os.Getenv("STAGE") == "" {
     return provideTestRepository(opts...)
@@ -46,6 +49,7 @@ func ProvideRepository(opts ...providers.Option) (Repository, error) {
   	return repoInstance, nil
 }
 
+// provideTestRepository returns a test Repository instance.
 func provideTestRepository(opts ...providers.Option) (Repository, error) {
   options, err := providers.BuildOptions(opts...)
   if err != nil {
@@ -66,6 +70,7 @@ func provideTestRepository(opts ...providers.Option) (Repository, error) {
   return repo, nil
 }
 
+// createRepoInstance creates a new Repository instance with the provided options.
 func createRepoInstance(opts ...providers.Option) (*repository.Repository, error) {
   gen, err := ProvideGeneratorID(opts...)
   if err != nil {

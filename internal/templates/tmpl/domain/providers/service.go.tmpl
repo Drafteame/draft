@@ -1,19 +1,35 @@
 package providers
 
 import (
+  "context"
   "os"
   "sync"
 
+  "{{.PackageName}}/{{ .DomainPath }}/domain"
+  dmnoptions "{{.PackageName}}/{{ .DomainPath }}/domain/options"
 	"{{.PackageName}}/{{ .DomainPath }}/service"
 	"{{.PackageName}}/pkg/providers"
 	"{{.PackageName}}/projects/framev2/pkg/logger"
 )
 
+// Service is an abstration of the Service struct that allow to use a mock struct and the real struct at the same time
+// depending if the STAGE env indicates a test environment or not
+type Service interface {
+	Create(ctx context.Context, m domain.{{.DomainNamePascal}}) (domain.{{.DomainNamePascal}}, error)
+	Delete(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error)
+	Get(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error)
+	Search(ctx context.Context, so dmnoptions.SearchOptions) ([]domain.{{.DomainNamePascal}}, int64, error)
+	SearchOne(ctx context.Context, filters dmnoptions.SearchFilters) (domain.{{.DomainNamePascal}}, error)
+	Update(ctx context.Context, id string, fields dmnoptions.UpdateFields) (domain.{{.DomainNamePascal}}, error)
+}
+
 const PrvService = "domains.{{ .DomainNameLower }}.service"
 
-var serviceInstance *service.Service
+var serviceInstance Service
 
-func ProvideService(opts ...providers.Option) (*service.Service, error) {
+// ProvideService returns a Service instance based on the environment.
+// If the STAGE environment variable is not set, it provides a test service.
+func ProvideService(opts ...providers.Option) (Service, error) {
   if os.Getenv("STAGE") == "" {
     return provideTestService(opts...)
   }
@@ -31,14 +47,15 @@ func ProvideService(opts ...providers.Option) (*service.Service, error) {
   return serviceInstance, nil
 }
 
-func provideTestService(opts ...providers.Option) (*service.Service, error) {
+// provideTestService returns a test Service instance.
+func provideTestService(opts ...providers.Option) (Service, error) {
   options, err := providers.BuildOptions(opts...)
   if err != nil {
     return nil, err
   }
 
   if options.Container.Exists(PrvService) {
-    return options.Container.Get(PrvService).(*service.Service), nil
+    return options.Container.Get(PrvService).(Service), nil
   }
 
   srv, err := createServiceInstance(opts...)
@@ -51,7 +68,8 @@ func provideTestService(opts ...providers.Option) (*service.Service, error) {
   return srv, nil
 }
 
-func createServiceInstance(opts ...providers.Option) (*service.Service, error) {
+// createServiceInstance creates a new Service instance with the provided options.
+func createServiceInstance(opts ...providers.Option) (Service, error) {
   repo, err := ProvideRepository(opts...)
   if err != nil {
     return nil, err
