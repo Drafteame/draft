@@ -1,3 +1,9 @@
+## v1.10.1 (2025-03-26)
+
+
+- chore(ci): update vendor hash for version 1.10.1
+- refactor: migrate up (#84)
+
 ## v1.10.0 (2025-03-26)
 
 
