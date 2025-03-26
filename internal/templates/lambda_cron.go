@@ -9,6 +9,7 @@ type LambdaCron struct {
 type LambdaCronHandler struct {
 	BootstrapGo []byte
 	HandlerGo   []byte
+	ProviderGo  []byte
 }
 
 func loadLambdaCron(v CronSetter, data any) error {
@@ -60,11 +61,19 @@ func loadFrameV2CronLambdaConfigYAML(v *LambdaCron, data any) error {
 }
 
 func loadFrameV2CronHandler(v *LambdaCron, data any) error {
-	if err := loadFrameV2CronHandlerBootstrapGo(v, data); err != nil {
-		return err
+	loaders := []func(cron *LambdaCron, data any) error{
+		loadFrameV2CronHandlerProviderGo,
+		loadFrameV2CronHandlerBootstrapGo,
+		loadFrameV2CronHandlerHandlerGo,
 	}
 
-	return loadFrameV2CronHandlerHandlerGo(v, data)
+	for _, loader := range loaders {
+		if err := loader(v, data); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func loadFrameV2CronHandlerBootstrapGo(v *LambdaCron, data any) error {
@@ -91,6 +100,20 @@ func loadFrameV2CronHandlerHandlerGo(v *LambdaCron, data any) error {
 	}
 
 	v.Handler.HandlerGo = content
+
+	return nil
+}
+
+func loadFrameV2CronHandlerProviderGo(v *LambdaCron, data any) error {
+	name := "framev2/cron/handler/provider.go"
+	path := "tmpl/sls/framev2/cron/handler/provider.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.ProviderGo = content
 
 	return nil
 }

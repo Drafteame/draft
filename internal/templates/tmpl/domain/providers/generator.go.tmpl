@@ -1,55 +1,11 @@
 package providers
 
 import (
-	"os"
-
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
-	"{{.PackageName}}/pkg/generatorid"
-	mockgenerator "{{.PackageName}}/pkg/generatorid/mocks"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 	"{{.PackageName}}/pkg/providers"
+	prvidgenerator "{{.PackageName}}/pkg/providers/idgenerator"
 )
 
-type Generator interface {
-	Generate() (string, error)
-}
-
-func ProvideGeneratorID(opts ...providers.Option) (Generator, error) {
-	if os.Getenv("STAGE") == "" {
-		return provideTestGeneratorID(opts...)
-	}
-
-	options, err := providers.BuildOptions(opts...)
-	if err != nil {
-		return generatorid.GeneratorID{}, err
-	}
-
-	if options.Container.Exists(PrvGeneratorID) {
-		return options.Container.Get(PrvGeneratorID).(Generator), nil
-	}
-
-	gen, err := generatorid.New(daos.DBPrefix)
-	if err != nil {
-		return generatorid.GeneratorID{}, err
-	}
-
-	options.Container.Set(PrvGeneratorID, gen)
-
-	return gen, nil
-}
-
-func provideTestGeneratorID(opts ...providers.Option) (Generator, error) {
-	options, err := providers.BuildOptions(opts...)
-	if err != nil {
-		return generatorid.GeneratorID{}, err
-	}
-
-	if options.Container.Exists(PrvGeneratorID) {
-		return options.Container.Get(PrvGeneratorID).(Generator), nil
-	}
-
-	gen := mockgenerator.NewMockGeneratorID(daos.DBPrefix, 1)
-
-	options.Container.Set(PrvGeneratorID, gen)
-
-	return gen, nil
+func ProvideGeneratorID(opts ...providers.Option) (prvidgenerator.GeneratorV2, error) {
+	return prvidgenerator.ProvideV2(daos.DBPrefix, opts...)
 }

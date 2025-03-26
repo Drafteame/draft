@@ -10,6 +10,7 @@ type LambdaSnsSqsHandler struct {
 	BootstrapGo []byte
 	HandlerGo   []byte
 	WorkerGo    []byte
+	ProviderGo  []byte
 }
 
 func loadLambdaSnsSqs(v SnsSqsSetter, data any) error {
@@ -65,6 +66,7 @@ func loadLambdaSnsSqsHandler(v *LambdaSnsSqs, data any) error {
 		loadLambdaSnsSqsHandlerBootstrapGo,
 		loadLambdaSnsSqsHandlerHandlerGo,
 		loadLambdaSnsSqsHandlerWorkerGo,
+		loadLambdaSnsSqsHandlerProviderGo,
 	}
 
 	for _, loader := range loaders {
@@ -114,6 +116,20 @@ func loadLambdaSnsSqsHandlerWorkerGo(v *LambdaSnsSqs, data any) error {
 	}
 
 	v.Handler.WorkerGo = content
+
+	return nil
+}
+
+func loadLambdaSnsSqsHandlerProviderGo(v *LambdaSnsSqs, data any) error {
+	name := "framev2/snssqs/handler/provider.go"
+	path := "tmpl/sls/framev2/snssqs/handler/provider.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.ProviderGo = content
 
 	return nil
 }

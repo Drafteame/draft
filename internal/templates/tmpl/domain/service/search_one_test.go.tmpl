@@ -5,10 +5,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
-	prv{{.DomainNameLower}} "{{.PackageName}}/domains/{{.DomainPath}}/providers"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
-	"{{.PackageName}}/domains/{{.DomainPath}}/service/mocks"
+	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
+	prv{{.DomainNameLower}} "{{.PackageName}}/{{ .DomainPath }}/providers"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/service/mocks"
 )
 
 func (ts *testSuite) TestSearchOneSuccess() {

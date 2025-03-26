@@ -2,15 +2,17 @@ package service_test
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
-	prv{{.DomainNameLower}} "{{.PackageName}}/domains/{{.DomainPath}}/providers"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
-	rpomocks "{{.PackageName}}/domains/{{.DomainPath}}/repository/mocks"
-	"{{.PackageName}}/domains/{{.DomainPath}}/service/mocks"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	prv{{.DomainNameLower}} "{{.PackageName}}/{{ .DomainPath }}/providers"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	rpomocks "{{.PackageName}}/{{ .DomainPath }}/repository/mocks"
+	"{{.PackageName}}/{{ .DomainPath }}/service/mocks"
+	prvidgenerator "{{.PackageName}}/pkg/providers/idgenerator"
 	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
 	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
 )
@@ -25,11 +27,7 @@ func (ts *testSuite) TestSuccessCreate() {
 		prv{{.DomainNameLower}}.PrvRepository: repo,
 	}))
 
-	gen := tw.mu.Get(prv{{.DomainNameLower}}.PrvGeneratorID).(interface{ Generate() (string, error) })
-	newID, err := gen.Generate()
-	if err != nil {
-		t.Fatal(err)
-	}
+	newID := fmt.Sprintf("%s_test_id", daos.DBPrefix)
 
 	repo.On("Create", mock.MatchedBy(tmock.AnyContextMatcher()), daos.{{.DomainNamePascal}}{}).
 		Return(daos.{{.DomainNamePascal}}{
@@ -78,7 +76,7 @@ func (ts *testSuite) TestErrorOnIDGeneration() {
 	gen := rpomocks.NewMockGeneratorID(t)
 
 	tw := newTestWrapper(t, withMocks(map[string]any{
-		prv{{.DomainNameLower}}.PrvGeneratorID: gen,
+		prvidgenerator.ProviderName(daos.DBPrefix): gen,
 	}))
 
 	gen.On("Generate").Return("", assert.AnError)
@@ -99,7 +97,7 @@ func (ts *testSuite) TestErrorOnCreate() {
 
 	tw := newTestWrapper(t)
 
-	db := tw.mu.Get(prvpostgres.PrvGeneral).(interface{ Close() error })
+	db := tw.mu.Get(prvpostgres.ProviderName(prvpostgres.Prv{{ .DBName }})).(interface{ Close() error })
 	if err := db.Close(); err != nil {
 		t.Fatal(err)
 	}

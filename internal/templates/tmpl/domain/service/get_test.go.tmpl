@@ -6,10 +6,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
-	prv{{.DomainNameLower}} "{{.PackageName}}/domains/{{.DomainPath}}/providers"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
-	"{{.PackageName}}/domains/{{.DomainPath}}/service/mocks"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	prv{{.DomainNameLower}} "{{.PackageName}}/{{ .DomainPath }}/providers"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/service/mocks"
 	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
 	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
 )
@@ -72,7 +72,7 @@ func (ts *testSuite) TestUnexpectedError() {
 
 	tw := newTestWrapper(t)
 
-	db := tw.mu.Get(prvpostgres.PrvGeneral).(interface{ Close() error })
+	db := tw.mu.Get(prvpostgres.ProviderName(prvpostgres.Prv{{ .DBName }})).(interface{ Close() error })
 	if err := db.Close(); err != nil {
 		t.Fatal(err)
 	}

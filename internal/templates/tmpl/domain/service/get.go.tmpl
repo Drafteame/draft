@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 )
 
 func (s *Service) Get(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error) {

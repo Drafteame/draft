@@ -22,9 +22,10 @@ var legacyPath string
 
 func init() {
 	newLambdaCmd.Flags().StringVarP(&legacyPath, "legacy-path", "l", "", "Path to legacy service")
+	newLambdaCmd.Flags().Bool("use-dig", false, "Use uber dig for dependency injection")
 }
 
-func run(_ *cobra.Command, _ []string) {
+func run(cmd *cobra.Command, _ []string) {
 	if data.Flags.WorkingDir != "" {
 		if err := os.Chdir(data.Flags.WorkingDir); err != nil {
 			panic(err)
@@ -33,7 +34,13 @@ func run(_ *cobra.Command, _ []string) {
 
 	data.LoadMeta()
 
-	input := dtos.LambdaInput{}
+	useDig, err := cmd.Flags().GetBool("use-dig")
+	if err != nil {
+		panic(err)
+	}
+	input := dtos.LambdaInput{
+		UseDig: useDig,
+	}
 
 	if legacyPath != "" {
 		input.IsLegacy = true

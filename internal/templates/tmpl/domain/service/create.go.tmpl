@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 )
 
 func (s *Service) Create(ctx context.Context, m domain.{{.DomainNamePascal}}) (domain.{{.DomainNamePascal}}, error) {

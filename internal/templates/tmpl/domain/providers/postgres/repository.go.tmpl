@@ -1,53 +1,105 @@
 package providers
 
 import (
-	"context"
+  "context"
+	"os"
+	"sync"
+	"fmt"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+  dmnoptions "{{.PackageName}}/{{ .DomainPath }}/domain/options"
+  "{{.PackageName}}/{{ .DomainPath }}/repository"
+  "{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 	"{{.PackageName}}/pkg/providers"
 	prvclock "{{.PackageName}}/pkg/providers/clock"
 	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
+	"{{.PackageName}}/projects/framev2/pkg/logger"
 )
 
+// Repository is an abstration of the Repository struct that allow to use a mock struct and the real struct at the same time
+// depending if the STAGE env indicates a test environment or not
 type Repository interface {
 	Get(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error)
 	Create(ctx context.Context, m daos.{{.DomainNamePascal}}) (daos.{{.DomainNamePascal}}, error)
-	Update(ctx context.Context, id string, fields options.UpdateFields) (daos.{{.DomainNamePascal}}, error)
+	Update(ctx context.Context, id string, fields dmnoptions.UpdateFields) (daos.{{.DomainNamePascal}}, error)
 	Delete(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error)
-	Search(ctx context.Context, opts options.SearchOptions) ([]daos.{{.DomainNamePascal}}, int64, error)
-	SearchOne(ctx context.Context, filters options.SearchFilters) (daos.{{.DomainNamePascal}}, error)
+	Search(ctx context.Context, opts dmnoptions.SearchOptions) ([]daos.{{.DomainNamePascal}}, int64, error)
+	SearchOne(ctx context.Context, filters dmnoptions.SearchFilters) (daos.{{.DomainNamePascal}}, error)
 }
 
+const PrvRepository = "domains.{{ .DomainNameLower }}.repository"
+
+var repoInstance Repository
+
+// ProvideRepository returns a Repository instance based on the environment.
+// If the STAGE environment variable is not set, it provides a test repository.
 func ProvideRepository(opts ...providers.Option) (Repository, error) {
-	gen, err := ProvideGeneratorID(opts...)
-	if err != nil {
-		return nil, err
-	}
+  if os.Getenv("STAGE") == "" {
+    return provideTestRepository(opts...)
+  }
 
-	buildOpts, err := providers.BuildOptions(opts...)
-	if err != nil {
-		return nil, err
-	}
+  var initErr error
 
-	if buildOpts.Container.Exists(PrvRepository) {
-		return buildOpts.Container.Get(PrvRepository).(Repository), nil
-	}
+	sync.OnceFunc(func() {
+  	repo, err := createRepoInstance(opts...)
+  	if err != nil {
+  		initErr = err
+  		logger.Get().Err(err).Fields(map[string]any{"name": PrvRepository}).
+  			Error("error creating repository instance")
+  	}
 
-	clock, err := prvclock.ProvideClock(opts...)
-	if err != nil {
-		return nil, err
-	}
+  	repoInstance = repo
+  })
 
-	driver, err := prvpostgres.Provide{{.DBProviderFuncName}}(opts...)
-	if err != nil {
-		return nil, err
-	}
+  if initErr != nil {
+    return nil, initErr
+  }
 
-	repo := repository.New(driver, clock, gen)
+  return repoInstance, nil
+}
 
-	buildOpts.Container.Set(PrvRepository, repo)
+// provideTestRepository returns a test Repository instance.
+func provideTestRepository(opts ...providers.Option) (Repository, error) {
+  options, err := providers.BuildOptions(opts...)
+  if err != nil {
+    return nil, err
+  }
 
-	return repo, nil
+  if options.Container.Exists(PrvRepository) {
+    svc, ok := options.Container.Get(PrvRepository).(Repository)
+    if !ok {
+      return nil, fmt.Errorf("saved object in '%s' doesn't implement provider Repository interface", PrvRepository)
+    }
+    return svc, nil
+  }
+
+  repo, err := createRepoInstance(opts...)
+  if err != nil {
+    return nil, err
+  }
+
+  options.Container.Set(PrvRepository, repo)
+
+  return repo, nil
+}
+
+// createRepoInstance creates a new Repository instance with the provided options.
+func createRepoInstance(opts ...providers.Option) (*repository.Repository, error) {
+  gen, err := ProvideGeneratorID(opts...)
+  if err != nil {
+    return nil, err
+  }
+
+  clock, err := prvclock.ProvideClock(opts...)
+  if err != nil {
+    return nil, err
+  }
+
+  driver, err := prvpostgres.Provide{{.DBProviderFuncName}}(opts...)
+  if err != nil {
+    return nil, err
+  }
+
+  repo := repository.New(driver, clock, gen)
+
+  return repo, nil
 }

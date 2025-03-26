@@ -1,28 +1,23 @@
 package handler
 
 import (
-	"net/http"
-
-	"github.com/labstack/echo/v4"
-
 	ehttp "{{ .PackageName }}/projects/framev2/engine/http"
-	"{{ .PackageName }}/projects/framev2/engine/http/middlewares"
+	"{{ .PackageName }}/projects/framev2/engine/http/middlewares"{{ if .UseDig }}
 	"{{ .PackageName }}/projects/framev2/pkg/inject"
+	"{{ .PackageName }}/projects/framev2/pkg/logger"{{ end }}
 )
 
-func init() {
+{{ if .UseDig }}func init() {
 	if err := inject.Get().Provide(New); err != nil {
-		panic(err)
+		logger.Get().Err(err).Fatal("error providing handler")
 	}
-}
-
-const path = "{{ .HTTPPathEcho }}"
+}{{ end }}
 
 type Handler struct {
 	router ehttp.Router
 }
 
-func New(router ehttp.Router) Handler {
+func New(router ehttp.Router) {{ if not .UseDig }}ehttp.{{ end }}Handler {
 	return Handler{
 		router: router,
 	}
@@ -34,9 +29,4 @@ func (h Handler) Register() {
 		h.handle,
 		middlewares.AuthAPIKey(),
 	)
-}
-
-func (h Handler) handle(ec echo.Context) error {
-    // TODO: Implement your logic here
-	return ec.JSON(http.StatusOK, map[string]any{"message": "Hello, World!"})
 }

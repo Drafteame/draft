@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
 )
 
 type searchOrdersBuilder func(options.SearchOrders) string

@@ -16,6 +16,7 @@ func (nl *NewLambda) createSqs() error {
 		{Path: "/handler/handler.go", Data: nl.tmpl.Sqs.Handler.HandlerGo},
 		{Path: "/handler/worker.go", Data: nl.tmpl.Sqs.Handler.WorkerGo},
 		{Path: "/handler/bootstrap.go", Data: nl.tmpl.Sqs.Handler.BootstrapGo},
+		{Path: "/handler/provider.go", Data: nl.tmpl.Sqs.Handler.ProviderGo},
 	}
 
 	return nl.createFiles(filesEntries...)

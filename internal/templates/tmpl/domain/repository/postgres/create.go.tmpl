@@ -5,8 +5,8 @@ import (
 	"errors"
 	"strings"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
 func (r *Repository) Create(ctx context.Context, entity daos.{{.DomainNamePascal}}) (daos.{{.DomainNamePascal}}, error) {

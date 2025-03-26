@@ -37,8 +37,8 @@ func (nd *NewDomain) mockery() error {
 
 func (nd *NewDomain) addMockeryPackages() error {
 	paths := []string{
-		nd.input.PackageName + "/domains/" + nd.input.DomainPath + "/service",
-		nd.input.PackageName + "/domains/" + nd.input.DomainPath + "/repository",
+		nd.input.PackageName + "/" + nd.input.DomainPath + "/service",
+		nd.input.PackageName + "/" + nd.input.DomainPath + "/repository",
 	}
 
 	mockeryConfig, err := files.Read(".mockery.yml")

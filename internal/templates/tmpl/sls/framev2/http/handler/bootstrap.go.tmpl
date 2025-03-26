@@ -30,11 +30,11 @@ func Bootstrap() {
 		middlewares.LogRequest(),
 		middlewares.SkipWarmup(),
 		middleware.CORSWithConfig(corsConfig),
-	).WithResolver(
-		Resolver,
+	).{{ if not .UseDig }}SetProvider{{ end }}{{ if .UseDig }}WithResolver{{ end }}(
+		{{ if not .UseDig }}Provide{{ end }}{{ if .UseDig }}Resolver{{ end }},
 	).Start()
 }
-
+{{ if .UseDig }}
 func Resolver(h Handler) {
 	h.Register()
-}
+}{{ end }}

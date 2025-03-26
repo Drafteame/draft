@@ -3,7 +3,7 @@ package domain
 import (
 	"time"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
 type {{.DomainNamePascal}} struct {
@@ -16,8 +16,8 @@ type {{.DomainNamePascal}} struct {
 	DeletedAt *time.Time
 }
 
-func ToModel(m daos.{{.DomainNamePascal}}) (Some, error) {
-	return Some{
+func ToModel(m daos.{{.DomainNamePascal}}) ({{.DomainNamePascal}}, error) {
+	return {{.DomainNamePascal}}{
 		ID: m.ID,
 
 		// TODO: [generated] add fields

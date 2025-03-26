@@ -10,7 +10,6 @@ type Providers struct {
 func loadDomainsProviders(v *Providers, data any) error {
 	loaders := []func(*Providers, any) error{
 		loadProvidersGeneratorGo,
-		loadProvidersProvidersGo,
 		loadProvidersServiceGo,
 		loadProvidersPostgres,
 	}
@@ -34,20 +33,6 @@ func loadProvidersGeneratorGo(v *Providers, data any) error {
 	}
 
 	v.GeneratorGo = content
-
-	return nil
-}
-
-func loadProvidersProvidersGo(v *Providers, data any) error {
-	name := "domains/providers/providers.go"
-	path := "tmpl/domain/providers/providers.go.tmpl"
-
-	content, err := loadTemplate(name, path, data, domain)
-	if err != nil {
-		return err
-	}
-
-	v.ProvidersGo = content
 
 	return nil
 }
