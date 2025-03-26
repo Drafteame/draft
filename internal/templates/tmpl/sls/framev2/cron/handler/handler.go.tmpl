@@ -1,13 +1,12 @@
 package handler
 
 import (
-    {{ if not .UseDig }}"{{ .PackageName }}/pkg/providers"
-    {{ end }}"{{ .PackageName }}/projects/framev2/engine/lambda"
+    "{{ .PackageName }}/projects/framev2/engine/lambda"
 )
 
 type handler struct{}
 
-func New({{ if not .UseDig }}_ ...providers.Option{{ end }}) lambda.Resolver {
+func New() lambda.Resolver {
     return &handler{}
 }
 
