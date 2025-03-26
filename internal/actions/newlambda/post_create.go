@@ -15,11 +15,19 @@ func (nl *NewLambda) postCreate() error {
 		return nil
 	}
 
-	if err := nl.addToDepsGo(); err != nil {
-		return err
+	actions := []func() error{
+		nl.addToDepsGo,
+		nl.addToServerlessYAML,
+		nl.format,
 	}
 
-	return nl.addToServerlessYAML()
+	for _, action := range actions {
+		if err := action(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (nl *NewLambda) addToServerlessYAML() error {

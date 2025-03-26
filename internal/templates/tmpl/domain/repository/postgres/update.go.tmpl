@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
 func (r *Repository) Update(ctx context.Context, id string, fields options.UpdateFields) (daos.{{.DomainNamePascal}}, error) {

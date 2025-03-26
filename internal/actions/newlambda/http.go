@@ -15,6 +15,8 @@ func (nl *NewLambda) createHttp() error {
 		{Path: "/lambda-config.yml", Data: nl.tmpl.HTTP.LambdaConfigYAML},
 		{Path: "/handler/handler.go", Data: nl.tmpl.HTTP.Handler.HandlerGo},
 		{Path: "/handler/bootstrap.go", Data: nl.tmpl.HTTP.Handler.BootstrapGo},
+		{Path: "/handler/provider.go", Data: nl.tmpl.HTTP.Handler.ProviderGo},
+		{Path: "/handler/route.go", Data: nl.tmpl.HTTP.Handler.RouteGo},
 	}
 
 	return nl.createFiles(filesEntries...)

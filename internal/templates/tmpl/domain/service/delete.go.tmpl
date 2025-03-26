@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 )
 
 func (s *Service) Delete(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error) {

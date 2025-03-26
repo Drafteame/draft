@@ -6,8 +6,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
 func (r *Repository) Get(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error) {

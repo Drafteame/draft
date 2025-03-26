@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain"
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
-	"{{.PackageName}}/domains/{{.DomainPath}}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
 func TestUpdate(t *testing.T) {

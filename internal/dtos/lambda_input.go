@@ -16,4 +16,5 @@ type LambdaInput struct {
 	NextImportTag       string
 	NextLambdaImportTag string
 	IsLegacy            bool
+	UseDig              bool
 }

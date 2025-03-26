@@ -4,6 +4,7 @@ func (nd *NewDomain) postCreate() error {
 	actions := []func() error{
 		nd.postgresModels,
 		nd.mockery,
+		nd.format,
 	}
 
 	for _, action := range actions {

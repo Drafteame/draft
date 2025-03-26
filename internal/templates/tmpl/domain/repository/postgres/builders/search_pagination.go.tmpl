@@ -3,7 +3,7 @@ package builders
 import (
 	"gorm.io/gorm"
 
-	"{{.PackageName}}/domains/{{.DomainPath}}/domain/options"
+	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
 )
 
 type searchPaginationBuilder func(*gorm.DB, options.SearchPagination) *gorm.DB

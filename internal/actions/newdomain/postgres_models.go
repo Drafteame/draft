@@ -29,7 +29,7 @@ func (nd *NewDomain) addPostgresTestModelsOnProvider() error {
 	fileName := lo.SnakeCase(nd.input.DBName) + ".go"
 	filePath := "pkg/providers/postgres/" + fileName
 
-	daoPackage := nd.input.PackageName + "/domains/" + nd.input.DomainPath + "/repository/daos"
+	daoPackage := nd.input.PackageName + "/" + nd.input.DomainPath + "/repository/daos"
 	alias := "dao" + nd.input.DomainNameLower
 	fullImport := alias + ` "` + daoPackage + `"`
 	fullModel := alias + "." + nd.input.DomainNamePascal + "{},"

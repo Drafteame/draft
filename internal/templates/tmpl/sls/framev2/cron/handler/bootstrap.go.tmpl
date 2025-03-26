@@ -15,8 +15,8 @@ func Bootstrap() {
         engine.WithLambdaDecorator(datadog.Trace),
     ).WithMiddleware(
         middlewares.Recover(),
-    ).WithResolver(
-        New,
+    ).{{ if not .UseDig }}SetProvider{{ end }}{{ if .UseDig }}WithResolver{{ end }}(
+        {{ if not .UseDig }}Provide{{ end }}{{ if .UseDig }}New{{ end }},
     ).WithExecutionMode(
         lambda.PlainMode,
     ).Start()
