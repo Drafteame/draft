@@ -21,6 +21,7 @@ func GetCmd() *cobra.Command {
 func init() {
 	migrateUpCmd.Flags().StringP("database", "D", "", "database name")
 	migrateUpCmd.Flags().StringP("local-migrate-config", "c", ".local-migrate-config.yml", "path to the migrations config file")
+	migrateUpCmd.Flags().Bool("all", false, "migrate all databases")
 }
 
 func run(cmd *cobra.Command, _ []string) {
@@ -42,6 +43,20 @@ func run(cmd *cobra.Command, _ []string) {
 		panic(fmt.Sprintf("Failed to load local migrations config: %s\n", err.Error()))
 	}
 
+	all, err := cmd.Flags().GetBool("all")
+	if err != nil {
+		panic(fmt.Sprintf("Failed to get all flag: %s\n", err.Error()))
+	}
+
+	if all {
+		if err := migrateAll(config); err != nil {
+			panic(fmt.Sprintf("Failed to migrate all databases: %s\n", err.Error()))
+		}
+
+		_, _ = fmt.Println("Migrations executed successfully")
+		return
+	}
+
 	dbName := cmd.Flag("database").Value.String()
 
 	if dbName == "" {
@@ -51,12 +66,6 @@ func run(cmd *cobra.Command, _ []string) {
 		}
 
 		dbName = name
-	}
-
-	if dbName == "all" {
-		if err := migrateAll(config); err != nil {
-			panic(fmt.Sprintf("Failed to migrate all databases: %s\n", err.Error()))
-		}
 	}
 
 	if err := migrateOne(config, dbName); err != nil {
