@@ -1,3 +1,10 @@
+## v1.9.1 (2025-03-26)
+
+
+- chore(ci): update vendor hash for version 1.9.1
+- fix: [PLA-59] wrong integration with new injection providers (#78)
+- Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>
+
 ## v1.9.0 (2025-03-12)
 
 
