@@ -1,6 +1,7 @@
 package up
 
 import (
+	"errors"
 	"os"
 	"strings"
 
@@ -21,6 +22,7 @@ type Migrations struct {
 }
 
 type Database struct {
+	Group      string     `yaml:"group"`
 	Folder     string     `yaml:"folder"`
 	Connection Connection `yaml:"connection"`
 }
@@ -50,12 +52,20 @@ func (a *Action) loadConfig() (Config, error) {
 	return config, nil
 }
 
-func promptSelectDD(config Config) (string, error) {
+func (a *Action) promptSelectDB(config Config) (string, error) {
 	dbs := make(map[string]string)
 
 	for key := range config.Migrations.Databases {
+		if config.Migrations.Databases[key].Group != a.Input.Group {
+			continue
+		}
+
 		title := strings.Join(strings.Split(key, "_"), " ")
 		dbs[cases.Title(language.English).String(title)] = key
+	}
+
+	if len(dbs) == 0 {
+		return "", errors.New("no databases found")
 	}
 
 	var db string
