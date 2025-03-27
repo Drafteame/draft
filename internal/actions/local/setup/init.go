@@ -10,15 +10,17 @@ import (
 )
 
 func (a *Action) init() error {
-	cmd := "docker compose -f ./docker/docker-compose.yml up -d"
+	if !a.Input.BypassDocker {
+		cmd := "docker compose -f ./docker/docker-compose.yml up -d"
 
-	_, err := exec.Command(cmd, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr))
-	if err != nil {
-		return fmt.Errorf("init failed: %w", err)
-	}
+		_, err := exec.Command(cmd, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr))
+		if err != nil {
+			return fmt.Errorf("init failed: %w", err)
+		}
 
-	if err := a.postgresHealthCheck(); err != nil {
-		return err
+		if err := a.postgresHealthCheck(); err != nil {
+			return err
+		}
 	}
 
 	input := migrateup.Input{
