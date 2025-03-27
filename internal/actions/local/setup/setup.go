@@ -1,8 +1,9 @@
 package setup
 
 type Input struct {
-	WorkingDir string
-	Prune      bool
+	WorkingDir   string
+	Prune        bool
+	BypassDocker bool
 }
 
 type Action struct {

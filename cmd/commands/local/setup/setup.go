@@ -22,6 +22,7 @@ func GetCmd() *cobra.Command {
 
 func init() {
 	localSetupCmd.Flags().Bool("prune", false, "Prune environment before creation")
+	localSetupCmd.Flags().Bool("bypass-docker", false, "Avoid running docker commands")
 }
 
 func run(cmd *cobra.Command, _ []string) {
@@ -42,9 +43,15 @@ func run(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
+	bypassDocker, err := cmd.Flags().GetBool("bypass-docker")
+	if err != nil {
+		panic(err)
+	}
+
 	input := localsetup.Input{
-		WorkingDir: workDir,
-		Prune:      prune,
+		WorkingDir:   workDir,
+		Prune:        prune,
+		BypassDocker: bypassDocker,
 	}
 
 	if err := localsetup.New(input).Exec(); err != nil {

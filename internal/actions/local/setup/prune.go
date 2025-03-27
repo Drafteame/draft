@@ -9,7 +9,8 @@ import (
 
 func (a *Action) prune() error {
 	println("pruning env")
-	if !a.Input.Prune {
+
+	if !a.Input.Prune || a.Input.BypassDocker {
 		return nil
 	}
 
