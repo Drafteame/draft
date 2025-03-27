@@ -1,3 +1,9 @@
+## v1.11.1 (2025-03-27)
+
+
+- chore(ci): update vendor hash for version 1.11.1
+- chore: bypass docker executions on local setup (#86)
+
 ## v1.11.0 (2025-03-27)
 
 
