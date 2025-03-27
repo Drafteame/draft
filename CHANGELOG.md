@@ -1,3 +1,9 @@
+## v1.11.0 (2025-03-27)
+
+
+- chore(ci): update vendor hash for version 1.11.0
+- feat: add commands for local setup data (#85)
+
 ## v1.10.1 (2025-03-26)
 
 
