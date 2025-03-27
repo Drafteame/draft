@@ -24,6 +24,7 @@ func init() {
 	migrateUpCmd.Flags().StringP("database", "D", "", "database name")
 	migrateUpCmd.Flags().StringP("local-migrate-config", "c", ".local-migrate-config.yml", "path to the migrations config file")
 	migrateUpCmd.Flags().Bool("all", false, "migrate all databases")
+	migrateUpCmd.Flags().String("group", "", "DB migrations group name")
 }
 
 func run(cmd *cobra.Command, _ []string) {
@@ -54,10 +55,16 @@ func run(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
+	group, err := cmd.Flags().GetString("group")
+	if err != nil {
+		panic(err)
+	}
+
 	input := up.Input{
 		WorkingDir:         workingDir,
 		Database:           database,
 		LocalMigrateConfig: localMigrateConfig,
+		Group:              group,
 		All:                all,
 	}
 

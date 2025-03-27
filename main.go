@@ -5,6 +5,7 @@ import (
 	"github.com/Drafteame/draft/cmd/commands/config"
 	"github.com/Drafteame/draft/cmd/commands/local/invoke"
 	migrateup "github.com/Drafteame/draft/cmd/commands/local/migrate/up"
+	testsetup "github.com/Drafteame/draft/cmd/commands/local/setup"
 	"github.com/Drafteame/draft/cmd/commands/newdomain"
 	"github.com/Drafteame/draft/cmd/commands/newlambda"
 	"github.com/Drafteame/draft/cmd/commands/newservice"
@@ -21,6 +22,7 @@ func main() {
 	cmd.AddCommand(deleteproject.GetCmd())
 	cmd.AddCommand(invoke.GetCmd())
 	cmd.AddCommand(migrateup.GetCmd())
+	cmd.AddCommand(testsetup.GetCmd())
 
 	if err := cmd.Execute(); err != nil {
 		panic(err)

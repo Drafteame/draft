@@ -29,7 +29,7 @@ func (a *Action) Exec() error {
 	dbName := a.Input.Database
 
 	if dbName == "" {
-		name, err := promptSelectDD(config)
+		name, err := a.promptSelectDB(config)
 		if err != nil {
 			return fmt.Errorf("failed to select database: %w", err)
 		}

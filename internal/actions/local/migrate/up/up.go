@@ -4,6 +4,7 @@ type Input struct {
 	WorkingDir         string
 	Database           string
 	LocalMigrateConfig string
+	Group              string
 	All                bool
 }
 
