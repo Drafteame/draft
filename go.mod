@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/aws/aws-sdk-go-v2/config v1.29.11
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.58.0
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.58.2
 	github.com/charmbracelet/huh v0.6.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20250325161010-490bbff9f374
 	github.com/getsentry/sentry-go v0.31.1
