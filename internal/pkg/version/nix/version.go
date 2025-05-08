@@ -13,11 +13,10 @@ import (
 
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms"
-	"github.com/Drafteame/draft/internal/pkg/auth"
 	nixmetadata "github.com/Drafteame/draft/internal/pkg/nix-metadata"
 )
 
-const nixModulesGithubURL = "https://api.github.com/repos/Drafteame/nix-modules/releases/latest"
+const nixModulesVersion = "https://draftea-cdn-prod.s3.us-east-2.amazonaws.com/xb/nix/version.json"
 
 type UpdateType int
 
@@ -132,14 +131,8 @@ func fetchLatestVersion() (*semver.Version, error) {
 	client := resty.New().
 		SetTimeout(2 * time.Second)
 
-	ghToken, err := auth.GetGithubToken()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get github token: %w", err)
-	}
-
 	response, err := client.R().
-		SetHeader("Authorization", fmt.Sprintf("token %s", ghToken)).
-		Get(nixModulesGithubURL)
+		Get(nixModulesVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get latest version: %w", err)
 	}
@@ -148,30 +141,17 @@ func fetchLatestVersion() (*semver.Version, error) {
 		return nil, fmt.Errorf("response is nil")
 	}
 
-	if response.IsError() && response.StatusCode() != 401 {
-		return nil, fmt.Errorf("github API error: %s", response.Status())
-	} else if response.StatusCode() == 401 {
-		ghToken, errToken := auth.RefreshGithubToken()
-		if errToken != nil {
-			return nil, fmt.Errorf("failed to refresh github token: %w", errToken)
-		}
-
-		var errRes error
-		response, errRes = client.R().
-			SetHeader("Authorization", fmt.Sprintf("token %s", ghToken)).
-			Get(nixModulesGithubURL)
-
-		if errRes != nil {
-			return nil, fmt.Errorf("failed to get latest version: %w", errRes)
-		}
+	if response.IsError() {
+		return nil, fmt.Errorf("error getting nix version: %s", response.Status())
 	}
 
 	var latestVersion struct {
-		Tag string `json:"tag_name"`
+		NixVersion string `json:"nixVersion"`
 	}
+
 	if err := json.Unmarshal(response.Body(), &latestVersion); err != nil {
 		return nil, fmt.Errorf("failed to parse github response: %w", err)
 	}
 
-	return semver.NewVersion(strings.TrimPrefix(latestVersion.Tag, "v"))
+	return semver.NewVersion(strings.TrimPrefix(latestVersion.NixVersion, "v"))
 }
