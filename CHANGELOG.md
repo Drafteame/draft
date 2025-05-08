@@ -1,3 +1,9 @@
+## v1.11.2 (2025-05-08)
+
+
+- chore(ci): update vendor hash for version 1.11.2
+- fix: remove deprecated git token flow (#99)
+
 ## v1.11.1 (2025-03-27)
 
 
