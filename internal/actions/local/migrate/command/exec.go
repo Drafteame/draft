@@ -1,4 +1,4 @@
-package force
+package command
 
 import (
 	"fmt"
@@ -17,6 +17,15 @@ func (a *Action) Exec() error {
 		return fmt.Errorf("failed to load local migrations config: %w", err)
 	}
 
+	if a.Input.All {
+		if err := a.migrateAll(config); err != nil {
+			return fmt.Errorf("failed to migrate all databases: %w", err)
+		}
+
+		_, _ = fmt.Println("Migrations executed successfully")
+		return nil
+	}
+
 	dbName := a.Input.Database
 
 	if dbName == "" {
@@ -29,9 +38,9 @@ func (a *Action) Exec() error {
 	}
 
 	if err := a.migrateOne(config, dbName); err != nil {
-		return fmt.Errorf("failed to force migration version for database %s: %w", dbName, err)
+		return fmt.Errorf("failed to migrate database %s: %w", dbName, err)
 	}
 
-	_, _ = fmt.Printf("Migration version %d successfully forced for database %s\n", a.Input.Version, dbName)
+	_, _ = fmt.Println("Migrations executed successfully")
 	return nil
 }

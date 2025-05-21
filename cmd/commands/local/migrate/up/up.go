@@ -2,11 +2,10 @@ package up
 
 import (
 	"fmt"
+	comm "github.com/Drafteame/draft/internal/actions/local/migrate/command"
 	"os"
 
 	"github.com/spf13/cobra"
-
-	"github.com/Drafteame/draft/internal/actions/local/migrate/up"
 )
 
 var migrateUpCmd = cobra.Command{
@@ -60,7 +59,10 @@ func run(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	input := up.Input{
+	command := "up"
+
+	input := comm.Input{
+		Command:            command,
 		WorkingDir:         workingDir,
 		Database:           database,
 		LocalMigrateConfig: localMigrateConfig,
@@ -68,7 +70,7 @@ func run(cmd *cobra.Command, _ []string) {
 		All:                all,
 	}
 
-	errExec := up.New(input).Exec()
+	errExec := comm.New(input).Exec()
 	if errExec != nil {
 		panic(errExec)
 	}

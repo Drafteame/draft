@@ -2,12 +2,11 @@ package force
 
 import (
 	"fmt"
+	comm "github.com/Drafteame/draft/internal/actions/local/migrate/command"
 	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
-
-	"github.com/Drafteame/draft/internal/actions/local/migrate/force"
 )
 
 var migrateForceCmd = cobra.Command{
@@ -36,7 +35,6 @@ func run(cmd *cobra.Command, args []string) {
 		}
 	}()
 
-	// Parse version argument - todo: validate
 	version, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {
 		panic(fmt.Errorf("invalid version number: %w", err))
@@ -62,15 +60,19 @@ func run(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	input := force.Input{
+	command := "force"
+
+	input := comm.Input{
+		Command:            command,
 		WorkingDir:         workingDir,
 		Database:           database,
 		LocalMigrateConfig: localMigrateConfig,
 		Group:              group,
+		All:                false,
 		Version:            version,
 	}
 
-	errExec := force.New(input).Exec()
+	errExec := comm.New(input).Exec()
 	if errExec != nil {
 		panic(errExec)
 	}

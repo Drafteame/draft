@@ -42,6 +42,8 @@ func Exec(action Action, config Config) error {
 
 	script := strings.Join(args, " ")
 
+	fmt.Printf("Running command: %s", script)
+
 	_, errExec := exec.Command(script, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr))
 	return errExec
 }

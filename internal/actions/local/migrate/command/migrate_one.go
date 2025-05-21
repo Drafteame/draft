@@ -1,4 +1,4 @@
-package up
+package command
 
 import (
 	"errors"
@@ -32,8 +32,26 @@ func (a *Action) migrateOne(config Config, dbName string) error {
 		db.Connection.Database,
 	)
 
-	return gomigrate.Exec(gomigrate.ActionUp, gomigrate.Config{
-		Source:   source,
-		Database: database,
-	})
+	if a.Input.Command == "up" {
+		return gomigrate.Exec(gomigrate.ActionUp, gomigrate.Config{
+			Source:   source,
+			Database: database,
+		})
+	} else if a.Input.Command == "force" {
+		return gomigrate.Exec(gomigrate.ActionForce, gomigrate.Config{
+			Source:   source,
+			Database: database,
+			Args:     []string{fmt.Sprintf("%d", a.Input.Version)},
+		})
+	} else if a.Input.Command == "down" {
+		return gomigrate.Exec(gomigrate.ActionDown, gomigrate.Config{
+			Source:   source,
+			Database: database,
+		})
+
+	} else {
+		return errors.New("invalid command")
+
+	}
+
 }

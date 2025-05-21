@@ -1,7 +1,8 @@
-package force
+package command
 
 import (
 	"errors"
+	"github.com/Drafteame/draft/internal/pkg/inputs"
 	"os"
 	"strings"
 
@@ -9,7 +10,6 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/Drafteame/draft/internal/pkg/files"
-	"github.com/Drafteame/draft/internal/pkg/inputs"
 )
 
 type Config struct {
@@ -69,9 +69,20 @@ func (a *Action) promptSelectDB(config Config) (string, error) {
 	}
 
 	var db string
+	var selectDB string
+	var description string
 
-	errSelect := inputs.Select[string]("Select DB to force migration version:",
-		inputs.WithDescription[string]("Select the database for which you want to force the migration version"),
+	switch a.Input.Command {
+	case "force":
+		selectDB = selectDBForce
+		description = descriptionSelectDBForce
+	case "up":
+		selectDB = selectDBUp
+		description = descriptionSelectDBUp
+	}
+
+	errSelect := inputs.Select[string](selectDB,
+		inputs.WithDescription[string](description),
 		inputs.WithOptions(dbs),
 		inputs.WithValue(&db),
 	)
