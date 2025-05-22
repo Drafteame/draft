@@ -1,38 +1,51 @@
-package up
+package down
 
 import (
 	"fmt"
 	comm "github.com/Drafteame/draft/internal/actions/local/migrate/command"
 	"os"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
 
-var migrateUpCmd = cobra.Command{
-	Use:   "local:migrate:up [flags] ",
-	Short: "Execute migrate up command to apply all pending migrations",
-	Long:  "Execute migrations using go migrate over all databases or a specific one",
+var migrateDownCmd = cobra.Command{
+	Use:   "local:migrate:down [flags] [number]",
+	Short: "Execute migrate down command to rollback the last migrations",
+	Long:  "Rollback one or more database migrations using go migrate on a specific database",
 	Run:   run,
 }
 
 func GetCmd() *cobra.Command {
-	return &migrateUpCmd
+	return &migrateDownCmd
 }
 
 func init() {
-	migrateUpCmd.Flags().StringP("database", "D", "", "database name")
-	migrateUpCmd.Flags().StringP("local-migrate-config", "c", ".local-migrate-config.yml", "path to the migrations config file")
-	migrateUpCmd.Flags().Bool("all", false, "migrate all databases")
-	migrateUpCmd.Flags().String("group", "", "DB migrations group name")
+	migrateDownCmd.Flags().StringP("database", "D", "", "database name")
+	migrateDownCmd.Flags().StringP("local-migrate-config", "c", ".local-migrate-config.yml", "path to the migrations config file")
+	migrateDownCmd.Flags().Bool("all", false, "migrate all databases")
+	migrateDownCmd.Flags().String("group", "", "DB migrations group name")
 }
 
-func run(cmd *cobra.Command, _ []string) {
+func run(cmd *cobra.Command, args []string) {
 	defer func() {
 		if r := recover(); r != nil {
 			_, _ = fmt.Printf("%v\n", r)
 			os.Exit(1)
 		}
 	}()
+
+	var (
+		numMigrations int64
+		err           error
+	)
+
+	if len(args) > 0 {
+		numMigrations, err = strconv.ParseInt(args[0], 10, 64)
+		if err != nil {
+			panic(fmt.Errorf("invalid number of migrations: %w", err))
+		}
+	}
 
 	workingDir, err := cmd.Parent().Flags().GetString("working-dir")
 	if err != nil {
@@ -59,7 +72,7 @@ func run(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	command := "up"
+	command := "down"
 
 	input := comm.Input{
 		Command:            command,
@@ -68,6 +81,7 @@ func run(cmd *cobra.Command, _ []string) {
 		LocalMigrateConfig: localMigrateConfig,
 		Group:              group,
 		All:                all,
+		NumberMigrations:   numMigrations,
 	}
 
 	errExec := comm.New(input).Exec()

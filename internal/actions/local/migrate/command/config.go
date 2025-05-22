@@ -1,7 +1,8 @@
-package up
+package command
 
 import (
 	"errors"
+	"github.com/Drafteame/draft/internal/pkg/inputs"
 	"os"
 	"strings"
 
@@ -9,7 +10,6 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/Drafteame/draft/internal/pkg/files"
-	"github.com/Drafteame/draft/internal/pkg/inputs"
 )
 
 type Config struct {
@@ -69,9 +69,23 @@ func (a *Action) promptSelectDB(config Config) (string, error) {
 	}
 
 	var db string
+	var selectDB string
+	var description string
 
-	errSelect := inputs.Select[string]("Select DB to migrate:",
-		inputs.WithDescription[string]("Select the database you want to migrate defined on the config file"),
+	switch a.Input.Command {
+	case "force":
+		selectDB = selectDBForce
+		description = descriptionSelectDBForce
+	case "up":
+		selectDB = selectDBUp
+		description = descriptionSelectDBUp
+	case "down":
+		selectDB = selectDBDown
+		description = descriptionSelectDBDown
+	}
+
+	errSelect := inputs.Select[string](selectDB,
+		inputs.WithDescription[string](description),
 		inputs.WithOptions(dbs),
 		inputs.WithValue(&db),
 	)
