@@ -1,3 +1,9 @@
+## v1.12.0 (2025-05-22)
+
+
+- chore(ci): update vendor hash for version 1.12.0
+- feat: [DEV-2] [DEV-3] add migrate force and migrate down (#100)
+
 ## v1.11.2 (2025-05-08)
 
 
