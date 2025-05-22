@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var migrateUpCmd = cobra.Command{
+var migrateDownCmd = cobra.Command{
 	Use:   "local:migrate:down [flags] [number]",
 	Short: "Execute migrate down command to rollback the last migrations",
 	Long:  "Rollback one or more database migrations using go migrate on a specific database",
@@ -17,14 +17,14 @@ var migrateUpCmd = cobra.Command{
 }
 
 func GetCmd() *cobra.Command {
-	return &migrateUpCmd
+	return &migrateDownCmd
 }
 
 func init() {
-	migrateUpCmd.Flags().StringP("database", "D", "", "database name")
-	migrateUpCmd.Flags().StringP("local-migrate-config", "c", ".local-migrate-config.yml", "path to the migrations config file")
-	migrateUpCmd.Flags().Bool("all", false, "migrate all databases")
-	migrateUpCmd.Flags().String("group", "", "DB migrations group name")
+	migrateDownCmd.Flags().StringP("database", "D", "", "database name")
+	migrateDownCmd.Flags().StringP("local-migrate-config", "c", ".local-migrate-config.yml", "path to the migrations config file")
+	migrateDownCmd.Flags().Bool("all", false, "migrate all databases")
+	migrateDownCmd.Flags().String("group", "", "DB migrations group name")
 }
 
 func run(cmd *cobra.Command, args []string) {
