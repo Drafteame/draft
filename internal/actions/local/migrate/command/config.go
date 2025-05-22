@@ -79,6 +79,9 @@ func (a *Action) promptSelectDB(config Config) (string, error) {
 	case "up":
 		selectDB = selectDBUp
 		description = descriptionSelectDBUp
+	case "down":
+		selectDB = selectDBDown
+		description = descriptionSelectDBDown
 	}
 
 	errSelect := inputs.Select[string](selectDB,

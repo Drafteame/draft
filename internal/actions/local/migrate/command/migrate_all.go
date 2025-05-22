@@ -8,7 +8,7 @@ func (a *Action) migrateAll(config Config) error {
 			continue
 		}
 
-		_, _ = fmt.Printf("Executing migrations for '%s'\n", db)
+		_, _ = fmt.Printf("Executing '%s' migration for '%s'\n", a.Input.Command, db)
 		if err := a.migrateOne(config, db); err != nil {
 			return err
 		}

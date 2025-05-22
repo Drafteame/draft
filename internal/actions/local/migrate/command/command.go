@@ -8,6 +8,7 @@ type Input struct {
 	Group              string
 	All                bool
 	Version            int64
+	NumberMigrations   int64
 }
 
 type Action struct {

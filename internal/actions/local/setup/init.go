@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	migrateup "github.com/Drafteame/draft/internal/actions/local/migrate/up"
+	migrateup "github.com/Drafteame/draft/internal/actions/local/migrate/command"
 	"github.com/Drafteame/draft/internal/pkg/exec"
 )
 
@@ -24,6 +24,7 @@ func (a *Action) init() error {
 	}
 
 	input := migrateup.Input{
+		Command:            "up",
 		WorkingDir:         a.Input.WorkingDir,
 		LocalMigrateConfig: ".local-migrate-config.yml",
 		All:                true,

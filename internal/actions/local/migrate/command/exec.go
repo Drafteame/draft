@@ -19,10 +19,10 @@ func (a *Action) Exec() error {
 
 	if a.Input.All {
 		if err := a.migrateAll(config); err != nil {
-			return fmt.Errorf("failed to migrate all databases: %w", err)
+			return fmt.Errorf("failed to execute '%s' migration on all databases: %w", a.Input.Command, err)
 		}
 
-		_, _ = fmt.Println("Migrations executed successfully")
+		_, _ = fmt.Printf("Migration '%s' executed successfully\n", a.Input.Command)
 		return nil
 	}
 
@@ -38,9 +38,9 @@ func (a *Action) Exec() error {
 	}
 
 	if err := a.migrateOne(config, dbName); err != nil {
-		return fmt.Errorf("failed to migrate database %s: %w", dbName, err)
+		return fmt.Errorf("failed to execute '%s' migration on database %s: %w", a.Input.Command, dbName, err)
 	}
 
-	_, _ = fmt.Println("Migrations executed successfully")
+	_, _ = fmt.Printf("Migration '%s' executed successfully\n", a.Input.Command)
 	return nil
 }
