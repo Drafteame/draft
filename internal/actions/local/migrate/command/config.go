@@ -2,7 +2,6 @@ package command
 
 import (
 	"errors"
-	"github.com/Drafteame/draft/internal/pkg/inputs"
 	"os"
 	"strings"
 
@@ -10,6 +9,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/Drafteame/draft/internal/pkg/files"
+	"github.com/Drafteame/draft/internal/pkg/inputs"
 )
 
 type Config struct {

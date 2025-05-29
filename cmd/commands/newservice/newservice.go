@@ -11,7 +11,7 @@ import (
 	"github.com/Drafteame/draft/internal/forms"
 )
 
-var cmd = &cobra.Command{
+var cmdNewService = &cobra.Command{
 	Use:   "new:service",
 	Short: "Create a new service",
 	Long:  "Create a new service",
@@ -19,10 +19,10 @@ var cmd = &cobra.Command{
 }
 
 func init() {
-	cmd.Flags().BoolVarP(&data.Flags.NoSentry, "no-sentry", "", data.Flags.NoSentry, "Disable sentry project creation")
+	cmdNewService.Flags().BoolVarP(&data.Flags.NoSentry, "no-sentry", "", data.Flags.NoSentry, "Disable sentry project creation")
 }
 
-func run(_ *cobra.Command, _ []string) {
+func run(cmd *cobra.Command, _ []string) {
 	if data.Flags.WorkingDir != "" {
 		if err := os.Chdir(data.Flags.WorkingDir); err != nil {
 			panic(err)
@@ -32,6 +32,22 @@ func run(_ *cobra.Command, _ []string) {
 	data.LoadMeta()
 
 	input := dtos.ServiceInput{}
+
+	useDig, err := cmd.Parent().Flags().GetBool("use-dig")
+	if err != nil {
+		panic(err)
+	}
+	input.UseDig = useDig
+
+	legacyPath, err := cmd.Parent().Flags().GetString("legacy-path")
+	if err != nil {
+		panic(err)
+	}
+
+	if legacyPath != "" {
+		input.IsLegacy = true
+		input.ServicePath = legacyPath
+	}
 
 	if err := forms.NewService(&input); err != nil {
 		panic(err)
@@ -50,5 +66,5 @@ func run(_ *cobra.Command, _ []string) {
 }
 
 func GetCmd() *cobra.Command {
-	return cmd
+	return cmdNewService
 }

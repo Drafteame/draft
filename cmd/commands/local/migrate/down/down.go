@@ -2,11 +2,12 @@ package down
 
 import (
 	"fmt"
-	comm "github.com/Drafteame/draft/internal/actions/local/migrate/command"
 	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
+
+	comm "github.com/Drafteame/draft/internal/actions/local/migrate/command"
 )
 
 var migrateDownCmd = cobra.Command{
