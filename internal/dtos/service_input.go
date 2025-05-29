@@ -21,4 +21,5 @@ type ServiceInput struct {
 	NextImportTag         string
 	NextLambdaImportTag   string
 	IsLegacy              bool
+	UseDig                bool
 }

@@ -2,10 +2,11 @@ package up
 
 import (
 	"fmt"
-	comm "github.com/Drafteame/draft/internal/actions/local/migrate/command"
 	"os"
 
 	"github.com/spf13/cobra"
+
+	comm "github.com/Drafteame/draft/internal/actions/local/migrate/command"
 )
 
 var migrateUpCmd = cobra.Command{

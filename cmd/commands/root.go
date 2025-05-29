@@ -21,6 +21,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&data.Flags.WorkingDir, "working-dir", "w", "", "Working directory")
 	rootCmd.PersistentFlags().BoolVarP(&data.Flags.Debug, "debug", "d", false, "Debug mode")
 	rootCmd.PersistentFlags().BoolVarP(&data.Flags.TTY, "tty", "t", true, "TTY mode")
+	rootCmd.Flags().Bool("use-dig", false, "Use uber dig for dependency injection")
+	rootCmd.Flags().String("legacy-path", "", "Path to legacy service")
 }
 
 func run(cmd *cobra.Command, _ []string) {
