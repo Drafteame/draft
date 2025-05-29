@@ -1,3 +1,9 @@
+## v1.12.1 (2025-05-29)
+
+
+- chore(ci): update vendor hash for version 1.12.1
+- deps: upgrade (#101)
+
 ## v1.12.0 (2025-05-22)
 
 
