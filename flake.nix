@@ -20,6 +20,10 @@
             revive
             go-task
           ];
+
+          shellHook = ''
+            export GOROOT="${pkgs.go}/share/go"
+          '';
         };
 
         packages.default = pkgs.buildGoModule {
