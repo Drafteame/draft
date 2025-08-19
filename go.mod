@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.59.0
 	github.com/charmbracelet/huh v0.7.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20250519092748-d6f1597485e0
-	github.com/getsentry/sentry-go v0.33.0
+	github.com/getsentry/sentry-go v0.35.1
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/samber/lo v1.50.0
 	github.com/spf13/cobra v1.9.1
