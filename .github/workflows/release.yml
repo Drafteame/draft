@@ -19,7 +19,7 @@ jobs:
     name: "Bump version"
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: "${{ secrets.ACCESS_TOKEN }}"
@@ -91,7 +91,7 @@ jobs:
       - bump_version
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: "${{ secrets.ACCESS_TOKEN }}"
@@ -100,7 +100,7 @@ jobs:
       - name: Setup Golang
         uses: actions/setup-go@v5
         with:
-          go-version: 1.23
+          go-version: 1.24
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6

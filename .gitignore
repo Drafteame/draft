@@ -33,3 +33,6 @@ dist/
 bin/
 examples/
 result/
+
+# locks
+flake.lock
