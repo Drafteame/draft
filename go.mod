@@ -12,7 +12,7 @@ require (
 	github.com/charmbracelet/huh/spinner v0.0.0-20250519092748-d6f1597485e0
 	github.com/getsentry/sentry-go v0.33.0
 	github.com/go-resty/resty/v2 v2.16.5
-	github.com/samber/lo v1.50.0
+	github.com/samber/lo v1.51.0
 	github.com/spf13/cobra v1.9.1
 	golang.org/x/crypto v0.38.0
 	golang.org/x/sync v0.14.0
@@ -47,6 +47,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
