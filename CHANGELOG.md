@@ -1,3 +1,9 @@
+## v1.13.0 (2025-08-19)
+
+
+- chore(ci): update vendor hash for version 1.13.0
+- feat: automatic local body (#129)
+
 ## v1.12.1 (2025-05-29)
 
 
