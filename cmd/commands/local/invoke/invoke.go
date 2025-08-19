@@ -11,7 +11,6 @@ import (
 
 	"github.com/Drafteame/draft/internal/pkg/aws"
 	"github.com/Drafteame/draft/internal/pkg/build"
-	"github.com/Drafteame/draft/internal/pkg/dirs"
 	"github.com/Drafteame/draft/internal/pkg/exec"
 	"github.com/Drafteame/draft/internal/pkg/files"
 	"github.com/Drafteame/draft/internal/pkg/pkl"
@@ -57,6 +56,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	pklOutFile := buildPkl(parent, awsEnvs)
+	embedded := copyToEmbedDir(pklOutFile, lambdaPath)
 
 	println("Building lambda...")
 
@@ -65,7 +65,7 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	binCmd := buildBinCmd(lambdaPath, pklOutFile, body)
+	binCmd := buildBinCmd(lambdaPath, pklOutFile, body, embedded)
 
 	serviceEnvs := map[string]string{
 		"STAGE":    "dev",
@@ -90,10 +90,10 @@ func run(cmd *cobra.Command, args []string) {
 }
 
 // buildBinCmd builds a binary execution command by appending optional config and body arguments to the given path.
-func buildBinCmd(lambdaPath, pklOutFile, body string) string {
+func buildBinCmd(lambdaPath, pklOutFile, body string, embeddedConfig bool) string {
 	execName := path.Join(build.BinPath, lambdaPath)
 
-	if pklOutFile != "" {
+	if pklOutFile != "" && !embeddedConfig {
 		pklOutFile = fmt.Sprintf("--config %s", pklOutFile)
 	}
 
@@ -126,25 +126,51 @@ func buildPkl(parent string, awsEnvs map[string]string) string {
 		os.Exit(1)
 	}
 
-	copyToEmbedDir(pklOutFile, parent)
-
 	return pklOutFile
 }
 
 // copyToEmbedDir copies the generated YAML configuration file to the embed directory.
 // It takes the path to the output YAML file and the parent directory path as input.
-func copyToEmbedDir(pklOutFile, parent string) {
-	if !files.Exists(path.Join(parent, "embed")) {
-		if errEmbedCreate := dirs.Create(path.Join(parent, "embed")); errEmbedCreate != nil {
-			println("Failed to create embed directory:", errEmbedCreate.Error())
-			return
-		}
+func copyToEmbedDir(pklOutFile, lambdaPath string) bool {
+	println("Copying pkl to embed dir...")
+
+	bootstrapGo := searchBootstrapGo(lambdaPath)
+	if bootstrapGo == "" {
+		println("No bootstrap.go found in lambda path. Skipping copy to embed dir.")
+		return false
 	}
 
-	if errCopy := files.Copy(pklOutFile, path.Join(parent, "embed", ".app-config.yaml")); errCopy != nil {
-		println("Failed to copy pkl to embed dir:", errCopy.Error())
-		return
+	basePath := path.Dir(bootstrapGo)
+
+	if !files.Exists(path.Join(basePath, "embed")) {
+		println("No embed directory found. Skipping copy to embed dir.")
+		return false
 	}
+
+	embedFile := path.Join(basePath, "embed", ".app-config.yaml")
+
+	if errCopy := files.Copy(pklOutFile, embedFile); errCopy != nil {
+		println("Failed to copy pkl to embed dir:", errCopy.Error())
+		return false
+	}
+
+	println("Copied pkl to embed dir:", embedFile)
+
+	return true
+}
+
+// searchBootstrapGo searches for a file named "bootstrap.go" in the given path and returns the first match, or an empty string.
+func searchBootstrapGo(lambdaPath string) string {
+	list, err := files.Search(lambdaPath, "bootstrap.go")
+	if err != nil {
+		return ""
+	}
+
+	if len(list) > 0 {
+		return list[0]
+	}
+
+	return ""
 }
 
 // getPath returns the full absolute path by appending the passed argument to the current working directory.
