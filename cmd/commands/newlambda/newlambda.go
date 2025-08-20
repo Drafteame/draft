@@ -42,7 +42,7 @@ func run(cmd *cobra.Command, _ []string) {
 	}
 
 	if errForm := forms.NewLambda(&input); errForm != nil {
-		log.Exitf(1, "failed to colect new lambda info: %s", errForm.Error())
+		log.Exitf(1, "failed to collect new lambda info: %s", errForm.Error())
 	}
 
 	if errExec := newlambda.New(input).Exec(); errExec != nil {
