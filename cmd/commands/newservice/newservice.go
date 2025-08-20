@@ -46,7 +46,7 @@ func run(cmd *cobra.Command, _ []string) {
 	}
 
 	if errForm := forms.NewService(&input); errForm != nil {
-		log.Exitf(1, "failed to colect new service info: %s", errForm.Error())
+		log.Exitf(1, "failed to collect new service info: %s", errForm.Error())
 	}
 
 	if errExec := newservice.New(input).Exec(); errExec != nil {
