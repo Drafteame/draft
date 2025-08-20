@@ -89,7 +89,7 @@ func confirmUpdate(current, latest *semver.Version) bool {
 	input := dtos.UpdateNixModules{}
 	err := forms.UpdateNixModules(&input, current, latest)
 	if err != nil {
-		log.Debugf("Error reading user for nix modules input: %v", err)
+		log.Debugf("Error reading user input for nix modules: %v", err)
 		return false
 	}
 	return input.ShouldUpdateNixModules
