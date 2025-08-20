@@ -1,16 +1,17 @@
 package down
 
 import (
-	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
 
+	"github.com/Drafteame/draft/cmd/commands/internal/common"
+	"github.com/Drafteame/draft/cmd/commands/local/migrate/internal/flags"
 	comm "github.com/Drafteame/draft/internal/actions/local/migrate/command"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
-var migrateDownCmd = cobra.Command{
+var migrateDownCmd = &cobra.Command{
 	Use:   "local:migrate:down [flags] [number]",
 	Short: "Execute migrate down command to rollback the last migrations",
 	Long:  "Rollback one or more database migrations using go migrate on a specific database",
@@ -18,23 +19,15 @@ var migrateDownCmd = cobra.Command{
 }
 
 func GetCmd() *cobra.Command {
-	return &migrateDownCmd
+	return migrateDownCmd
 }
 
 func init() {
-	migrateDownCmd.Flags().StringP("database", "D", "", "database name")
-	migrateDownCmd.Flags().StringP("local-migrate-config", "c", ".local-migrate-config.yml", "path to the migrations config file")
-	migrateDownCmd.Flags().Bool("all", false, "migrate all databases")
-	migrateDownCmd.Flags().String("group", "", "DB migrations group name")
+	flags.Register(migrateDownCmd)
 }
 
 func run(cmd *cobra.Command, args []string) {
-	defer func() {
-		if r := recover(); r != nil {
-			_, _ = fmt.Printf("%v\n", r)
-			os.Exit(1)
-		}
-	}()
+	common.ChDir(cmd)
 
 	var (
 		numMigrations int64
@@ -44,49 +37,27 @@ func run(cmd *cobra.Command, args []string) {
 	if len(args) > 0 {
 		numMigrations, err = strconv.ParseInt(args[0], 10, 64)
 		if err != nil {
-			panic(fmt.Errorf("invalid number of migrations: %w", err))
+			log.Exitf(1, "invalid number of migrations: %s", err.Error())
 		}
 	}
 
-	workingDir, err := cmd.Parent().Flags().GetString("working-dir")
-	if err != nil {
-		panic(err)
-	}
-
-	database, err := cmd.Flags().GetString("database")
-	if err != nil {
-		panic(err)
-	}
-
-	localMigrateConfig, err := cmd.Flags().GetString("local-migrate-config")
-	if err != nil {
-		panic(err)
-	}
-
-	all, err := cmd.Flags().GetBool("all")
-	if err != nil {
-		panic(err)
-	}
-
-	group, err := cmd.Flags().GetString("group")
-	if err != nil {
-		panic(err)
-	}
+	f := flags.GetFlags(cmd)
 
 	command := "down"
 
 	input := comm.Input{
 		Command:            command,
-		WorkingDir:         workingDir,
-		Database:           database,
-		LocalMigrateConfig: localMigrateConfig,
-		Group:              group,
-		All:                all,
+		Database:           f.Database,
+		LocalMigrateConfig: f.Config,
+		Group:              f.Group,
+		All:                f.All,
 		NumberMigrations:   numMigrations,
 	}
 
 	errExec := comm.New(input).Exec()
 	if errExec != nil {
-		panic(errExec)
+		log.Exitf(1, "failed to execute command: %s", errExec.Error())
 	}
+
+	log.Success("Migration down completed")
 }

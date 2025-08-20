@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Drafteame/draft/internal/config"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
 var configCmd = &cobra.Command{
@@ -15,14 +16,17 @@ var configCmd = &cobra.Command{
 }
 
 func run(_ *cobra.Command, _ []string) {
-	cfg := config.Get()
+	cfg, err := config.Get()
+	if err != nil {
+		log.Exitf(1, "failed to obtain config: %s", err.Error())
+	}
 
 	tb, err := toml.Marshal(cfg)
 	if err != nil {
-		panic(err)
+		log.Exitf(1, "failed to obtain config: %s", err.Error())
 	}
 
-	println(string(tb))
+	log.PrintCode(string(tb), "toml")
 }
 
 func GetCmd() *cobra.Command {

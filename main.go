@@ -12,6 +12,7 @@ import (
 	"github.com/Drafteame/draft/cmd/commands/newlambda"
 	"github.com/Drafteame/draft/cmd/commands/newservice"
 	"github.com/Drafteame/draft/cmd/commands/sentry/deleteproject"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
 func main() {
@@ -29,6 +30,6 @@ func main() {
 	cmd.AddCommand(testsetup.GetCmd())
 
 	if err := cmd.Execute(); err != nil {
-		panic(err)
+		log.Exit(1, err.Error())
 	}
 }

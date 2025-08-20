@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 
@@ -20,15 +21,28 @@ type Sentry struct {
 	Team         string `toml:"team"`
 }
 
-func Get() Config {
-	cfg, err := load()
+var (
+	cfg  Config
+	once sync.Once
+)
+
+func Get() (Config, error) {
+	var err error
+
+	once.Do(func() {
+		cfg, err = load()
+		if err != nil {
+			return
+		}
+
+		loadEnvs(&cfg)
+	})
+
 	if err != nil {
-		panic(err)
+		return cfg, err
 	}
 
-	loadEnvs(&cfg)
-
-	return cfg
+	return cfg, nil
 }
 
 func load() (Config, error) {
@@ -41,12 +55,12 @@ func load() (Config, error) {
 		return Config{}, err
 	}
 
-	cfg := Config{}
-	if errUnm := toml.Unmarshal(content, &cfg); errUnm != nil {
+	c := Config{}
+	if errUnm := toml.Unmarshal(content, &c); errUnm != nil {
 		return Config{}, errUnm
 	}
 
-	return cfg, nil
+	return c, nil
 }
 
 func loadEnvs(cfg *Config) {

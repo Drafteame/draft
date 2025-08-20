@@ -6,12 +6,12 @@ import (
 
 	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/pkg/files"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
 func (nl *NewLambda) postCreate() error {
 	if nl.input.IsLegacy {
-		println("Command executed in legacy mode. No deps and serverless.yml changes created. Please add manually")
-
+		log.Warn("Command executed in legacy mode. No deps and serverless.yml changes created. Please add manually")
 		return nil
 	}
 

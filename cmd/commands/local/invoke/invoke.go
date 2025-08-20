@@ -9,10 +9,12 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/Drafteame/draft/cmd/commands/internal/common"
 	"github.com/Drafteame/draft/internal/pkg/aws"
 	"github.com/Drafteame/draft/internal/pkg/build"
 	"github.com/Drafteame/draft/internal/pkg/exec"
 	"github.com/Drafteame/draft/internal/pkg/files"
+	"github.com/Drafteame/draft/internal/pkg/log"
 	"github.com/Drafteame/draft/internal/pkg/pkl"
 )
 
@@ -34,35 +36,29 @@ func init() {
 }
 
 func run(cmd *cobra.Command, args []string) {
-	if workDir := cmd.Parent().Flag("working-dir").Value.String(); workDir != "" {
-		if err := os.Chdir(workDir); err != nil {
-			panic(err)
-		}
-	}
+	common.ChDir(cmd)
 
 	lambdaPath := getPath(args[0])
 	body := getBody(cmd, lambdaPath)
 
-	println("Getting AWS credentials...")
+	log.Info("Getting AWS credentials...")
 
 	awsEnvs := getAWSEnvs()
 
-	println("Identifying service...")
+	log.Info("Identifying service...")
 
 	serviceName, parent, err := getService(lambdaPath)
 	if err != nil {
-		println("Failed to get service name:", err.Error())
-		os.Exit(1)
+		log.Exitf(1, "Failed to get service name: %v", err)
 	}
 
 	pklOutFile := buildPkl(parent, awsEnvs)
 	embedded := copyToEmbedDir(pklOutFile, lambdaPath)
 
-	println("Building lambda...")
+	log.Info("Building lambda...")
 
 	if errBuild := build.Exec(cmd.Context(), lambdaPath); errBuild != nil {
-		println("Failed to build:", errBuild.Error())
-		os.Exit(1)
+		log.Exitf(1, "Failed to build: %v", errBuild)
 	}
 
 	binCmd := buildBinCmd(lambdaPath, pklOutFile, body, embedded)
@@ -81,11 +77,10 @@ func run(cmd *cobra.Command, args []string) {
 		exec.WithStderr(os.Stderr),
 	}
 
-	println("Running lambda...")
+	log.Info("Running lambda...")
 
 	if _, errRun := exec.Command(binCmd, execOpts...); errRun != nil {
-		_, _ = fmt.Printf("Failed to run command '%s': %v", binCmd, errRun)
-		os.Exit(1)
+		log.Exitf(1, "Failed to run command '%s': %v", binCmd, errRun)
 	}
 }
 
@@ -118,11 +113,11 @@ func buildPkl(parent string, awsEnvs map[string]string) string {
 		return ""
 	}
 
-	println("Building pkl...")
+	log.Info("Building pkl...")
 
 	_, errPkl := pkl.Build(pklConfigFile, pklOutFile, "yaml", pkl.WithEnvs(awsEnvs))
 	if errPkl != nil {
-		println("Failed to build pkl:", errPkl.Error())
+		log.Errorf("Failed to build pkl: %v", errPkl)
 		os.Exit(1)
 	}
 
@@ -132,29 +127,29 @@ func buildPkl(parent string, awsEnvs map[string]string) string {
 // copyToEmbedDir copies the generated YAML configuration file to the embed directory.
 // It takes the path to the output YAML file and the parent directory path as input.
 func copyToEmbedDir(pklOutFile, lambdaPath string) bool {
-	println("Copying pkl to embed dir...")
+	log.Info("Copying pkl to embed dir...")
 
 	bootstrapGo := searchBootstrapGo(lambdaPath)
 	if bootstrapGo == "" {
-		println("No bootstrap.go found in lambda path. Skipping copy to embed dir.")
+		log.Warn("No bootstrap.go found in lambda path. Skipping copy to embed dir.")
 		return false
 	}
 
 	basePath := path.Dir(bootstrapGo)
 
 	if !files.Exists(path.Join(basePath, "embed")) {
-		println("No embed directory found. Skipping copy to embed dir.")
+		log.Warn("No embed directory found. Skipping copy to embed dir.")
 		return false
 	}
 
 	embedFile := path.Join(basePath, "embed", ".app-config.yaml")
 
 	if errCopy := files.Copy(pklOutFile, embedFile); errCopy != nil {
-		println("Failed to copy pkl to embed dir:", errCopy.Error())
+		log.Errorf("Failed to copy pkl to embed dir: %v", errCopy)
 		return false
 	}
 
-	println("Copied pkl to embed dir:", embedFile)
+	log.Success("Copied pkl to embed dir:", embedFile)
 
 	return true
 }
@@ -178,11 +173,11 @@ func searchBootstrapGo(lambdaPath string) string {
 func getPath(argPath string) string {
 	cwd, err := os.Getwd()
 	if err != nil {
-		println("Failed to get current working directory:", err.Error())
+		log.Errorf("Failed to get current working directory: %v", err)
 		os.Exit(1)
 	}
 
-	println("Current working directory:", cwd)
+	log.Debug("Current working directory:", cwd)
 
 	argPath = cwd + "/" + argPath
 
@@ -194,7 +189,7 @@ func getPath(argPath string) string {
 func getAWSEnvs() map[string]string {
 	awsEnvs, err := aws.GetLocalCredentials()
 	if err != nil {
-		println("Failed to get AWS credentials:", err.Error())
+		log.Errorf("Failed to get AWS credentials: %v", err)
 		os.Exit(1)
 	}
 
@@ -234,13 +229,13 @@ func searchLocalBodyFile(servicePath string) string {
 // It exits the program with an error if the file does not exist or cannot be read.
 func readBodyFromFile(file string) string {
 	if !files.Exists(file) {
-		println("Failed to get body:", fmt.Errorf("file not found: %s", file).Error())
+		log.Errorf("Failed to get body: file not found: %s", file)
 		os.Exit(1)
 	}
 
 	body, err := files.Read(file)
 	if err != nil {
-		println("Failed to read body:", err.Error())
+		log.Errorf("Failed to read body: %v", err)
 		os.Exit(1)
 	}
 

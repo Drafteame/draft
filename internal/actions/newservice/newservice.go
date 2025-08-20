@@ -14,22 +14,24 @@ type NewService struct {
 	input dtos.ServiceInput
 }
 
-func GetAction(input dtos.ServiceInput) (*NewService, error) {
-	tmpl, err := templates.NewServiceTemplates(input)
-	if err != nil {
-		return nil, err
-	}
-
-	return &NewService{input: input, tmpl: tmpl}, nil
+func New(input dtos.ServiceInput) *NewService {
+	return &NewService{input: input}
 }
 
 func (ns *NewService) Exec() error {
-	if err := ns.preCreate(); err != nil {
+	tmpl, err := templates.NewServiceTemplates(ns.input)
+	if err != nil {
 		return err
 	}
 
-	if err := ns.exec(); err != nil {
-		return err
+	ns.tmpl = tmpl
+
+	if errPre := ns.preCreate(); errPre != nil {
+		return errPre
+	}
+
+	if errExec := ns.exec(); errExec != nil {
+		return errExec
 	}
 
 	return ns.postCreate()

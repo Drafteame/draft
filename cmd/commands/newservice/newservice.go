@@ -1,14 +1,14 @@
 package newservice
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
+	"github.com/Drafteame/draft/cmd/commands/internal/common"
 	"github.com/Drafteame/draft/internal/actions/newservice"
 	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
 var cmdNewService = &cobra.Command{
@@ -23,11 +23,7 @@ func init() {
 }
 
 func run(cmd *cobra.Command, _ []string) {
-	if data.Flags.WorkingDir != "" {
-		if err := os.Chdir(data.Flags.WorkingDir); err != nil {
-			panic(err)
-		}
-	}
+	common.ChDir(cmd)
 
 	data.LoadMeta()
 
@@ -35,13 +31,13 @@ func run(cmd *cobra.Command, _ []string) {
 
 	useDig, err := cmd.Parent().Flags().GetBool("use-dig")
 	if err != nil {
-		panic(err)
+		log.Exitf(1, "failed to obtain use-dig flag: %s", err.Error())
 	}
 	input.UseDig = useDig
 
 	legacyPath, err := cmd.Parent().Flags().GetString("legacy-path")
 	if err != nil {
-		panic(err)
+		log.Exitf(1, "failed to obtain legacy-path flag: %s", err.Error())
 	}
 
 	if legacyPath != "" {
@@ -49,20 +45,15 @@ func run(cmd *cobra.Command, _ []string) {
 		input.ServicePath = legacyPath
 	}
 
-	if err := forms.NewService(&input); err != nil {
-		panic(err)
+	if errForm := forms.NewService(&input); errForm != nil {
+		log.Exitf(1, "failed to colect new service info: %s", errForm.Error())
 	}
 
-	action, err := newservice.GetAction(input)
-	if err != nil {
-		panic(err)
+	if errExec := newservice.New(input).Exec(); errExec != nil {
+		log.Exitf(1, "failed to create service: %s", errExec.Error())
 	}
 
-	if errExec := action.Exec(); errExec != nil {
-		panic(errExec)
-	}
-
-	println("Service created successfully")
+	log.Success("Service created successfully")
 }
 
 func GetCmd() *cobra.Command {

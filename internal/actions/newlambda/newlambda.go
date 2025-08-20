@@ -14,12 +14,7 @@ type NewLambda struct {
 	lambdaPath string
 }
 
-func GetAction(input dtos.LambdaInput) (*NewLambda, error) {
-	tmpl, err := templates.NewLambdaTemplates(input)
-	if err != nil {
-		return nil, err
-	}
-
+func New(input dtos.LambdaInput) *NewLambda {
 	lambdaPath := input.ServicePath + "/cmd/" + input.LambdaType + "/" + input.LambdaName
 	if input.IsLegacy {
 		lambdaPath = input.ServicePath + "/" + input.LambdaType + "/" + input.LambdaName
@@ -27,18 +22,24 @@ func GetAction(input dtos.LambdaInput) (*NewLambda, error) {
 
 	return &NewLambda{
 		input:      input,
-		tmpl:       tmpl,
 		lambdaPath: lambdaPath,
-	}, nil
+	}
 }
 
 func (nl *NewLambda) Exec() error {
+	tmpl, err := templates.NewLambdaTemplates(nl.input)
+	if err != nil {
+		return err
+	}
+
+	nl.tmpl = tmpl
+
 	if !files.Exists(nl.input.ServicePath) {
 		return fmt.Errorf("service %s not found", nl.input.ServicePath)
 	}
 
-	if err := nl.exec(); err != nil {
-		return err
+	if errExec := nl.exec(); errExec != nil {
+		return errExec
 	}
 
 	return nl.postCreate()
