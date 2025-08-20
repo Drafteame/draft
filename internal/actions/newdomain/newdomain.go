@@ -10,21 +10,22 @@ type NewDomain struct {
 	tmpl  templates.Domains
 }
 
-func GetAction(input dtos.DomainInput) (*NewDomain, error) {
-	tmpl, err := templates.NewDomains(input)
-	if err != nil {
-		return nil, err
-	}
-
+func New(input dtos.DomainInput) *NewDomain {
 	return &NewDomain{
 		input: input,
-		tmpl:  tmpl,
-	}, nil
+	}
 }
 
 func (nd *NewDomain) Exec() error {
-	if err := nd.exec(); err != nil {
+	tmpl, err := templates.NewDomains(nd.input)
+	if err != nil {
 		return err
+	}
+
+	nd.tmpl = tmpl
+
+	if errExec := nd.exec(); errExec != nil {
+		return errExec
 	}
 
 	return nd.postCreate()

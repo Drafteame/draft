@@ -1,50 +1,41 @@
 package deleteproject
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
+	"github.com/Drafteame/draft/cmd/commands/internal/common"
 	"github.com/Drafteame/draft/internal/actions/sentry/deleteproject"
-	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
-var cmd = &cobra.Command{
+var sentryDeleteProjectCmd = &cobra.Command{
 	Use:   "sentry:delete-project",
 	Short: "Delete a Sentry project",
 	Long:  "Delete a Sentry project",
 	Run:   run,
 }
 
-func run(_ *cobra.Command, _ []string) {
-	if data.Flags.WorkingDir != "" {
-		if err := os.Chdir(data.Flags.WorkingDir); err != nil {
-			panic(err)
-		}
-	}
+func run(cmd *cobra.Command, _ []string) {
+	common.ChDir(cmd)
 
 	input := dtos.DeleteProjectInput{}
 
 	if err := forms.DeleteProject(&input); err != nil {
 		if err.Error() == "operation cancelled by the user" {
-			println("The operation was cancelled by the user.")
+			log.Warn("The operation was cancelled by the user.")
 			return
 		}
-		panic(err)
+
+		log.Exitf(1, "Failed to collect project info: %v", err)
 	}
 
-	action, err := deleteproject.GetAction(input)
-	if err != nil {
-		panic(err)
-	}
-
-	if err = action.Exec(); err != nil {
-		panic(err)
+	if err := deleteproject.New(input).Exec(); err != nil {
+		log.Exitf(1, "Failed to delete sentry project: %v", err)
 	}
 }
 
 func GetCmd() *cobra.Command {
-	return cmd
+	return sentryDeleteProjectCmd
 }

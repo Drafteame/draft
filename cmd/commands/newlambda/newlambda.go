@@ -1,14 +1,14 @@
 package newlambda
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
+	"github.com/Drafteame/draft/cmd/commands/internal/common"
 	"github.com/Drafteame/draft/internal/actions/newlambda"
 	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
 var newLambdaCmd = &cobra.Command{
@@ -18,22 +18,14 @@ var newLambdaCmd = &cobra.Command{
 	Run:   run,
 }
 
-func init() {
-	// TODO: add flags for lambda creation
-}
-
 func run(cmd *cobra.Command, _ []string) {
-	if data.Flags.WorkingDir != "" {
-		if err := os.Chdir(data.Flags.WorkingDir); err != nil {
-			panic(err)
-		}
-	}
+	common.ChDir(cmd)
 
 	data.LoadMeta()
 
 	useDig, err := cmd.Parent().Flags().GetBool("use-dig")
 	if err != nil {
-		panic(err)
+		log.Exitf(1, "failed to obtain use-dig flag: %s", err.Error())
 	}
 	input := dtos.LambdaInput{
 		UseDig: useDig,
@@ -41,7 +33,7 @@ func run(cmd *cobra.Command, _ []string) {
 
 	legacyPath, err := cmd.Parent().Flags().GetString("legacy-path")
 	if err != nil {
-		panic(err)
+		log.Exitf(1, "failed to obtain legacy-path flag: %s", err.Error())
 	}
 
 	if legacyPath != "" {
@@ -49,20 +41,15 @@ func run(cmd *cobra.Command, _ []string) {
 		input.ServicePath = legacyPath
 	}
 
-	if err := forms.NewLambda(&input); err != nil {
-		panic(err)
+	if errForm := forms.NewLambda(&input); errForm != nil {
+		log.Exitf(1, "failed to collect new lambda info: %s", errForm.Error())
 	}
 
-	action, err := newlambda.GetAction(input)
-	if err != nil {
-		panic(err)
+	if errExec := newlambda.New(input).Exec(); errExec != nil {
+		log.Exitf(1, "failed to create lambda: %s", errExec.Error())
 	}
 
-	if err := action.Exec(); err != nil {
-		panic(err)
-	}
-
-	println("Lambda created successfully")
+	log.Success("Lambda created successfully")
 }
 
 func GetCmd() *cobra.Command {

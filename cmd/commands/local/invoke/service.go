@@ -2,6 +2,7 @@ package invoke
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/Drafteame/draft/internal/pkg/files"
@@ -14,12 +15,16 @@ func getService(path string) (string, string, error) {
 		parent := strings.Join(parts[:i+1], "/")
 
 		if isServerlessService(parent) {
-			serviceName := getServiceNameFormServerlessFile(parent)
+			serviceName, errSlsFile := getServiceNameFormServerlessFile(parent)
+			if errSlsFile != nil {
+				return "", "", errSlsFile
+			}
+
 			return serviceName, parent, nil
 		}
 	}
 
-	return "", "", errors.New("service is not serverless or cdk")
+	return "", "", errors.New("service does not have a valid serverless.yaml file")
 }
 
 func isServerlessService(path string) bool {
@@ -30,7 +35,7 @@ func isServerlessService(path string) bool {
 	return files.Exists(path + "/serverless.yml")
 }
 
-func getServiceNameFormServerlessFile(path string) string {
+func getServiceNameFormServerlessFile(path string) (string, error) {
 	file := path + "/serverless.yml"
 
 	type serverless struct {
@@ -40,8 +45,8 @@ func getServiceNameFormServerlessFile(path string) string {
 	data := serverless{}
 
 	if err := files.LoadYAML(file, &data); err != nil {
-		panic("Failed to load serverless.yml: " + err.Error())
+		return "", fmt.Errorf("failed to load serverless.yml: %w", err)
 	}
 
-	return data.Service
+	return data.Service, nil
 }

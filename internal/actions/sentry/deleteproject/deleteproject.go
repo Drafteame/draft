@@ -8,10 +8,10 @@ type DeleteProject struct {
 	input dtos.DeleteProjectInput
 }
 
-func GetAction(input dtos.DeleteProjectInput) (*DeleteProject, error) {
+func New(input dtos.DeleteProjectInput) *DeleteProject {
 	return &DeleteProject{
 		input: input,
-	}, nil
+	}
 }
 
 func (dl *DeleteProject) Exec() error {

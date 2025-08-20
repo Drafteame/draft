@@ -1,12 +1,11 @@
 package setup
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
 
+	"github.com/Drafteame/draft/cmd/commands/internal/common"
 	localsetup "github.com/Drafteame/draft/internal/actions/local/setup"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
 var localSetupCmd = &cobra.Command{
@@ -26,38 +25,26 @@ func init() {
 }
 
 func run(cmd *cobra.Command, _ []string) {
-	defer func() {
-		if r := recover(); r != nil {
-			_, _ = fmt.Fprintln(os.Stderr, r)
-			os.Exit(1)
-		}
-	}()
-
-	workDir, err := cmd.Parent().Flags().GetString("working-dir")
-	if err != nil {
-		panic(err)
-	}
+	common.ChDir(cmd)
 
 	prune, err := cmd.Flags().GetBool("prune")
 	if err != nil {
-		panic(err)
+		log.Exitf(1, "failed to obtain prune flag: %s", err.Error())
 	}
 
 	bypassDocker, err := cmd.Flags().GetBool("bypass-docker")
 	if err != nil {
-		panic(err)
+		log.Exitf(1, "failed to obtain bypass-docker flag: %s", err.Error())
 	}
 
 	input := localsetup.Input{
-		WorkingDir:   workDir,
 		Prune:        prune,
 		BypassDocker: bypassDocker,
 	}
 
-	if err := localsetup.New(input).Exec(); err != nil {
-		panic(err)
+	if errExec := localsetup.New(input).Exec(); errExec != nil {
+		log.Exitf(1, "failed to setup test environment: %s", errExec.Error())
 	}
 
-	println("Setup test environment completed")
-	os.Exit(0)
+	log.Success("Setup test environment completed")
 }

@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/Drafteame/draft/internal/pkg/files"
+	"github.com/Drafteame/draft/internal/pkg/log"
 	"github.com/Drafteame/draft/internal/project"
 )
 
@@ -12,17 +13,13 @@ type meta struct {
 var Meta = meta{}
 
 func LoadMeta() {
-	setPackageName()
-}
-
-func setPackageName() {
 	if !files.Exists("go.mod") {
-		panic("go.mod file not found")
+		log.Exit(1, "go.mod file not found")
 	}
 
 	name, err := project.GetPackage("go.mod")
 	if err != nil {
-		panic(err)
+		log.Exitf(1, "failed to get package name: %s", err.Error())
 	}
 
 	Meta.PackageName = name

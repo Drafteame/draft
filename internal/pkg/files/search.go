@@ -40,7 +40,12 @@ func search(rootPath, fileName string, files []string, options searchOptions) ([
 	}
 
 	for _, entry := range entries {
-		if shouldBeOmited(entry, options) {
+		omit, errOmit := shouldBeOmitted(entry, options)
+		if errOmit != nil {
+			return nil, errOmit
+		}
+
+		if omit {
 			continue
 		}
 
@@ -61,17 +66,17 @@ func search(rootPath, fileName string, files []string, options searchOptions) ([
 	return files, nil
 }
 
-func shouldBeOmited(file os.DirEntry, opts searchOptions) bool {
+func shouldBeOmitted(file os.DirEntry, opts searchOptions) (bool, error) {
 	for _, omit := range opts.Omit {
 		assert, err := regexp.MatchString(omit, file.Name())
 		if err != nil {
-			panic(err)
+			return false, err
 		}
 
 		if assert {
-			return true
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }

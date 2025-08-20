@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Drafteame/draft/internal/data"
+	"github.com/Drafteame/draft/internal/pkg/log"
 	nixversion "github.com/Drafteame/draft/internal/pkg/version/nix"
 )
 
@@ -27,7 +28,7 @@ func init() {
 
 func run(cmd *cobra.Command, _ []string) {
 	if err := cmd.Help(); err != nil {
-		panic(err)
+		log.Exitf(1, "failed to print help: %s", err.Error())
 	}
 }
 

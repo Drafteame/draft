@@ -1,50 +1,41 @@
 package newdomain
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
+	"github.com/Drafteame/draft/cmd/commands/internal/common"
 	"github.com/Drafteame/draft/internal/actions/newdomain"
 	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
-var cmd = &cobra.Command{
+var newDomainCmd = &cobra.Command{
 	Use:   "new:domain",
 	Short: "Create a new domain",
 	Long:  "Create a new configurable domain, creates models, services, repositories and any other needed config to work",
 	Run:   run,
 }
 
-func run(_ *cobra.Command, _ []string) {
-	if data.Flags.WorkingDir != "" {
-		if err := os.Chdir(data.Flags.WorkingDir); err != nil {
-			panic(err)
-		}
-	}
+func run(cmd *cobra.Command, _ []string) {
+	common.ChDir(cmd)
 
 	data.LoadMeta()
 
 	input := dtos.DomainInput{}
 
 	if err := forms.NewDomain(&input); err != nil {
-		panic(err)
+		log.Exitf(1, "Failed to collect domain info: %v", err)
 	}
 
-	action, err := newdomain.GetAction(input)
-	if err != nil {
-		panic(err)
+	if errExec := newdomain.New(input).Exec(); errExec != nil {
+		log.Exitf(1, "Failed to create domain: %v", errExec)
 	}
 
-	if err := action.Exec(); err != nil {
-		panic(err)
-	}
-
-	println("Domain", input.DomainName, "created successfully")
+	log.Successf("Domain %s created successfully", input.DomainName)
 }
 
 func GetCmd() *cobra.Command {
-	return cmd
+	return newDomainCmd
 }

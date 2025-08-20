@@ -13,6 +13,7 @@ import (
 
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/forms"
+	"github.com/Drafteame/draft/internal/pkg/log"
 	nixmetadata "github.com/Drafteame/draft/internal/pkg/nix-metadata"
 )
 
@@ -30,7 +31,7 @@ const (
 func CheckNixModulesVersion() {
 	nixMetadata, err := nixmetadata.Get()
 	if err != nil {
-		_, _ = fmt.Printf("Error getting current version: %v\n", err)
+		log.Debugf("Error getting current nix modules version: %v", err)
 		return
 	}
 
@@ -40,14 +41,14 @@ func CheckNixModulesVersion() {
 
 	latestVersion, err := getLatestVersion(nixMetadata)
 	if err != nil {
-		_, _ = fmt.Printf("Error getting latest version: %v\n", err)
+		log.Debugf("Error getting latest nix modules version: %v", err)
 		return
 	}
 
 	shouldUpdateLastNegativeResponse := handleUpdate(nixMetadata.CurrentVersion, latestVersion)
 	if !shouldUpdateLastNegativeResponse {
 		if err = nixMetadata.UpdateLastNegativeUpdatePrompt(); err != nil {
-			_, _ = fmt.Printf("Error updating last negative update prompt: %v\n", err)
+			log.Debugf("Error updating last negative update prompt: %v", err)
 		}
 	}
 }
@@ -88,7 +89,7 @@ func confirmUpdate(current, latest *semver.Version) bool {
 	input := dtos.UpdateNixModules{}
 	err := forms.UpdateNixModules(&input, current, latest)
 	if err != nil {
-		_, _ = fmt.Printf("Error reading user input: %v\n", err)
+		log.Debugf("Error reading user input for nix modules: %v", err)
 		return false
 	}
 	return input.ShouldUpdateNixModules
@@ -97,17 +98,22 @@ func confirmUpdate(current, latest *semver.Version) bool {
 func performNixUpdate() {
 	cmd := exec.Command("hms-update", "--silent=true")
 
-	if err := spinner.New().Type(spinner.Dots).Title("Updating nix-modules...").Action(func() {
-		if err := cmd.Run(); err != nil {
-			_, _ = fmt.Printf("Error updating nix-modules: %v\n", err)
-			return
-		}
-	}).Run(); err != nil {
-		_, _ = fmt.Printf("Error updating nix-modules: %v\n", err)
+	err := spinner.New().Type(spinner.Dots).
+		Title("Updating nix-modules...").
+		Action(func() {
+			if err := cmd.Run(); err != nil {
+				log.Debugf("Error updating nix-modules: %v", err)
+				return
+			}
+		}).
+		Run()
+
+	if err != nil {
+		log.Debugf("Error updating nix-modules: %v", err)
 		return
 	}
 
-	println("Nix modules update completed successfully")
+	log.Info("Nix modules update completed successfully")
 }
 
 func getLatestVersion(nixMetadata nixmetadata.NixMetadata) (*semver.Version, error) {

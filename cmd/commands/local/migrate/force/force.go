@@ -1,16 +1,17 @@
 package force
 
 import (
-	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
 
+	"github.com/Drafteame/draft/cmd/commands/internal/common"
+	"github.com/Drafteame/draft/cmd/commands/local/migrate/internal/flags"
 	comm "github.com/Drafteame/draft/internal/actions/local/migrate/command"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
-var migrateForceCmd = cobra.Command{
+var migrateForceCmd = &cobra.Command{
 	Use:   "local:migrate:force [flags] [version]",
 	Short: "Force a specific migration version to resolve dirty state",
 	Long:  "This command forces a specific version to avoid dirty state and continue with migration corrections.",
@@ -19,62 +20,38 @@ var migrateForceCmd = cobra.Command{
 }
 
 func GetCmd() *cobra.Command {
-	return &migrateForceCmd
+	return migrateForceCmd
 }
 
 func init() {
-	migrateForceCmd.Flags().StringP("database", "D", "", "database name")
-	migrateForceCmd.Flags().StringP("local-migrate-config", "c", ".local-migrate-config.yml", "path to the migrations config file")
-	migrateForceCmd.Flags().String("group", "", "DB migrations group name")
+	flags.Register(migrateForceCmd)
 }
 
 func run(cmd *cobra.Command, args []string) {
-	defer func() {
-		if r := recover(); r != nil {
-			_, _ = fmt.Printf("%v\n", r)
-			os.Exit(1)
-		}
-	}()
+	common.ChDir(cmd)
 
 	version, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {
-		panic(fmt.Errorf("invalid version number: %w", err))
+		log.Exitf(1, "invalid version number: %s", err.Error())
 	}
 
-	workingDir, err := cmd.Parent().Flags().GetString("working-dir")
-	if err != nil {
-		panic(err)
-	}
-
-	database, err := cmd.Flags().GetString("database")
-	if err != nil {
-		panic(err)
-	}
-
-	localMigrateConfig, err := cmd.Flags().GetString("local-migrate-config")
-	if err != nil {
-		panic(err)
-	}
-
-	group, err := cmd.Flags().GetString("group")
-	if err != nil {
-		panic(err)
-	}
+	f := flags.GetFlags(cmd)
 
 	command := "force"
 
 	input := comm.Input{
 		Command:            command,
-		WorkingDir:         workingDir,
-		Database:           database,
-		LocalMigrateConfig: localMigrateConfig,
-		Group:              group,
+		Database:           f.Database,
+		LocalMigrateConfig: f.Config,
+		Group:              f.Group,
 		All:                false,
 		Version:            version,
 	}
 
 	errExec := comm.New(input).Exec()
 	if errExec != nil {
-		panic(errExec)
+		log.Exitf(1, "failed to execute command: %s", errExec.Error())
 	}
+
+	log.Success("Migration force completed")
 }

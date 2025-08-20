@@ -5,10 +5,11 @@ import (
 	"os"
 
 	"github.com/Drafteame/draft/internal/pkg/exec"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
 func (a *Action) prune() error {
-	println("pruning env")
+	log.Debug("Pruning env")
 
 	if !a.Input.Prune || a.Input.BypassDocker {
 		return nil
@@ -20,7 +21,7 @@ func (a *Action) prune() error {
 	}
 
 	for _, cmd := range commands {
-		println("cmd:", cmd)
+		log.Debug("Prune command:", cmd)
 		_, err := exec.Command(cmd, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr))
 		if err != nil {
 			return fmt.Errorf("prune failed: %w", err)
