@@ -1,3 +1,10 @@
+## v1.14.0 (2025-08-20)
+
+
+- chore(ci): update vendor hash for version 1.14.0
+- feat: add proper log package for all commands (#134)
+- Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>
+
 ## v1.13.1 (2025-08-19)
 
 
