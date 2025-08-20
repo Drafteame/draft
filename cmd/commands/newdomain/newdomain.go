@@ -26,7 +26,7 @@ func run(cmd *cobra.Command, _ []string) {
 	input := dtos.DomainInput{}
 
 	if err := forms.NewDomain(&input); err != nil {
-		log.Exitf(1, "Failed colect domain info: %v", err)
+		log.Exitf(1, "Failed to collect domain info: %v", err)
 	}
 
 	if errExec := newdomain.New(input).Exec(); errExec != nil {
