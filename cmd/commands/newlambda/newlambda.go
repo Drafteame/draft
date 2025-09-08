@@ -18,12 +18,18 @@ var newLambdaCmd = &cobra.Command{
 	Run:   run,
 }
 
+func init() {
+	newLambdaCmd.Flags().Bool("use-dig", false, "Use uber dig for dependency injection")
+	newLambdaCmd.Flags().StringP("legacy-path", "l", "", "Path to legacy service")
+	newLambdaCmd.Flags().BoolP("with-frame", "f", false, "Use framev2 for lambda creation")
+}
+
 func run(cmd *cobra.Command, _ []string) {
 	common.ChDir(cmd)
 
 	data.LoadMeta()
 
-	useDig, err := cmd.Parent().Flags().GetBool("use-dig")
+	useDig, err := cmd.Flags().GetBool("use-dig")
 	if err != nil {
 		log.Exitf(1, "failed to obtain use-dig flag: %s", err.Error())
 	}
@@ -31,7 +37,7 @@ func run(cmd *cobra.Command, _ []string) {
 		UseDig: useDig,
 	}
 
-	legacyPath, err := cmd.Parent().Flags().GetString("legacy-path")
+	legacyPath, err := cmd.Flags().GetString("legacy-path")
 	if err != nil {
 		log.Exitf(1, "failed to obtain legacy-path flag: %s", err.Error())
 	}
@@ -40,6 +46,12 @@ func run(cmd *cobra.Command, _ []string) {
 		input.IsLegacy = true
 		input.ServicePath = legacyPath
 	}
+
+	withFrame, err := cmd.Flags().GetBool("with-frame")
+	if err != nil {
+		log.Exitf(1, "failed to obtain with-frame flag: %s", err.Error())
+	}
+	input.WithFrame = withFrame
 
 	if errForm := forms.NewLambda(&input); errForm != nil {
 		log.Exitf(1, "failed to collect new lambda info: %s", errForm.Error())

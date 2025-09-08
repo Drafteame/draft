@@ -6,6 +6,13 @@ import (
 )
 
 func (nl *NewLambda) createSqs() error {
+	if !nl.input.WithFrame {
+		return nl.createNativeSqs()
+	}
+	return nl.createSqsWithFrame()
+}
+
+func (nl *NewLambda) createSqsWithFrame() error {
 	if err := dirs.Create(nl.lambdaPath + "/handler"); err != nil {
 		return err
 	}
@@ -17,6 +24,31 @@ func (nl *NewLambda) createSqs() error {
 		{Path: "/handler/worker.go", Data: nl.tmpl.Sqs.Handler.WorkerGo},
 		{Path: "/handler/bootstrap.go", Data: nl.tmpl.Sqs.Handler.BootstrapGo},
 		{Path: "/handler/provider.go", Data: nl.tmpl.Sqs.Handler.ProviderGo},
+	}
+
+	return nl.createFiles(filesEntries...)
+}
+
+func (nl *NewLambda) createNativeSqs() error {
+	if err := dirs.Create(nl.lambdaPath + "/handler"); err != nil {
+		return err
+	}
+
+	if err := dirs.Create(nl.lambdaPath + "/handler/worker"); err != nil {
+		return err
+	}
+
+	if err := dirs.Create(nl.lambdaPath + "/handler/embed"); err != nil {
+		return err
+	}
+
+	filesEntries := []dtos.FileEntry{
+		{Path: "/main.go", Data: nl.tmpl.Sqs.MainGo},
+		{Path: "/lambda-config.yml", Data: nl.tmpl.Sqs.LambdaConfigYAML},
+		{Path: "/handler/bootstrap.go", Data: nl.tmpl.Sqs.Handler.BootstrapGo},
+		{Path: "/handler/worker/worker.go", Data: nl.tmpl.Sqs.Handler.WorkerGo},
+		{Path: "/handler/worker/resources.go", Data: nl.tmpl.Sqs.Handler.ResourcesGo},
+		{Path: "/handler/embed/_.yaml", Data: nl.tmpl.Sqs.Handler.EmbedYML},
 	}
 
 	return nl.createFiles(filesEntries...)

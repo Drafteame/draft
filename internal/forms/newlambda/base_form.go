@@ -62,5 +62,9 @@ func baseForm(input *dtos.LambdaInput) error {
 		input.ServicePath = "services/" + input.ServicePath
 	}
 
+	splitServicePath := strings.Split(input.ServicePath, "/")
+	serviceName := splitServicePath[len(splitServicePath)-1]
+	input.ServiceName = strings.ToLower(serviceName)
+
 	return err
 }

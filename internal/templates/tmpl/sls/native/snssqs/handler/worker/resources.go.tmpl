@@ -1,0 +1,24 @@
+package worker
+
+import (
+    "context"
+
+    "{{ .PackageName }}/pkg/providers"
+	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+
+)
+
+type Resources struct {
+    // TODO: resources
+}
+
+func ProvideResources(ctx context.Context, opts ...providers.Option) (*Resources, error) {
+    _, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.snssqs.{{ .LambdaName }}.handler.worker.ProvideResources")
+	defer span.Close(nil)
+
+    // TODO: Implement your resources logic here
+
+	return &Resources{
+        // TODO: resources
+    }, nil
+}

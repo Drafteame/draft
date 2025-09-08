@@ -1,5 +1,9 @@
 package templates
 
+import (
+	"github.com/Drafteame/draft/internal/dtos"
+)
+
 type LambdaSnsSqs struct {
 	MainGo           []byte
 	LambdaConfigYAML []byte
@@ -11,15 +15,27 @@ type LambdaSnsSqsHandler struct {
 	HandlerGo   []byte
 	WorkerGo    []byte
 	ProviderGo  []byte
+	EmbedYML    []byte
+	ResourcesGo []byte
 }
 
-func loadLambdaSnsSqs(v SnsSqsSetter, data any) error {
+func loadLambdaSnsSqs(v SnsSqsSetter, data dtos.LambdaInput) error {
 	snssqs := LambdaSnsSqs{}
 
-	loaders := []func(*LambdaSnsSqs, any) error{
-		loadLambdaSnsSqsMainGo,
-		loadLambdaSnsSqsLambdaConfigYAML,
-		loadLambdaSnsSqsHandler,
+	var loaders []func(*LambdaSnsSqs, any) error
+
+	if !data.WithFrame {
+		loaders = []func(*LambdaSnsSqs, any) error{
+			nativeLoadLambdaSnsSqsMainGo,
+			nativeLoadLambdaSnsSqsLambdaConfigYAML,
+			nativeLoadLambdaSnsSqsHandler,
+		}
+	} else {
+		loaders = []func(*LambdaSnsSqs, any) error{
+			loadLambdaSnsSqsMainGo,
+			loadLambdaSnsSqsLambdaConfigYAML,
+			loadLambdaSnsSqsHandler,
+		}
 	}
 
 	for _, loader := range loaders {
