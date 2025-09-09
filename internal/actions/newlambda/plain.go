@@ -10,12 +10,26 @@ func (nl *NewLambda) createPlain() error {
 		return err
 	}
 
+	if err := dirs.Create(nl.lambdaPath + "/handler/worker"); err != nil {
+		return err
+	}
+
+	if err := dirs.Create(nl.lambdaPath + "/handler/embed"); err != nil {
+		return err
+	}
+
+	if err := dirs.Create(nl.lambdaPath + "/handler/dtos"); err != nil {
+		return err
+	}
+
 	filesEntries := []dtos.FileEntry{
 		{Path: "/main.go", Data: nl.tmpl.Plain.MainGo},
 		{Path: "/lambda-config.yml", Data: nl.tmpl.Plain.LambdaConfigYAML},
-		{Path: "/handler/handler.go", Data: nl.tmpl.Plain.Handler.HandlerGo},
 		{Path: "/handler/bootstrap.go", Data: nl.tmpl.Plain.Handler.BootstrapGo},
-		{Path: "/handler/provider.go", Data: nl.tmpl.SnsSqs.Handler.ProviderGo},
+		{Path: "/handler/worker/worker.go", Data: nl.tmpl.Plain.Handler.WorkerGo},
+		{Path: "/handler/worker/resources.go", Data: nl.tmpl.Plain.Handler.ResourcesGo},
+		{Path: "/handler/embed/_.yaml", Data: nl.tmpl.Plain.Handler.EmbedYML},
+		{Path: "/handler/dtos/dto.go", Data: nl.tmpl.Plain.Handler.DtosGo},
 	}
 
 	return nl.createFiles(filesEntries...)

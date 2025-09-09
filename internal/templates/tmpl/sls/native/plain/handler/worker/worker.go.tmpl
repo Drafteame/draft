@@ -1,0 +1,19 @@
+package worker
+
+import (
+    "context"
+
+	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}plain/{{ .LambdaName }}/handler/dtos"
+)
+
+func Worker(r *Resources) func(ctx context.Context, input dtos.Input) (dtos.Output, error) {
+	return func(ctx context.Context, input dtos.Input) (dtos.Output, error) {
+		newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.plain.{{ .LambdaName }}.handler.worker.Worker")
+		defer segment.Close(nil)
+
+		// TODO: implement worker logic here
+
+		return response, nil
+	}
+}

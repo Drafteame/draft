@@ -1,0 +1,4 @@
+function:
+  {{ .LambdaName }}:
+    handler: {{if not .IsLegacy}}cmd/{{ end }}plain/{{ .LambdaName }}/main.go
+    reservedConcurrency: 10

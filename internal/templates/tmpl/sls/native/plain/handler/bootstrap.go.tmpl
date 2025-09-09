@@ -1,0 +1,43 @@
+package handler
+
+import (
+	"context"
+	"embed"
+	"os"
+
+    "{{ .PackageName }}/config/loaders/parsers/yaml"
+	"{{ .PackageName }}/pkg/config/loader"
+	"{{ .PackageName }}/pkg/config/loader/readers"
+	"{{ .PackageName }}/pkg/lambda/decorators/deadline"
+    "{{ .PackageName }}/projects/framev2/engine/decorators/datadog"
+    "{{ .PackageName }}/projects/framev2/pkg/tracer"
+	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}plain/{{ .LambdaName }}/handler/dtos"
+	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}plain/{{ .LambdaName }}/handler/worker"
+)
+
+
+//go:embed embed/*.yaml
+var embedFs embed.FS
+
+// Bootstrap is the entrypoint of the lambda
+func Bootstrap() any {
+	return datadog.Trace(deadline.OverrideTimeout(
+		func(ctx context.Context, input dtos.Input) (dtos.Output, error) {
+			newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.plain.{{ .LambdaName }}.handler.Bootstrap")
+			defer span.Close(nil)
+
+			loader.LoadConfigs(newCtx, loader.WithReaders(
+				readers.Embed(embedFs, "embed/.app-config.yaml", yaml.Parser()),
+				readers.SecretsManager(os.Getenv("APP_NAME")),
+			))
+
+			r, err := worker.ProvideResources(newCtx)
+			if err != nil {
+				_ = span.AddError(err)
+				return dtos.Output{}, err
+			}
+
+			return worker.Worker(r)(newCtx, input)
+		},
+	))
+}
