@@ -1,7 +1,5 @@
 package templates
 
-import "github.com/Drafteame/draft/internal/dtos"
-
 type LambdaTemplates struct {
 	Cron   LambdaCron
 	HTTP   LambdaHTTP
@@ -30,7 +28,7 @@ func (l *LambdaTemplates) SetCron(cron LambdaCron) {
 	l.Cron = cron
 }
 
-func NewLambdaTemplates(data dtos.LambdaInput) (*LambdaTemplates, error) {
+func NewLambdaTemplates(data any) (*LambdaTemplates, error) {
 	l := new(LambdaTemplates)
 
 	if err := loadLambdaCron(l, data); err != nil {

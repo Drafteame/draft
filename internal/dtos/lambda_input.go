@@ -5,7 +5,6 @@ type LambdaInput struct {
 	ServiceFramework    string
 	ServicePath         string
 	ServiceName         string
-	WithFrame           bool
 	LambdaName          string
 	LambdaType          string
 	FrameVersion        string

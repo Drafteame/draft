@@ -14,7 +14,6 @@ import (
 	"{{ .PackageName }}/pkg/lambda/decorators/deadline"
     "{{ .PackageName }}/projects/framev2/engine/decorators/datadog"
     "{{ .PackageName }}/projects/framev2/pkg/tracer"
-	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}sqs/{{ .LambdaName }}/handler/dtos"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}sqs/{{ .LambdaName }}/handler/worker"
 )
 
