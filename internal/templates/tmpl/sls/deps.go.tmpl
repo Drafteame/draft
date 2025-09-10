@@ -2,6 +2,6 @@ package {{ .NormalizedServiceName }}
 
 // revive:disable:blank-imports
 import (
-    _ "{{ .PackageName }}/{{ .ServicePath }}/cmd/plain/{{ .LambdaName }}/handler"
+    _ "{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}plain/{{ .LambdaName }}/handler"
     {{.NextImportTag}}
 )

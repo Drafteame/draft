@@ -10,7 +10,7 @@ import (
 
 func baseForm(input *dtos.ServiceInput) error {
 	err := inputs.Text("Service Name:",
-		inputs.WithDescription[string]("Set the name of the service to used for configuration."),
+		inputs.WithDescription[string]("Set the name of the service to used for configuration (default: services/) "),
 		inputs.WithValue(&input.ServiceName),
 		inputs.WithValidation(func(s string) error {
 			if s == "" {
@@ -27,21 +27,23 @@ func baseForm(input *dtos.ServiceInput) error {
 
 	input.NormalizedServiceName = project.NormalizeServiceName(input.ServiceName)
 
-	err = inputs.Text("Service Path:",
-		inputs.WithDescription[string]("Set the path of the service to use for configuration."),
-		inputs.WithValue(&input.ServicePath),
-		inputs.WithPlaceholder[string](input.NormalizedServiceName),
-	)
+	if !input.IsLegacy {
+		err = inputs.Text("Service Path:",
+			inputs.WithDescription[string]("Set the path of the service to use for configuration."),
+			inputs.WithValue(&input.ServicePath),
+			inputs.WithPlaceholder[string](input.NormalizedServiceName),
+		)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+
+		if input.ServicePath == "" {
+			input.ServicePath = "services/" + input.NormalizedServiceName
+		}
+
+		return nil
 	}
-
-	if input.ServicePath == "" {
-		input.ServicePath = input.NormalizedServiceName
-	}
-
-	input.ServicePath = "services/" + input.ServicePath
 
 	return nil
 }
