@@ -9,7 +9,7 @@ require (
 	github.com/charmbracelet/huh v0.7.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20250818142555-c41a69ba6443
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/getsentry/sentry-go v0.35.1
+	github.com/getsentry/sentry-go v0.35.2
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/mattn/go-isatty v0.0.20
 	github.com/samber/lo v1.51.0
