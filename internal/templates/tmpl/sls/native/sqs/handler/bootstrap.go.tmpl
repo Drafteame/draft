@@ -13,7 +13,7 @@ import (
 	consumerdecorators "{{ .PackageName }}/pkg/consumer/decorators"
 	sqshelpers "{{ .PackageName }}/pkg/consumer/sqs/helpers"
 	"{{ .PackageName }}/pkg/lambda/decorators"
-	"github.com/Drafteame/api/pkg/lambda/decorators/health"
+	"{{ .PackageName }}/pkg/lambda/decorators/health"
     "{{ .PackageName }}/projects/framev2/pkg/publisher/types"
     "{{ .PackageName }}/projects/framev2/pkg/tracer"
     "{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}sqs/{{ .LambdaName }}/handler/dtos"

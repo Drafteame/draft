@@ -14,7 +14,7 @@ import (
 	"{{ .PackageName }}/pkg/consumer/sqs"
 	sqshelpers "{{ .PackageName }}/pkg/consumer/sqs/helpers"
 	"{{ .PackageName }}/pkg/lambda/decorators"
-	"github.com/Drafteame/api/pkg/lambda/decorators/health"
+	"{{ .PackageName }}/pkg/lambda/decorators/health"
     "{{ .PackageName }}/projects/framev2/pkg/publisher/types"
     "{{ .PackageName }}/projects/framev2/pkg/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}snssqs/{{ .LambdaName }}/handler/dtos"

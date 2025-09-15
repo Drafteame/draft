@@ -10,10 +10,10 @@ import (
     "{{ .PackageName }}/config/loaders/parsers/yaml"
 	"{{ .PackageName }}/pkg/config/loader"
 	"{{ .PackageName }}/pkg/config/loader/readers"
-	"{{ .PackageName }}/pkg/lambda/decorators/datadog"
-	"{{ .PackageName }}/pkg/lambda/decorators/deadline"
 	lhttp "{{ .PackageName }}/pkg/lambda/http"
     lecho "{{ .PackageName }}/pkg/lambda/http/echo"
+    "{{ .PackageName }}/pkg/lambda/decorators/health"
+    "{{ .PackageName }}/pkg/lambda/decorators"
     "{{ .PackageName }}/projects/framev2/engine/http/middlewares"
     "{{ .PackageName }}/projects/framev2/pkg/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}http/{{ .LambdaName }}/handler/worker"
@@ -25,7 +25,7 @@ var embedFs embed.FS
 
 // Bootstrap is the entrypoint of the lambda
 func Bootstrap() any {
-    return datadog.Trace(deadline.OverrideTimeout(
+    return decorators.Handle(
 		func(ctx context.Context, event events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
             newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.http.{{ .LambdaName }}.handler.Bootstrap")
 			defer span.Close(nil)
@@ -42,10 +42,14 @@ func Bootstrap() any {
                 }, nil
             }
 
+			if health.CheckHealthRequest(newCtx) {
+				return events.APIGatewayV2HTTPResponse{}, nil
+			}
+
             e := lecho.New()
             e.{{ .HTTPMethod }}(worker.Path, worker.Worker(r), middlewares.AuthAPIKey())
 
             return lhttp.Serve(newCtx, event, e)
 		},
-	))
+	)
 }
