@@ -8,8 +8,8 @@ import (
     "{{ .PackageName }}/config/loaders/parsers/yaml"
 	"{{ .PackageName }}/pkg/config/loader"
 	"{{ .PackageName }}/pkg/config/loader/readers"
-	"{{ .PackageName }}/pkg/lambda/decorators/deadline"
-    "{{ .PackageName }}/projects/framev2/engine/decorators/datadog"
+	"{{ .PackageName }}/pkg/lambda/decorators"
+	"{{ .PackageName }}/pkg/lambda/decorators/health"
     "{{ .PackageName }}/projects/framev2/pkg/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}plain/{{ .LambdaName }}/handler/dtos"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}plain/{{ .LambdaName }}/handler/worker"
@@ -21,7 +21,7 @@ var embedFs embed.FS
 
 // Bootstrap is the entrypoint of the lambda
 func Bootstrap() any {
-	return datadog.Trace(deadline.OverrideTimeout(
+	return decorators.Handle(
 		func(ctx context.Context, input dtos.Input) (dtos.Output, error) {
 			newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.plain.{{ .LambdaName }}.handler.Bootstrap")
 			defer span.Close(nil)
@@ -37,7 +37,11 @@ func Bootstrap() any {
 				return dtos.Output{}, err
 			}
 
+            if health.CheckHealthRequest(newCtx) {
+                return dtos.Output{}, nil
+            }
+
 			return worker.Worker(r)(newCtx, input)
 		},
-	))
+	)
 }
