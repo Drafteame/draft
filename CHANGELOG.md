@@ -1,3 +1,9 @@
+## v1.14.1 (2025-09-15)
+
+
+- chore(ci): update vendor hash for version 1.14.1
+- fix: update postgres container name in health check (#145)
+
 ## v1.14.0 (2025-08-20)
 
 
