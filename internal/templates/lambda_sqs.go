@@ -7,13 +7,15 @@ type LambdaSqs struct {
 }
 
 type LambdaSqsHandler struct {
-	BootstrapGo []byte
-	HandlerGo   []byte
-	WorkerGo    []byte
-	ProviderGo  []byte
-	EmbedYML    []byte
-	ResourcesGo []byte
-	DtosGo      []byte
+	BootstrapGo   []byte
+	HandlerGo     []byte
+	WorkerGo      []byte
+	ProviderGo    []byte
+	EmbedYML      []byte
+	ResourcesGo   []byte
+	DtosGo        []byte
+	IdempotencyGo []byte
+	InterfacesGo  []byte
 }
 
 func loadLambdaSqs(v SqsSetter, data any) error {
@@ -71,6 +73,8 @@ func loadLambdaSqsHandler(v *LambdaSqs, data any) error {
 		loadLambdaSqsHandlerWorkerResourcesGo,
 		loadLambdaSqsHandlerEmbedYaml,
 		loadLambdaSqsHandlerDtosGo,
+		loadLambdaSqsHandlerIdempotencyGo,
+		loadLambdaSqsHandlerInterfacesGo,
 	}
 
 	for _, loader := range loaders {
@@ -148,6 +152,34 @@ func loadLambdaSqsHandlerDtosGo(v *LambdaSqs, data any) error {
 	}
 
 	v.Handler.DtosGo = content
+
+	return nil
+}
+
+func loadLambdaSqsHandlerIdempotencyGo(v *LambdaSqs, data any) error {
+	name := "native/sqs/handler/worker/idempotency.go"
+	path := "tmpl/sls/native/sqs/handler/worker/idempotency.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.IdempotencyGo = content
+
+	return nil
+}
+
+func loadLambdaSqsHandlerInterfacesGo(v *LambdaSqs, data any) error {
+	name := "native/sqs/handler/worker/interfaces.go"
+	path := "tmpl/sls/native/sqs/handler/worker/interfaces.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.InterfacesGo = content
 
 	return nil
 }

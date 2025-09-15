@@ -4,11 +4,13 @@ import (
     "context"
 
     "{{ .PackageName }}/pkg/providers"
+    prvidempotency "{{ .PackageName }}/pkg/providers/idempotency"
 	"{{ .PackageName }}/projects/framev2/pkg/tracer"
 
 )
 
 type Resources struct {
+	IdemService       IdempotencyService
     // TODO: resources
 }
 
@@ -16,9 +18,16 @@ func ProvideResources(ctx context.Context, opts ...providers.Option) (*Resources
     _, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.sqs.{{ .LambdaName }}.handler.worker.ProvideResources")
 	defer span.Close(nil)
 
+	idemService, err := prvidempotency.ProvideTurbo(opts...) // TODO: change to correct idempotency provider
+	if err != nil {
+		_ = span.AddError(err)
+		return nil, err
+	}
+
     // TODO: Implement your resources logic here
 
 	return &Resources{
+		IdemService:       idemService,
         // TODO: resources
     }, nil
 }

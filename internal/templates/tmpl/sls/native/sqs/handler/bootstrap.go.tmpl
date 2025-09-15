@@ -10,10 +10,13 @@ import (
 	"{{ .PackageName }}/pkg/config/loader"
 	"{{ .PackageName }}/pkg/config/loader/readers"
 	"{{ .PackageName }}/pkg/consumer"
+	consumerdecorators "{{ .PackageName }}/pkg/consumer/decorators"
 	sqshelpers "{{ .PackageName }}/pkg/consumer/sqs/helpers"
-	"{{ .PackageName }}/pkg/lambda/decorators/deadline"
-    "{{ .PackageName }}/projects/framev2/engine/decorators/datadog"
+	"{{ .PackageName }}/pkg/lambda/decorators"
+	"github.com/Drafteame/api/pkg/lambda/decorators/health"
+    "{{ .PackageName }}/projects/framev2/pkg/publisher/types"
     "{{ .PackageName }}/projects/framev2/pkg/tracer"
+    "{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}sqs/{{ .LambdaName }}/handler/dtos"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}sqs/{{ .LambdaName }}/handler/worker"
 )
 
@@ -23,7 +26,7 @@ var embedFs embed.FS
 
 // Bootstrap is the entrypoint of the lambda
 func Bootstrap() any {
-    return datadog.Trace(deadline.OverrideTimeout(
+    return decorators.Handle(
 		func(ctx context.Context, event events.SQSEvent) (events.SQSEventResponse, error) {
             newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.sqs.{{ .LambdaName }}.handler.Bootstrap")
 			defer span.Close(nil)
@@ -38,9 +41,19 @@ func Bootstrap() any {
                 return events.SQSEventResponse{}, err
             }
 
-            errConsume := consumer.NewSqs(newCtx, event, worker.Worker(r)).Consume()
+			if health.CheckHealthRequest(newCtx) {
+				return events.SQSEventResponse{}, nil
+			}
+
+            errConsume := consumer.NewSqs(newCtx, event, worker.Worker(r)).
+                WithWorkerDecorators(consumerdecorators.IdempotencyOnDeadline[types.Event[dtos.Event]](
+                    worker.Action,
+                    r.GenerateIdempotencyKey,
+                    r.DelIdempotency,
+                )).
+                Consume()
 
             return sqshelpers.Response(newCtx, errConsume)
 		},
-	))
+	)
 }

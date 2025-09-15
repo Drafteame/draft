@@ -28,6 +28,8 @@ func (nl *NewLambda) createSnsSqs() error {
 		{Path: "/handler/bootstrap.go", Data: nl.tmpl.SnsSqs.Handler.BootstrapGo},
 		{Path: "/handler/worker/worker.go", Data: nl.tmpl.SnsSqs.Handler.WorkerGo},
 		{Path: "/handler/worker/resources.go", Data: nl.tmpl.SnsSqs.Handler.ResourcesGo},
+		{Path: "/handler/worker/idempotency.go", Data: nl.tmpl.SnsSqs.Handler.IdempotencyGo},
+		{Path: "/handler/worker/interfaces.go", Data: nl.tmpl.SnsSqs.Handler.InterfacesGo},
 		{Path: "/handler/embed/_.yaml", Data: nl.tmpl.SnsSqs.Handler.EmbedYML},
 		{Path: "/handler/dtos/dto.go", Data: nl.tmpl.SnsSqs.Handler.DtosGo},
 	}
