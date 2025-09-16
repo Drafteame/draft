@@ -1,7 +1,0 @@
-function:
-  {{ .LambdaName }}:
-    handler: {{if not .IsLegacy}}cmd/{{ end }}cron/{{ .LambdaName }}/main.go
-    reservedConcurrency: 1
-    events:
-      - schedule:
-          rate: '{{ .CronExpression }}'

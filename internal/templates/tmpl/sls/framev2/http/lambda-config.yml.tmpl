@@ -1,7 +1,0 @@
-function:
-  {{ .LambdaName }}:
-    handler: {{if not .IsLegacy}}cmd/{{ end }}http/{{ .LambdaName }}/main.go
-    events:
-      - httpApi:
-          path: '{{ .HTTPPathAPIGateway }}'
-          method: '{{ .HTTPMethod }}'
