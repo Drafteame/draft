@@ -32,6 +32,16 @@ func GetPackage(modPath string) (string, error) {
 }
 
 func NormalizeServiceName(serviceName string) string {
+	replacers := []string{" ", "_", "."}
+
+	for _, replacer := range replacers {
+		serviceName = strings.ReplaceAll(serviceName, replacer, "-")
+	}
+
+	return strings.ToLower(serviceName)
+}
+
+func NormalizeServicePackage(serviceName string) string {
 	replacers := []string{" ", "-", "."}
 
 	for _, replacer := range replacers {
