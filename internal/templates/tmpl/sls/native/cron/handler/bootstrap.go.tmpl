@@ -1,0 +1,46 @@
+package handler
+
+import (
+	"context"
+	"embed"
+
+	"github.com/aws/aws-lambda-go/events"
+
+    "{{ .PackageName }}/config/loaders/parsers/yaml"
+	"{{ .PackageName }}/pkg/config/loader"
+	"{{ .PackageName }}/pkg/config/loader/readers"
+	"{{ .PackageName }}/pkg/lambda/decorators"
+	"{{ .PackageName }}/pkg/lambda/decorators/health"
+    "{{ .PackageName }}/projects/framev2/pkg/tracer"
+	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}cron/{{ .LambdaName }}/handler/worker"
+)
+
+
+//go:embed embed/*.yaml
+var embedFs embed.FS
+
+// Bootstrap is the entrypoint of the lambda
+func Bootstrap() any {
+	return decorators.Handle(
+		func(ctx context.Context, event events.CloudWatchEvent) (error, error) {
+			newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.cron.{{ .LambdaName }}.handler.Bootstrap")
+			defer span.Close(nil)
+
+			loader.LoadConfigs(newCtx, loader.WithReaders(
+				readers.Embed(embedFs, "embed/.app-config.yaml", yaml.Parser()),
+			))
+
+			r, err := worker.ProvideResources(newCtx)
+			if err != nil {
+				_ = span.AddError(err)
+				return nil, err
+			}
+
+            if health.CheckHealthRequest(newCtx) {
+                return nil, nil
+            }
+
+			return worker.Worker(r)(newCtx, event)
+		},
+	)
+}

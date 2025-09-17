@@ -10,6 +10,9 @@ type LambdaCronHandler struct {
 	BootstrapGo []byte
 	HandlerGo   []byte
 	ProviderGo  []byte
+	WorkerGo    []byte
+	EmbedYML    []byte
+	ResourcesGo []byte
 }
 
 func loadLambdaCron(v CronSetter, data any) error {
@@ -17,8 +20,8 @@ func loadLambdaCron(v CronSetter, data any) error {
 
 	loaders := []func(cron *LambdaCron, data any) error{
 		loadLambdaCronMainGo,
-		loadFrameV2CronLambdaConfigYAML,
-		loadFrameV2CronHandler,
+		loadLambdaCronConfigYAML,
+		loadLambdaCronHandler,
 	}
 
 	for _, loader := range loaders {
@@ -33,8 +36,8 @@ func loadLambdaCron(v CronSetter, data any) error {
 }
 
 func loadLambdaCronMainGo(v *LambdaCron, data any) error {
-	name := "framev2/cron/main.go"
-	path := "tmpl/sls/framev2/cron/main.go.tmpl"
+	name := "native/cron/main.go"
+	path := "tmpl/sls/native/cron/main.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
@@ -46,9 +49,9 @@ func loadLambdaCronMainGo(v *LambdaCron, data any) error {
 	return nil
 }
 
-func loadFrameV2CronLambdaConfigYAML(v *LambdaCron, data any) error {
-	name := "framev2/cron/lambda-config.yml"
-	path := "tmpl/sls/framev2/cron/lambda-config.yml.tmpl"
+func loadLambdaCronConfigYAML(v *LambdaCron, data any) error {
+	name := "native/cron/lambda-config.yml"
+	path := "tmpl/sls/native/cron/lambda-config.yml.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
@@ -60,11 +63,12 @@ func loadFrameV2CronLambdaConfigYAML(v *LambdaCron, data any) error {
 	return nil
 }
 
-func loadFrameV2CronHandler(v *LambdaCron, data any) error {
-	loaders := []func(cron *LambdaCron, data any) error{
-		loadFrameV2CronHandlerProviderGo,
-		loadFrameV2CronHandlerBootstrapGo,
-		loadFrameV2CronHandlerHandlerGo,
+func loadLambdaCronHandler(v *LambdaCron, data any) error {
+	loaders := []func(*LambdaCron, any) error{
+		loadLambdaCronHandlerBoostrapGo,
+		loadLambdaCronHandlerWorkerWorkerGo,
+		loadLambdaCronHandlerWorkerResourcesGo,
+		loadLambdaCronHandlerEmbedYaml,
 	}
 
 	for _, loader := range loaders {
@@ -76,9 +80,9 @@ func loadFrameV2CronHandler(v *LambdaCron, data any) error {
 	return nil
 }
 
-func loadFrameV2CronHandlerBootstrapGo(v *LambdaCron, data any) error {
-	name := "framev2/cron/handler/bootstrap.go"
-	path := "tmpl/sls/framev2/cron/handler/bootstrap.go.tmpl"
+func loadLambdaCronHandlerBoostrapGo(v *LambdaCron, data any) error {
+	name := "native/cron/handler/bootstrap.go"
+	path := "tmpl/sls/native/cron/handler/bootstrap.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
@@ -90,30 +94,44 @@ func loadFrameV2CronHandlerBootstrapGo(v *LambdaCron, data any) error {
 	return nil
 }
 
-func loadFrameV2CronHandlerHandlerGo(v *LambdaCron, data any) error {
-	name := "framev2/cron/handler/handler.go"
-	path := "tmpl/sls/framev2/cron/handler/handler.go.tmpl"
+func loadLambdaCronHandlerWorkerWorkerGo(v *LambdaCron, data any) error {
+	name := "native/cron/handler/worker/worker.go"
+	path := "tmpl/sls/native/cron/handler/worker/worker.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
 
-	v.Handler.HandlerGo = content
+	v.Handler.WorkerGo = content
 
 	return nil
 }
 
-func loadFrameV2CronHandlerProviderGo(v *LambdaCron, data any) error {
-	name := "framev2/cron/handler/provider.go"
-	path := "tmpl/sls/framev2/cron/handler/provider.go.tmpl"
+func loadLambdaCronHandlerWorkerResourcesGo(v *LambdaCron, data any) error {
+	name := "native/cron/handler/worker/resources.go"
+	path := "tmpl/sls/native/cron/handler/worker/resources.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
 
-	v.Handler.ProviderGo = content
+	v.Handler.ResourcesGo = content
+
+	return nil
+}
+
+func loadLambdaCronHandlerEmbedYaml(v *LambdaCron, data any) error {
+	name := "native/cron/handler/embed/embed.yaml"
+	path := "tmpl/sls/native/cron/handler/embed/embed.yaml.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.EmbedYML = content
 
 	return nil
 }
