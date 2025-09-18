@@ -20,6 +20,8 @@ var cmdNewService = &cobra.Command{
 
 func init() {
 	cmdNewService.Flags().BoolVarP(&data.Flags.NoSentry, "no-sentry", "", data.Flags.NoSentry, "Disable sentry project creation")
+	cmdNewService.Flags().Bool("use-dig", false, "Use uber dig for dependency injection")
+	cmdNewService.Flags().StringP("legacy-path", "l", "", "Path to legacy service")
 }
 
 func run(cmd *cobra.Command, _ []string) {
@@ -29,13 +31,13 @@ func run(cmd *cobra.Command, _ []string) {
 
 	input := dtos.ServiceInput{}
 
-	useDig, err := cmd.Parent().Flags().GetBool("use-dig")
+	useDig, err := cmd.Flags().GetBool("use-dig")
 	if err != nil {
 		log.Exitf(1, "failed to obtain use-dig flag: %s", err.Error())
 	}
 	input.UseDig = useDig
 
-	legacyPath, err := cmd.Parent().Flags().GetString("legacy-path")
+	legacyPath, err := cmd.Flags().GetString("legacy-path")
 	if err != nil {
 		log.Exitf(1, "failed to obtain legacy-path flag: %s", err.Error())
 	}

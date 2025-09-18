@@ -4,6 +4,7 @@ type LambdaInput struct {
 	PackageName         string
 	ServiceFramework    string
 	ServicePath         string
+	ServiceName         string
 	LambdaName          string
 	LambdaType          string
 	FrameVersion        string

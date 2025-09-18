@@ -18,12 +18,17 @@ var newLambdaCmd = &cobra.Command{
 	Run:   run,
 }
 
+func init() {
+	newLambdaCmd.Flags().Bool("use-dig", false, "Use uber dig for dependency injection")
+	newLambdaCmd.Flags().StringP("legacy-path", "l", "", "Path to legacy service")
+}
+
 func run(cmd *cobra.Command, _ []string) {
 	common.ChDir(cmd)
 
 	data.LoadMeta()
 
-	useDig, err := cmd.Parent().Flags().GetBool("use-dig")
+	useDig, err := cmd.Flags().GetBool("use-dig")
 	if err != nil {
 		log.Exitf(1, "failed to obtain use-dig flag: %s", err.Error())
 	}
@@ -31,7 +36,7 @@ func run(cmd *cobra.Command, _ []string) {
 		UseDig: useDig,
 	}
 
-	legacyPath, err := cmd.Parent().Flags().GetString("legacy-path")
+	legacyPath, err := cmd.Flags().GetString("legacy-path")
 	if err != nil {
 		log.Exitf(1, "failed to obtain legacy-path flag: %s", err.Error())
 	}

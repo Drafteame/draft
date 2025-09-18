@@ -1,0 +1,19 @@
+package worker
+
+import (
+    "context"
+
+	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+	"github.com/aws/aws-lambda-go/events"
+)
+
+func Worker(r *Resources) func(ctx context.Context, event events.CloudWatchEvent) (error, error) {
+	return func(ctx context.Context, event events.CloudWatchEvent) (error, error) {
+		newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.cron.{{ .LambdaName }}.handler.worker.Worker")
+		defer segment.Close(nil)
+
+		// TODO: implement worker logic here
+
+		return nil, nil
+	}
+}

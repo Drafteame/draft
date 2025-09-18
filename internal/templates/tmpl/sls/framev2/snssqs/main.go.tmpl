@@ -1,9 +1,0 @@
-package main
-
-import (
-    "{{ .PackageName }}/{{ .ServicePath }}/{{if not .IsLegacy}}cmd/{{ end }}snssqs/{{ .LambdaName }}/handler"
-)
-
-func main() {
-    handler.Bootstrap()
-}

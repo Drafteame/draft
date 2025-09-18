@@ -1,0 +1,59 @@
+package handler
+
+import (
+	"context"
+	"embed"
+
+	"github.com/aws/aws-lambda-go/events"
+
+    "{{ .PackageName }}/config/loaders/parsers/yaml"
+	"{{ .PackageName }}/pkg/config/loader"
+	"{{ .PackageName }}/pkg/config/loader/readers"
+	"{{ .PackageName }}/pkg/consumer"
+	consumerdecorators "{{ .PackageName }}/pkg/consumer/decorators"
+	"{{ .PackageName }}/pkg/consumer/sqs"
+	sqshelpers "{{ .PackageName }}/pkg/consumer/sqs/helpers"
+	"{{ .PackageName }}/pkg/lambda/decorators"
+	"{{ .PackageName }}/pkg/lambda/decorators/health"
+    "{{ .PackageName }}/projects/framev2/pkg/publisher/types"
+    "{{ .PackageName }}/projects/framev2/pkg/tracer"
+	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}snssqs/{{ .LambdaName }}/handler/dtos"
+	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}snssqs/{{ .LambdaName }}/handler/worker"
+)
+
+//go:embed embed/*.yaml
+var embedFs embed.FS
+
+// Bootstrap is the entrypoint of the lambda
+func Bootstrap() any {
+    return decorators.Handle(
+		func(ctx context.Context, event events.SQSEvent) (events.SQSEventResponse, error) {
+            newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.snssqs.{{ .LambdaName }}.handler.Bootstrap")
+			defer span.Close(nil)
+
+            loader.LoadConfigs(newCtx, loader.WithReaders(
+                readers.Embed(embedFs, "embed/.app-config.yaml", yaml.Parser()),
+            ))
+
+            r, err := worker.ProvideResources(newCtx)
+            if err != nil {
+                _ = span.AddError(err)
+                return events.SQSEventResponse{}, err
+            }
+
+            if health.CheckHealthRequest(newCtx) {
+				return events.SQSEventResponse{}, nil
+			}
+
+            errConsume := consumer.NewSqs(newCtx, event, worker.Worker(r), sqs.WithSNS[types.Event[dtos.Event]]()).
+                WithWorkerDecorators(consumerdecorators.IdempotencyOnDeadline[types.Event[dtos.Event]](
+                    worker.Action,
+                    r.GenerateIdempotencyKey,
+                    r.DelIdempotency,
+                )).
+                Consume()
+
+            return sqshelpers.Response(newCtx, errConsume)
+		},
+	)
+}

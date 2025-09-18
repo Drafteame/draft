@@ -1,0 +1,9 @@
+package worker
+
+import "context"
+
+type IdempotencyService interface {
+	Set(ctx context.Context, key string) error
+	Exists(ctx context.Context, key string) (bool, error)
+	Delete(ctx context.Context, keys string) error
+}

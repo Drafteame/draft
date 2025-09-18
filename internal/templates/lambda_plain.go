@@ -9,7 +9,11 @@ type LambdaPlain struct {
 type LambdaPlainHandler struct {
 	BootstrapGo []byte
 	HandlerGo   []byte
+	WorkerGo    []byte
 	ProviderGo  []byte
+	EmbedYML    []byte
+	ResourcesGo []byte
+	DtosGo      []byte
 }
 
 func loadLambdaPlain(v PlainSetter, data any) error {
@@ -33,8 +37,8 @@ func loadLambdaPlain(v PlainSetter, data any) error {
 }
 
 func loadLambdaPlainMainGo(v *LambdaPlain, data any) error {
-	name := "framev2/plain/main.go"
-	path := "tmpl/sls/framev2/plain/main.go.tmpl"
+	name := "native/plain/main.go"
+	path := "tmpl/sls/native/plain/main.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
@@ -47,8 +51,8 @@ func loadLambdaPlainMainGo(v *LambdaPlain, data any) error {
 }
 
 func loadLambdaPlainLambdaConfigYAML(v *LambdaPlain, data any) error {
-	name := "framev2/plain/lambda-config.yml"
-	path := "tmpl/sls/framev2/plain/lambda-config.yml.tmpl"
+	name := "native/plain/lambda-config.yml"
+	path := "tmpl/sls/native/plain/lambda-config.yml.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
@@ -63,8 +67,10 @@ func loadLambdaPlainLambdaConfigYAML(v *LambdaPlain, data any) error {
 func loadLambdaPlainHandler(v *LambdaPlain, data any) error {
 	loaders := []func(*LambdaPlain, any) error{
 		loadLambdaPlainHandlerBoostrapGo,
-		loadLambdaPlainHandlerHandlerGo,
-		loadLambdaPlainHandlerProviderGo,
+		loadLambdaPlainHandlerWorkerWorkerGo,
+		loadLambdaPlainHandlerWorkerResourcesGo,
+		loadLambdaPlainHandlerEmbedYaml,
+		loadLambdaPlainHandlerDtosGo,
 	}
 
 	for _, loader := range loaders {
@@ -77,8 +83,8 @@ func loadLambdaPlainHandler(v *LambdaPlain, data any) error {
 }
 
 func loadLambdaPlainHandlerBoostrapGo(v *LambdaPlain, data any) error {
-	name := "framev2/plain/handler/bootstrap.go"
-	path := "tmpl/sls/framev2/plain/handler/bootstrap.go.tmpl"
+	name := "native/plain/handler/bootstrap.go"
+	path := "tmpl/sls/native/plain/handler/bootstrap.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
@@ -90,30 +96,58 @@ func loadLambdaPlainHandlerBoostrapGo(v *LambdaPlain, data any) error {
 	return nil
 }
 
-func loadLambdaPlainHandlerHandlerGo(v *LambdaPlain, data any) error {
-	name := "framev2/plain/handler/handler.go"
-	path := "tmpl/sls/framev2/plain/handler/handler.go.tmpl"
+func loadLambdaPlainHandlerWorkerWorkerGo(v *LambdaPlain, data any) error {
+	name := "native/plain/handler/worker/worker.go"
+	path := "tmpl/sls/native/plain/handler/worker/worker.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
 
-	v.Handler.HandlerGo = content
+	v.Handler.WorkerGo = content
 
 	return nil
 }
 
-func loadLambdaPlainHandlerProviderGo(v *LambdaPlain, data any) error {
-	name := "framev2/plain/handler/provider.go"
-	path := "tmpl/sls/framev2/plain/handler/provider.go.tmpl"
+func loadLambdaPlainHandlerWorkerResourcesGo(v *LambdaPlain, data any) error {
+	name := "native/plain/handler/worker/resources.go"
+	path := "tmpl/sls/native/plain/handler/worker/resources.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
 
-	v.Handler.ProviderGo = content
+	v.Handler.ResourcesGo = content
+
+	return nil
+}
+
+func loadLambdaPlainHandlerEmbedYaml(v *LambdaPlain, data any) error {
+	name := "native/plain/handler/embed/embed.yaml"
+	path := "tmpl/sls/native/plain/handler/embed/embed.yaml.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.EmbedYML = content
+
+	return nil
+}
+
+func loadLambdaPlainHandlerDtosGo(v *LambdaPlain, data any) error {
+	name := "native/plain/handler/dtos/dto.go"
+	path := "tmpl/sls/native/plain/handler/dtos/dto.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.DtosGo = content
 
 	return nil
 }

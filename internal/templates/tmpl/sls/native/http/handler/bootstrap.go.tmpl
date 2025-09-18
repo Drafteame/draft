@@ -1,0 +1,55 @@
+package handler
+
+import (
+	"context"
+	"embed"
+	"net/http"
+
+	"github.com/aws/aws-lambda-go/events"
+
+    "{{ .PackageName }}/config/loaders/parsers/yaml"
+	"{{ .PackageName }}/pkg/config/loader"
+	"{{ .PackageName }}/pkg/config/loader/readers"
+	lhttp "{{ .PackageName }}/pkg/lambda/http"
+    lecho "{{ .PackageName }}/pkg/lambda/http/echo"
+    "{{ .PackageName }}/pkg/lambda/decorators/health"
+    "{{ .PackageName }}/pkg/lambda/decorators"
+    "{{ .PackageName }}/projects/framev2/engine/http/middlewares"
+    "{{ .PackageName }}/projects/framev2/pkg/tracer"
+	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}http/{{ .LambdaName }}/handler/worker"
+)
+
+
+//go:embed embed/*.yaml
+var embedFs embed.FS
+
+// Bootstrap is the entrypoint of the lambda
+func Bootstrap() any {
+    return decorators.Handle(
+		func(ctx context.Context, event events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+            newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.http.{{ .LambdaName }}.handler.Bootstrap")
+			defer span.Close(nil)
+
+            loader.LoadConfigs(newCtx, loader.WithReaders(
+                readers.Embed(embedFs, "embed/.app-config.yaml", yaml.Parser()),
+            ))
+
+            r, err := worker.ProvideResources(newCtx)
+            if err != nil {
+                return events.APIGatewayV2HTTPResponse{
+                    StatusCode: http.StatusInternalServerError,
+                    Body:       `{"message": "error processing request", "error": "` + err.Error() + `" }`,
+                }, nil
+            }
+
+			if health.CheckHealthRequest(newCtx) {
+				return events.APIGatewayV2HTTPResponse{}, nil
+			}
+
+            e := lecho.New()
+            e.{{ .HTTPMethod }}(worker.Path, worker.Worker(r), middlewares.AuthAPIKey())
+
+            return lhttp.Serve(newCtx, event, e)
+		},
+	)
+}

@@ -20,6 +20,8 @@ custom:
 
   go:
     cmd: 'go build -ldflags="-s -w" -tags lambda.norpc'
+    beforeBuild:
+      - 'sh ../../scripts/build_pkl.sh "$PWD"'
 
 provider:
   name: aws

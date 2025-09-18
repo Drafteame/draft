@@ -9,8 +9,10 @@ type LambdaHTTP struct {
 type LambdaHTTPHandler struct {
 	BootstrapGo []byte
 	HandlerGo   []byte
-	ProviderGo  []byte
-	RouteGo     []byte
+	WorkerGo    []byte
+	EmbedYML    []byte
+	ResourcesGo []byte
+	DtosGo      []byte
 }
 
 func loadLambdaHTTP(v HTTPSetter, data any) error {
@@ -34,8 +36,8 @@ func loadLambdaHTTP(v HTTPSetter, data any) error {
 }
 
 func loadLambdaHTTPMainGo(v *LambdaHTTP, data any) error {
-	name := "framev2/http/main.go"
-	path := "tmpl/sls/framev2/http/main.go.tmpl"
+	name := "native/http/main.go"
+	path := "tmpl/sls/native/http/main.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
@@ -48,8 +50,8 @@ func loadLambdaHTTPMainGo(v *LambdaHTTP, data any) error {
 }
 
 func loadLambdaHTTPLambdaConfigYAML(v *LambdaHTTP, data any) error {
-	name := "framev2/http/lambda-config.yml"
-	path := "tmpl/sls/framev2/http/lambda-config.yml.tmpl"
+	name := "native/http/lambda-config.yml"
+	path := "tmpl/sls/native/http/lambda-config.yml.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
@@ -64,9 +66,10 @@ func loadLambdaHTTPLambdaConfigYAML(v *LambdaHTTP, data any) error {
 func loadLambdaHTTPHandler(v *LambdaHTTP, data any) error {
 	loaders := []func(*LambdaHTTP, any) error{
 		loadLambdaHTTPHandlerBootstrapGo,
-		loadLambdaHTTPHandlerHandlerGo,
-		loadLambdaHTTPHandlerProviderGo,
-		loadLambdaHTTPHandlerRouteGo,
+		loadLambdaHTTPHandlerWorkerWorkerGo,
+		loadLambdaHTTPHandlerWorkerResourcesGo,
+		loadLambdaHTTPHandlerEmbedYaml,
+		loadLambdaHTTPHandlerDtosGo,
 	}
 
 	for _, loader := range loaders {
@@ -79,8 +82,8 @@ func loadLambdaHTTPHandler(v *LambdaHTTP, data any) error {
 }
 
 func loadLambdaHTTPHandlerBootstrapGo(v *LambdaHTTP, data any) error {
-	name := "framev2/http/handler/bootstrap.go"
-	path := "tmpl/sls/framev2/http/handler/bootstrap.go.tmpl"
+	name := "native/http/handler/bootstrap.go"
+	path := "tmpl/sls/native/http/handler/bootstrap.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
@@ -92,44 +95,58 @@ func loadLambdaHTTPHandlerBootstrapGo(v *LambdaHTTP, data any) error {
 	return nil
 }
 
-func loadLambdaHTTPHandlerHandlerGo(v *LambdaHTTP, data any) error {
-	name := "framev2/http/handler/handler.go"
-	path := "tmpl/sls/framev2/http/handler/handler.go.tmpl"
+func loadLambdaHTTPHandlerWorkerWorkerGo(v *LambdaHTTP, data any) error {
+	name := "native/http/handler/worker/worker.go"
+	path := "tmpl/sls/native/http/handler/worker/worker.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
 
-	v.Handler.HandlerGo = content
+	v.Handler.WorkerGo = content
 
 	return nil
 }
 
-func loadLambdaHTTPHandlerProviderGo(v *LambdaHTTP, data any) error {
-	name := "framev2/http/handler/provider.go"
-	path := "tmpl/sls/framev2/http/handler/provider.go.tmpl"
+func loadLambdaHTTPHandlerWorkerResourcesGo(v *LambdaHTTP, data any) error {
+	name := "native/http/handler/worker/resources.go"
+	path := "tmpl/sls/native/http/handler/worker/resources.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
 
-	v.Handler.ProviderGo = content
+	v.Handler.ResourcesGo = content
 
 	return nil
 }
 
-func loadLambdaHTTPHandlerRouteGo(v *LambdaHTTP, data any) error {
-	name := "framev2/http/handler/route.go"
-	path := "tmpl/sls/framev2/http/handler/route.go.tmpl"
+func loadLambdaHTTPHandlerEmbedYaml(v *LambdaHTTP, data any) error {
+	name := "native/http/handler/embed/embed.yaml"
+	path := "tmpl/sls/native/http/handler/embed/embed.yaml.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
 
-	v.Handler.RouteGo = content
+	v.Handler.EmbedYML = content
+
+	return nil
+}
+
+func loadLambdaHTTPHandlerDtosGo(v *LambdaHTTP, data any) error {
+	name := "native/http/handler/dtos/dto.go"
+	path := "tmpl/sls/native/http/handler/dtos/dto.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.DtosGo = content
 
 	return nil
 }
