@@ -1,3 +1,9 @@
+## v1.14.2 (2025-09-18)
+
+
+- chore(ci): update vendor hash for version 1.14.2
+- chore: [DEV-108] add new lambda structure (#140)
+
 ## v1.14.1 (2025-09-15)
 
 
