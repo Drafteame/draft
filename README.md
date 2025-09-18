@@ -28,10 +28,17 @@ This will prompt you to fill the service details to create the folder structure 
 
 ![Screenshot 2024-11-18 at 5 52 52 p m](https://github.com/user-attachments/assets/bdf7d12c-2b6e-4b40-bfc7-2dbfb20abb16)
 
+---
 If you run the command outside the project root folder you can pass a flag to specify the path to it:
 
 ```bash
 draft new:service -w path/to/project
+```
+---
+
+If you want to create the service in a legacy path (main-api or game-engine) you can pass a flag to specify the path to it:
+```bash
+draft new:service -l <path/to/service>
 ```
 
 ### Create Lambda

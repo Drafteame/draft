@@ -30,7 +30,7 @@ func (ns *NewService) createSentryProject() error {
 		return nil
 	}
 
-	projectID, err := sentry.CreateProject(ns.input.ServiceName)
+	projectID, err := sentry.CreateProject(ns.input.NormalizedServiceName)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func (ns *NewService) setupSentryStages() error {
 	}
 
 	dsn := ns.input.SentryDSN
-	serviceName := ns.input.ServiceName
+	serviceName := ns.input.NormalizedServiceName
 
 	return sentry.CreateStages(serviceName, dsn)
 }

@@ -6,6 +6,7 @@ type ServiceInput struct {
 	ServiceName           string
 	NormalizedServiceName string
 	ServicePath           string
+	ServicePackage        string
 	LambdaName            string
 	LambdaType            string
 	CustomDomain          bool
