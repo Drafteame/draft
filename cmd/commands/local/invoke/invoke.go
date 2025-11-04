@@ -33,6 +33,7 @@ func GetCmd() *cobra.Command {
 func init() {
 	invokeCmd.Flags().StringP("body", "b", "", "Body to send to the lambda")
 	invokeCmd.Flags().StringP("body-file", "f", "", "File to read body from")
+	invokeCmd.Flags().StringP("port", "p", "", "Port to run the lambda on")
 }
 
 func run(cmd *cobra.Command, args []string) {
@@ -75,7 +76,9 @@ func run(cmd *cobra.Command, args []string) {
 		log.Exitf(1, "Failed to build: %v", errBuild)
 	}
 
-	binCmd := buildBinCmd(lambdaPath, pklOutFile, body, embedded)
+	port := cmd.Flag("port").Value.String()
+
+	binCmd := buildBinCmd(lambdaPath, pklOutFile, body, port, embedded)
 
 	serviceEnvs := map[string]string{
 		"STAGE":    "dev",
@@ -99,7 +102,7 @@ func run(cmd *cobra.Command, args []string) {
 }
 
 // buildBinCmd builds a binary execution command by appending optional config and body arguments to the given path.
-func buildBinCmd(lambdaPath, pklOutFile, body string, embeddedConfig bool) string {
+func buildBinCmd(lambdaPath, pklOutFile, body, port string, embeddedConfig bool) string {
 	execName := path.Join(build.BinPath, lambdaPath)
 
 	if pklOutFile != "" && !embeddedConfig {
@@ -110,6 +113,10 @@ func buildBinCmd(lambdaPath, pklOutFile, body string, embeddedConfig bool) strin
 
 	if body != "" {
 		binCmd = fmt.Sprintf("%s --body '%s'", binCmd, body)
+	}
+
+	if port != "" {
+		binCmd = fmt.Sprintf("%s --port %s", binCmd, port)
 	}
 
 	return binCmd
