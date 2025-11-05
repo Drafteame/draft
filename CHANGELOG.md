@@ -1,3 +1,9 @@
+## v1.14.3 (2025-11-05)
+
+
+- chore(ci): update vendor hash for version 1.14.3
+- chore: flag port is added (#152)
+
 ## v1.14.2 (2025-09-18)
 
 
