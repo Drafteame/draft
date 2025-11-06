@@ -8,6 +8,7 @@ import (
 	"github.com/Drafteame/draft/internal/forms/newlambda"
 	"github.com/Drafteame/draft/internal/forms/newservice"
 	"github.com/Drafteame/draft/internal/forms/nixversion"
+	"github.com/Drafteame/draft/internal/forms/sentry/createproject"
 	"github.com/Drafteame/draft/internal/forms/sentry/deleteproject"
 )
 
@@ -21,6 +22,10 @@ func NewLambda(input *dtos.LambdaInput) error {
 
 func NewDomain(input *dtos.DomainInput) error {
 	return newdomain.GetForm(input)
+}
+
+func CreateProject(input *dtos.CreateProjectInput) error {
+	return createproject.GetForm(input)
 }
 
 func DeleteProject(input *dtos.DeleteProjectInput) error {
