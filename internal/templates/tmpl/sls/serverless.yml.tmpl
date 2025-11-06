@@ -7,10 +7,14 @@ custom:
   datadog: ${file(../../config/sls/datadog.yml):datadog}
   pklConfig: ${file(../../config/sls/pkl-config.yml):config}
   reservedConcurrency: ${file(../../config/sls/concurrency.yml):${self:custom.stage}.reservedConcurrency}
-  {{ if .WarmupEnabled }}warmup: ${file(../../config/sls/concurrency.yml):${self:custom.stage}.warmup}{{ end }}
-  {{ if .CustomDomain }}customDomain: ${file(../../config/sls/domains.yml):${self:custom.stage}.customDomain}
+  {{- if .WarmupEnabled }}
+  warmup: ${file(../../config/sls/concurrency.yml):${self:custom.stage}.warmup}
+  {{- end }}
+  {{- if .CustomDomain }}
+  customDomain: ${file(../../config/sls/domains.yml):${self:custom.stage}.customDomain}
   domain:
-    basePath: '{{ .DomainPath }}'{{ end }}
+    basePath: '{{ .DomainPath }}'
+  {{- end }}
 
   lambdaInsights:
     defaultLambdaInsights: true
@@ -54,5 +58,9 @@ plugins:
   - serverless-plugin-s3-remover
   - serverless-plugin-datadog
   - serverless-plugin-stage-reserved-concurrency
-  {{ if .WarmupEnabled }}- serverless-plugin-warmup{{ end }}
-  {{ if .CustomDomain }}- serverless-domain-manager{{ end }}
+  {{- if .WarmupEnabled }}
+  - serverless-plugin-warmup
+  {{- end }}
+  {{- if .CustomDomain }}
+  - serverless-domain-manager
+  {{- end }}
