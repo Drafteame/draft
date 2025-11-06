@@ -1,3 +1,9 @@
+## v1.15.0 (2025-11-06)
+
+
+- chore(ci): update vendor hash for version 1.15.0
+- feat: add sentry project create command (#155)
+
 ## v1.14.3 (2025-11-05)
 
 
