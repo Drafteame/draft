@@ -1,4 +1,4 @@
-package deleteproject
+package delete
 
 import (
 	"github.com/spf13/cobra"
@@ -11,7 +11,7 @@ import (
 )
 
 var sentryDeleteProjectCmd = &cobra.Command{
-	Use:   "sentry:delete-project",
+	Use:   "sentry:project:delete",
 	Short: "Delete a Sentry project",
 	Long:  "Delete a Sentry project",
 	Run:   run,
