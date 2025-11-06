@@ -18,4 +18,5 @@ type LambdaInput struct {
 	NextLambdaImportTag string
 	IsLegacy            bool
 	UseDig              bool
+	ReservedConcurrency string
 }

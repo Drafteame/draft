@@ -1,7 +1,7 @@
 function:
   {{ .LambdaName }}:
     handler: {{if not .IsLegacy}}cmd/{{ end }}sqs/{{ .LambdaName }}/main.go
-    reservedConcurrency: ${self:custom.reservedConcurrency.medium.http}
+    reservedConcurrency: ${self:custom.reservedConcurrency.{{ .ReservedConcurrency }}}
     events:
       - sqs:
           arn: '{{ .QueueARN }}'

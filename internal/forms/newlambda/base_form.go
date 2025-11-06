@@ -12,23 +12,23 @@ import (
 
 func baseForm(input *dtos.LambdaInput) error {
 	if !input.IsLegacy {
-		services, err := project.GetServices()
-		if err != nil {
-			return err
+		services, errGet := project.GetServices()
+		if errGet != nil {
+			return errGet
 		}
 
-		err = inputs.Select[string]("Service:",
+		errSrv := inputs.Select[string]("Service:",
 			inputs.WithDescription[string]("Select the service where the new lambda will be created."),
 			inputs.WithValue(&input.ServicePath),
 			inputs.WithOptions(services),
 		)
 
-		if err != nil {
-			return err
+		if errSrv != nil {
+			return errSrv
 		}
 	}
 
-	err := inputs.Text("Lambda Name:",
+	errName := inputs.Text("Lambda Name:",
 		inputs.WithDescription[string]("Enter the name of the new lambda."),
 		inputs.WithValue(&input.LambdaName),
 		inputs.WithValidation(func(s string) error {
@@ -40,11 +40,11 @@ func baseForm(input *dtos.LambdaInput) error {
 		}),
 	)
 
-	if err != nil {
-		return err
+	if errName != nil {
+		return errName
 	}
 
-	err = inputs.Select[string]("Lambda Type:",
+	errType := inputs.Select[string]("Lambda Type:",
 		inputs.WithDescription[string]("Select the type of the new lambda to be created."),
 		inputs.WithValue(&input.LambdaType),
 		inputs.WithOptions(map[string]string{
@@ -56,6 +56,35 @@ func baseForm(input *dtos.LambdaInput) error {
 		}),
 	)
 
+	if errType != nil {
+		return errType
+	}
+
+	if input.LambdaType != "cron" && input.LambdaType != "http" {
+		errConcurrency := inputs.Select[string]("Reserved Concurrency:",
+			inputs.WithDescription[string]("Select the tier of reserved concurrency for the new lambda."),
+			inputs.WithValue(&input.ReservedConcurrency),
+			inputs.WithOptions(map[string]string{
+				"MACRO - HTTP":          "macro.http",
+				"MACRO - EVENT DRIVEN":  "macro.eventDriven",
+				"HIGH - HTTP":           "high.http",
+				"HIGH - EVENT DRIVEN":   "high.eventDriven",
+				"MEDIUM - HTTP":         "medium.http",
+				"MEDIUM - EVENT DRIVEN": "medium.eventDriven",
+				"LOW - HTTP":            "low.http",
+				"LOW - EVENT DRIVEN":    "low.eventDriven",
+				"MIN - HTTP":            "min.http",
+				"MIN - EVENT DRIVEN":    "min.eventDriven",
+				"MICRO - HTTP":          "micro.http",
+				"MICRO - EVENT DRIVEN":  "micro.eventDriven",
+			}),
+		)
+
+		if errConcurrency != nil {
+			return errConcurrency
+		}
+	}
+
 	input.PackageName = data.Meta.PackageName
 
 	if !strings.HasPrefix(input.ServicePath, "services/") && !input.IsLegacy {
@@ -66,5 +95,5 @@ func baseForm(input *dtos.LambdaInput) error {
 	serviceName := splitServicePath[len(splitServicePath)-1]
 	input.ServiceName = strings.ToLower(serviceName)
 
-	return err
+	return nil
 }
