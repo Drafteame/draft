@@ -1,3 +1,9 @@
+## v1.15.1 (2025-11-06)
+
+
+- chore(ci): update vendor hash for version 1.15.1
+- chore: adjust app.pkl template to load global config (#156)
+
 ## v1.15.0 (2025-11-06)
 
 
