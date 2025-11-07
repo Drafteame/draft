@@ -15,9 +15,14 @@ type NewLambda struct {
 }
 
 func New(input dtos.LambdaInput) *NewLambda {
-	lambdaPath := input.ServicePath + "/cmd/" + input.LambdaType + "/" + input.LambdaName
+	typePath := input.LambdaType
+	if input.LambdaType == "custom" {
+		typePath = input.CustomTypePath
+	}
+
+	lambdaPath := input.ServicePath + "/cmd/" + typePath + "/" + input.LambdaName
 	if input.IsLegacy {
-		lambdaPath = input.ServicePath + "/" + input.LambdaType + "/" + input.LambdaName
+		lambdaPath = input.ServicePath + "/" + typePath + "/" + input.LambdaName
 	}
 
 	return &NewLambda{

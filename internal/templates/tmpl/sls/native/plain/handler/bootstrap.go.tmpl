@@ -5,12 +5,12 @@ import (
 	"embed"
 	"os"
 
-    "{{ .PackageName }}/config/loaders/parsers/yaml"
+  "{{ .PackageName }}/config/loaders/parsers/yaml"
 	"{{ .PackageName }}/pkg/config/loader"
 	"{{ .PackageName }}/pkg/config/loader/readers"
 	"{{ .PackageName }}/pkg/lambda/decorators"
 	"{{ .PackageName }}/pkg/lambda/decorators/health"
-    "{{ .PackageName }}/projects/framev2/pkg/tracer"
+  "{{ .PackageName }}/projects/framev2/pkg/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}plain/{{ .LambdaName }}/handler/dtos"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}plain/{{ .LambdaName }}/handler/worker"
 )
@@ -27,8 +27,7 @@ func Bootstrap() any {
 			defer span.Close(nil)
 
 			loader.LoadConfigs(newCtx, loader.WithReaders(
-				readers.Embed(embedFs, "embed/.app-config.yaml", yaml.Parser()),
-				readers.SecretsManager(os.Getenv("APP_NAME")),
+				readers.Embed(embedFs, "embed/.app-config.yaml", yaml.Parser(), readers.IsRequired()),
 			))
 
 			r, err := worker.ProvideResources(newCtx)
@@ -37,9 +36,9 @@ func Bootstrap() any {
 				return dtos.Output{}, err
 			}
 
-            if health.CheckHealthRequest(newCtx) {
-                return dtos.Output{}, nil
-            }
+      if health.CheckHealthRequest(newCtx) {
+        return dtos.Output{}, nil
+      }
 
 			return worker.Worker(r)(newCtx, input)
 		},

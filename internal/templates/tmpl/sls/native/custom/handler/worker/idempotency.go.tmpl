@@ -1,0 +1,74 @@
+package worker
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"{{ .PackageName }}/projects/framev2/pkg/logger"
+	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+)
+
+const (
+	Action = "" // TODO: set action name for idempotency
+)
+
+func (r *Resources) GenerateIdempotencyKey(ctx context.Context, input json.RawMessage) string {
+	_, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.{{ .CustomTypePath }}.{{ .LambdaName }}.handler.worker.Resources.GenerateIdempotencyKey")
+	defer segment.Close(nil)
+
+	// TODO: Reimplement this function to generate a unique idempotency key based on your event structure
+	// Example: Parse the input and extract a unique identifier
+	// var event MyEventType
+	// if err := json.Unmarshal(input, &event); err != nil {
+	//     logger.Get().Err(err).Error("failed to unmarshal event for idempotency key")
+	//     return ""
+	// }
+	// return fmt.Sprintf("%s:%s", Action, event.ID)
+
+	panic("reimplement this function to generate idempotency key")
+}
+
+func (r *Resources) SetIdempotency(ctx context.Context, input json.RawMessage) (err error) {
+	newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.{{ .CustomTypePath }}.{{ .LambdaName }}.handler.Worker.Resources.SetIdempotency")
+	defer segment.Close(nil)
+
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+			logger.Get().Err(err).Error("panic recovered in {{ .LambdaName }} handler")
+		}
+	}()
+
+	idemKey := r.GenerateIdempotencyKey(newCtx, input)
+
+	return r.IdemService.Set(newCtx, idemKey)
+}
+
+func (r *Resources) DelIdempotency(ctx context.Context, key string) error {
+	newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.{{ .CustomTypePath }}.{{ .LambdaName }}.handler.Worker.Resources.DelIdempotency")
+	defer segment.Close(nil)
+
+	if err := r.IdemService.Delete(newCtx, key); err != nil {
+		_ = segment.AddError(err)
+		logger.Get().Err(err).Fields(map[string]any{"key": key}).Error("error deleting idempotency key")
+		return err
+	}
+
+	return nil
+}
+
+func (r *Resources) deleteIdempotency(ctx context.Context, input json.RawMessage) error {
+	newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.{{ .CustomTypePath }}.{{ .LambdaName }}.handler.Worker.Resources.deleteIdempotency")
+	defer segment.Close(nil)
+
+	key := r.GenerateIdempotencyKey(newCtx, input)
+
+	if err := r.DelIdempotency(newCtx, key); err != nil {
+		_ = segment.AddError(err)
+		logger.Get().Err(err).Fields(map[string]any{"key": key}).Error("error deleting idempotency key")
+		return err
+	}
+
+	return nil
+}

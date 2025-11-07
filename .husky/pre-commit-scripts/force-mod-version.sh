@@ -29,6 +29,12 @@ function sed_replace() {
 function update_go_version() {
   local file="$1"
 
+  # Check if file exists
+  if [ ! -f "$file" ]; then
+    echo "[force-mod-version] skipping $file (file not found)"
+    return 0
+  fi
+
   if grep -q "^toolchain go" "$file"; then
     echo "[force-mod-version] removing gotoolchain version from $file"
     sed_replace '/^toolchain go/d' "$file"
@@ -43,14 +49,17 @@ function update_go_version() {
   fi
 }
 
-update_go_version "./go.work"
+# Update go.work if it exists
+if [ -f "./go.work" ]; then
+  update_go_version "./go.work"
+fi
 
 # Find and process go.mod files
-go_mod_files=$(fd 'go.mod' --glob)
+go_mod_files=$(fd 'go.mod' --glob 2>/dev/null)
 if [ -n "$go_mod_files" ]; then
-  for file in $go_mod_files; do
+  while IFS= read -r file; do
     update_go_version "$file"
-  done
+  done <<< "$go_mod_files"
 fi
 
 git add --all
