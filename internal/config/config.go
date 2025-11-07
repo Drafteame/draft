@@ -6,10 +6,15 @@ import (
 
 	"github.com/BurntSushi/toml"
 
+	"github.com/Drafteame/draft/internal/pkg/aws"
 	"github.com/Drafteame/draft/internal/pkg/files"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
-const configPath = "$HOME/.draftea/draft/config.toml"
+const (
+	configPath   = "$HOME/.draftea/draft/config.toml"
+	ssmParamName = "/service/sentry/dev/SENTRY_TOKEN"
+)
 
 type Config struct {
 	Sentry Sentry `toml:"sentry"`
@@ -81,5 +86,14 @@ func loadSentryEnvs(cfg *Config) {
 	org := os.Getenv("DRAFT_SENTRY_ORGANIZATION")
 	if org != "" {
 		cfg.Sentry.Organization = org
+	}
+
+	if cfg.Sentry.Token == "" {
+		ssmToken, err := aws.GetParameter(ssmParamName)
+		if err != nil {
+			log.Warn("Failed to get Sentry token from SSM:", err)
+		} else if ssmToken != "" {
+			cfg.Sentry.Token = ssmToken
+		}
 	}
 }
