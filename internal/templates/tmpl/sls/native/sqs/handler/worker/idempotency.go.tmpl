@@ -14,7 +14,12 @@ func (r *Resources) GenerateIdempotencyKey(ctx context.Context, event types.Even
 	_, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.sqs.{{ .LambdaName }}.handler.worker.Resources.GenerateIdempotencyKey")
 	defer segment.Close(nil)
 
-	return fmt.Sprintf("%s:%s", action, event.ID())
+	eventRootID, ok := ctx.Value(base.CtxKeyRootID).(string)
+	if !ok {
+	    log.Get().ErrorContext(newCtx, "error obtaining root ID for idempotency key generation", slog.String("action", action))
+	}
+
+	return fmt.Sprintf("%s:%s", action, eventRootID)
 }
 
 func (r *Resources) SetIdempotency(ctx context.Context, evt types.Event[dtos.Event]) (err error) {

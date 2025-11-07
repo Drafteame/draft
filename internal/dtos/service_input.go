@@ -23,4 +23,5 @@ type ServiceInput struct {
 	NextLambdaImportTag   string
 	IsLegacy              bool
 	UseDig                bool
+	ReservedConcurrency   string
 }

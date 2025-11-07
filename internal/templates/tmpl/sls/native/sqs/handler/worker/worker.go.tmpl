@@ -15,15 +15,12 @@ const (
 	target = "" // TODO: set target name
 )
 
-func Worker(r *Resources) base.Worker[types.Event[dtos.Event]] {
+func Worker(r *Resources) base.Worker[dtos.Event] {
     return func(ctx context.Context, event types.Event[dtos.Event]) error {
         newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.sqs.{{ .LambdaName }}.handler.worker.Worker")
     	defer segment.Close(nil)
 
         // TODO: Implement your worker logic here
-
-        log.Get().DebugContext(newCtx, "finish {{ .LambdaName }} worker")
-
         return nil
     }
 }
