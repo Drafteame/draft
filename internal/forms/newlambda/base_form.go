@@ -10,6 +10,25 @@ import (
 	"github.com/Drafteame/draft/internal/project"
 )
 
+var reservedConcurrency = map[string]map[string]string{
+	"http": {
+		"MACRO":  "macro.http",
+		"HIGH":   "high.http",
+		"MEDIUM": "medium.http",
+		"LOW":    "low.http",
+		"MIN":    "min.http",
+		"MICRO":  "micro.http",
+	},
+	"eventDriven": {
+		"MACRO":  "macro.eventDriven",
+		"HIGH":   "high.eventDriven",
+		"MEDIUM": "medium.eventDriven",
+		"LOW":    "low.eventDriven",
+		"MIN":    "min.eventDriven",
+		"MICRO":  "micro.eventDriven",
+	},
+}
+
 func baseForm(input *dtos.LambdaInput) error {
 	if !input.IsLegacy {
 		services, errGet := project.GetServices()
@@ -60,29 +79,19 @@ func baseForm(input *dtos.LambdaInput) error {
 		return errType
 	}
 
-	if input.LambdaType != "cron" && input.LambdaType != "http" {
-		errConcurrency := inputs.Select[string]("Reserved Concurrency:",
-			inputs.WithDescription[string]("Select the tier of reserved concurrency for the new lambda."),
-			inputs.WithValue(&input.ReservedConcurrency),
-			inputs.WithOptions(map[string]string{
-				"MACRO - HTTP":          "macro.http",
-				"MACRO - EVENT DRIVEN":  "macro.eventDriven",
-				"HIGH - HTTP":           "high.http",
-				"HIGH - EVENT DRIVEN":   "high.eventDriven",
-				"MEDIUM - HTTP":         "medium.http",
-				"MEDIUM - EVENT DRIVEN": "medium.eventDriven",
-				"LOW - HTTP":            "low.http",
-				"LOW - EVENT DRIVEN":    "low.eventDriven",
-				"MIN - HTTP":            "min.http",
-				"MIN - EVENT DRIVEN":    "min.eventDriven",
-				"MICRO - HTTP":          "micro.http",
-				"MICRO - EVENT DRIVEN":  "micro.eventDriven",
-			}),
-		)
+	rcType := "eventDriven"
+	if input.LambdaType == "http" {
+		rcType = "http"
+	}
 
-		if errConcurrency != nil {
-			return errConcurrency
-		}
+	errConcurrency := inputs.Select[string]("Reserved Concurrency:",
+		inputs.WithDescription[string]("Select the tier of reserved concurrency for the new lambda."),
+		inputs.WithValue(&input.ReservedConcurrency),
+		inputs.WithOptions(reservedConcurrency[rcType]),
+	)
+
+	if errConcurrency != nil {
+		return errConcurrency
 	}
 
 	input.PackageName = data.Meta.PackageName
