@@ -1,3 +1,9 @@
+## v1.15.3 (2025-11-07)
+
+
+- chore(ci): update vendor hash for version 1.15.3
+- chore: [pla-206] command improvements (#154)
+
 ## v1.15.2 (2025-11-07)
 
 
