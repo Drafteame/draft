@@ -1,3 +1,9 @@
+## v1.15.2 (2025-11-07)
+
+
+- chore(ci): update vendor hash for version 1.15.2
+- chore: [PLA-205] get sentry token to create sentry project (#153)
+
 ## v1.15.1 (2025-11-06)
 
 
