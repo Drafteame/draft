@@ -37,5 +37,5 @@ func (r *Repository) Get(ctx context.Context, id string) (domain.{{.DomainNamePa
 		return domain.{{.DomainNamePascal}}{}, dbErr
 	}
 
-	return daos.ToDomain(dao), nil
+	return daos.ToModel(dao), nil
 }

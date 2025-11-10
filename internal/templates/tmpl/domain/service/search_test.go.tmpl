@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
@@ -26,7 +25,7 @@ func (ts *testSuite) TestSearchSuccess() {
 	opts := options.NewSearchOptions().
 		Limit(10)
 
-	w.repo.On("Search", mock.MatchedBy(tmock.AnyContextMatcher()), opts).
+	w.repo.On("Search", tmock.AnyContext(), opts).
 		Return(data, int64(3), nil)
 
 	got, total, err := w.service.Search(context.TODO(), opts)
@@ -51,7 +50,7 @@ func (ts *testSuite) TestSearchWhenLimitIsZeroShouldAppliedTheDefaultLimit() {
 	}
 
 	optsWithDefaultLimit := options.NewSearchOptions().Limit(options.DefaultPaginationLimit)
-	w.repo.On("Search", mock.MatchedBy(tmock.AnyContextMatcher()), optsWithDefaultLimit).
+	w.repo.On("Search", tmock.AnyContext(), optsWithDefaultLimit).
 		Return(data, int64(3), nil)
 
 	opts := options.NewSearchOptions()
@@ -77,7 +76,7 @@ func (ts *testSuite) TestSearchWhenLimitIsGreaterThanTheMaxShouldAppliedTheMaxLi
 	}
 
 	optsWithMaxLimit := options.NewSearchOptions().Limit(options.MaxPaginationLimit)
-	w.repo.On("Search", context.TODO(), optsWithMaxLimit).Return(data, int64(3), nil)
+	w.repo.On("Search", tmock.AnyContext(), optsWithMaxLimit).Return(data, int64(3), nil)
 
 	opts := options.NewSearchOptions().Limit(9999)
 	got, total, err := w.service.Search(context.TODO(), opts)
@@ -102,7 +101,7 @@ func (ts *testSuite) TestSearchWhenOffsetIsLowerThanZeroShouldBeZero() {
 	}
 
 	optsWithMaxLimit := options.NewSearchOptions().Offset(0)
-	w.repo.On("Search", mock.MatchedBy(tmock.AnyContextMatcher()), optsWithMaxLimit).
+	w.repo.On("Search", tmock.AnyContext(), optsWithMaxLimit).
 		Return(data, int64(3), nil)
 
 	opts := options.NewSearchOptions().Offset(-1)
@@ -122,7 +121,7 @@ func (ts *testSuite) TestSearchWhenRepositoryErrorShouldReturnError() {
 	w := newTestWrapper(t)
 
 	opts := options.NewSearchOptions()
-	w.repo.On("Search", mock.MatchedBy(tmock.AnyContextMatcher()), opts).
+	w.repo.On("Search", tmock.AnyContext(), opts).
 		Return(nil, int64(0), assert.AnError)
 
 	got, total, err := w.service.Search(context.TODO(), opts)

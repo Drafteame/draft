@@ -7,6 +7,7 @@ import (
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
+	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
 )
 
 func (ts *testSuite) TestSearchOneSuccess() {
@@ -17,7 +18,7 @@ func (ts *testSuite) TestSearchOneSuccess() {
 
 	filters := options.NewSearchFilters()
 
-	w.repo.On("SearchOne", context.Background(), filters).
+	w.repo.On("SearchOne", tmock.AnyContext(), filters).
 		Return(domain.{{.DomainNamePascal}}{ID: "some-id"}, nil)
 
 	got, err := w.service.SearchOne(context.Background(), filters)
@@ -36,7 +37,7 @@ func (ts *testSuite) TestSearchOneWhenRepositoryErrorShouldReturnTheSameError() 
 
 	filters := options.NewSearchFilters()
 
-	w.repo.On("SearchOne", context.Background(), filters).
+	w.repo.On("SearchOne", tmock.AnyContext(), filters).
 		Return(domain.{{.DomainNamePascal}}{}, assert.AnError)
 
 	got, err := w.service.SearchOne(context.Background(), filters)

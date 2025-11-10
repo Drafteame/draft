@@ -1,0 +1,34 @@
+package tableid
+
+import (
+	"context"
+	"sync"
+
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/pkg/generators/nanoid"
+	"{{.PackageName}}/pkg/providers"
+	"{{.PackageName}}/projects/framev2/pkg/stage"
+	"{{.PackageName}}/projects/framev2/pkg/tracer"
+)
+
+const Prv{{.DomainNamePascal}} = "pkg.generators.nanoid.tableid.{{.DomainNamePascal}}"
+
+var (
+	instance{{.DomainNamePascal}} any
+	once{{.DomainNamePascal}}     = &sync.Once{}
+)
+
+func Provide{{.DomainNamePascal}}(ctx context.Context, opts ...providers.Option) (any, error) {
+	_, span := tracer.BeginSubSegment(ctx, "pkg.generators.nanoid.tableid.Provide{{.DomainNamePascal}}")
+	defer span.Close(nil)
+
+	if stage.IsTest() {
+		return provideTest(Prv{{.DomainNamePascal}}, daos.DBPrefix, opts...)
+	}
+
+	once{{.DomainNamePascal}}.Do(func() {
+		instance{{.DomainNamePascal}} = nanoid.New(nanoid.WithPrefix(daos.DBPrefix), nanoid.WithLength(length))
+	})
+
+	return instance{{.DomainNamePascal}}, nil
+}

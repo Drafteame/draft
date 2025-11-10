@@ -14,6 +14,7 @@ func (nd *NewDomain) exec() error {
 		nd.createService,
 		nd.createRepository,
 		nd.createDomain,
+		nd.createProviders,
 	}
 
 	for _, creator := range creators {
@@ -32,6 +33,7 @@ func (nd *NewDomain) createAllDirs() error {
 		nd.input.DomainPath + "/repository/builders",
 		nd.input.DomainPath + "/repository/daos",
 		nd.input.DomainPath + "/domain/options",
+		"pkg/providers/generators/nanoid/tableid",
 	}
 
 	for _, dir := range dirList {
@@ -126,6 +128,20 @@ func (nd *NewDomain) createDomain() error {
 		{Path: nd.input.DomainPath + "/domain/options/update_fields.go", Data: nd.tmpl.Domain.Options.UpdateFieldsGo},
 		{Path: nd.input.DomainPath + "/domain/domain.go", Data: nd.tmpl.Domain.DomainGo},
 		{Path: nd.input.DomainPath + "/domain/errors.go", Data: nd.tmpl.Domain.ErrorsGo},
+	}
+
+	for _, file := range fileList {
+		if err := files.Create(file.Path, file.Data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (nd *NewDomain) createProviders() error {
+	fileList := []dtos.FileEntry{
+		{Path: "pkg/providers/generators/nanoid/tableid/" + nd.input.DomainNameLower + ".go", Data: nd.tmpl.Providers.GeneratorsNanoidTableid.ProvideGo},
 	}
 
 	for _, file := range fileList {

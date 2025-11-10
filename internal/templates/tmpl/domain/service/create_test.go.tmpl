@@ -2,10 +2,8 @@ package service
 
 import (
 	"context"
-	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
@@ -19,11 +17,11 @@ func (ts *testSuite) TestSuccessCreate() {
 
 	newID := "test_id"
 
-	tw.repo.On("Create", mock.MatchedBy(tmock.AnyContextMatcher()), domain.{{.DomainNamePascal}}{}).
+	tw.repo.On("Create", tmock.AnyContext(), domain.{{.DomainNamePascal}}{}).
 		Return(domain.{{.DomainNamePascal}}{
 			ID:        newID,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			CreatedAt: tw.clock.Now(),
+			UpdatedAt: tw.clock.Now(),
 		}, nil)
 
 	got, err := tw.service.Create(context.TODO(), domain.{{.DomainNamePascal}}{})
@@ -43,7 +41,7 @@ func (ts *testSuite) TestDuplicatedRecordError() {
 
 	tw := newTestWrapper(t)
 
-	tw.repo.On("Create", mock.MatchedBy(tmock.AnyContextMatcher()), domain.{{.DomainNamePascal}}{}).
+	tw.repo.On("Create", tmock.AnyContext(), domain.{{.DomainNamePascal}}{}).
 		Return(domain.{{.DomainNamePascal}}{}, domain.ErrDuplicatedRecord)
 
 	got, err := tw.service.Create(context.TODO(), domain.{{.DomainNamePascal}}{})
@@ -61,7 +59,7 @@ func (ts *testSuite) TestErrorOnCreate() {
 
 	tw := newTestWrapper(t)
 
-	tw.repo.On("Create", mock.MatchedBy(tmock.AnyContextMatcher()), domain.{{.DomainNamePascal}}{}).
+	tw.repo.On("Create", tmock.AnyContext(), domain.{{.DomainNamePascal}}{}).
 		Return(domain.{{.DomainNamePascal}}{}, domain.ErrUnexpected)
 
 	got, err := tw.service.Create(context.TODO(), domain.{{.DomainNamePascal}}{})

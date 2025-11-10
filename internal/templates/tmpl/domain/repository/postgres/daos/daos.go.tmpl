@@ -22,7 +22,7 @@ func (t {{.DomainNamePascal}}) TableName() string {
 	return "{{.TableName}}"
 }
 
-func FromDomain(m domain.{{.DomainNamePascal}}) {{.DomainNamePascal}} {
+func FromModel(m domain.{{.DomainNamePascal}}) {{.DomainNamePascal}} {
 	return {{.DomainNamePascal}}{
 		ID: m.ID,
 
@@ -34,7 +34,7 @@ func FromDomain(m domain.{{.DomainNamePascal}}) {{.DomainNamePascal}} {
 	}
 }
 
-func ToDomain(m {{.DomainNamePascal}}) domain.{{.DomainNamePascal}} {
+func ToModel(m {{.DomainNamePascal}}) domain.{{.DomainNamePascal}} {
 	return domain.{{.DomainNamePascal}}{
 		ID: m.ID,
 

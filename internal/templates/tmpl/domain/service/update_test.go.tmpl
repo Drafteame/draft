@@ -20,12 +20,12 @@ func (ts *testSuite) TestSuccessUpdate() {
 
 	data := domain.{{.DomainNamePascal}}{
 		ID:        "some-id",
-		CreatedAt: time.Now().Add(-time.Hour),
-		UpdatedAt: time.Now(),
+		CreatedAt: tw.clock.Now().Add(-time.Hour),
+		UpdatedAt: tw.clock.Now(),
 	}
 
 	// TODO: [generated] Add fields and remove mock.Anything
-	tw.repo.On("Update", mock.MatchedBy(tmock.AnyContextMatcher()), "some-id", mock.Anything).
+	tw.repo.On("Update", tmock.AnyContext(), "some-id", mock.Anything).
 		Return(data, nil)
 
 	got, err := tw.service.Update(context.TODO(), "some-id", options.UpdateFields{})
@@ -43,7 +43,7 @@ func (ts *testSuite) TestErrorUpdatingInexistentRecord() {
 
 	tw := newTestWrapper(t)
 
-	tw.repo.On("Update", mock.MatchedBy(tmock.AnyContextMatcher()), "some-id", mock.Anything).
+	tw.repo.On("Update", tmock.AnyContext(), "some-id", mock.Anything).
 		Return(domain.{{.DomainNamePascal}}{}, domain.ErrRecordNotFound)
 
 	got, err := tw.service.Update(context.TODO(), "some-id", options.UpdateFields{})

@@ -21,7 +21,7 @@ func (r *Repository) Update(ctx context.Context, id string, fields options.Updat
 
 	updated := daos.ToUpdateDAO(id, fields)
 
-	dao := daos.FromDomain(entity)
+	dao := daos.FromModel(entity)
 
 	if err := r.driver.GetClient().Model(&dao).WithContext(newCtx).Updates(updated).Error; err != nil {
 		_ = span.AddError(err)

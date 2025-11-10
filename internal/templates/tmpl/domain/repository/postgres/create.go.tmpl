@@ -25,7 +25,7 @@ func (r *Repository) Create(ctx context.Context, entity domain.{{.DomainNamePasc
 		entity.ID = id
 	}
 
-	dao := daos.FromDomain(entity)
+	dao := daos.FromModel(entity)
 
 	if dbErr := r.driver.GetClient().WithContext(newCtx).Create(&dao).Error; dbErr != nil {
 		if strings.Contains(dbErr.Error(), "duplicate key") {

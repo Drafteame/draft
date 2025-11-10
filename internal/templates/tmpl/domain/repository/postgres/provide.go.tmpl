@@ -4,16 +4,15 @@ import (
 	"context"
 	"sync"
 
-	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 	"{{.PackageName}}/pkg/providers"
 	prvdatetime "{{.PackageName}}/pkg/providers/datetime"
+	prvgenerator "{{.PackageName}}/pkg/providers/generators/nanoid/tableid"
 	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
-	generator "{{.PackageName}}/projects/framev2/pkg/drivers/generatorid/v2"
 	"{{.PackageName}}/projects/framev2/pkg/stage"
 	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
-const PrvRepository = "domains.{{ .DomainNameLower }}.repository"
+const PrvRepo = "domains.{{ .DomainNameLower }}.repository"
 
 var (
 	instance any
@@ -54,8 +53,8 @@ func provideTestRepository(ctx context.Context, opt ...providers.Option) (any, e
 		return nil, err
 	}
 
-	if options.Container.Exists(PrvRepository) {
-		return options.Container.Get(PrvRepository), nil
+	if options.Container.Exists(PrvRepo) {
+		return options.Container.Get(PrvRepo), nil
 	}
 
 	aux, err := createInstance(ctx, opt...)
@@ -63,7 +62,7 @@ func provideTestRepository(ctx context.Context, opt ...providers.Option) (any, e
 		return nil, err
 	}
 
-	options.Container.Set(PrvRepository, aux)
+	options.Container.Set(PrvRepo, aux)
 
 	return aux, nil
 }
@@ -80,11 +79,7 @@ func createInstance(ctx context.Context, opts ...providers.Option) (any, error) 
 
 	clock := providers.MustAs[Clock](newCtx, prvdatetime.ProvideClock, opts...)
 
-	generatorID, err := generator.NewGeneratorID(daos.DBPrefix)
-	if err != nil {
-		_ = span.AddError(err)
-		return nil, err
-	}
+	generatorID := providers.MustAs[GeneratorID](newCtx, prvgenerator.Provide{{.DomainNamePascal}}, opts...)
 
 	return New(postgres{{.DomainNamePascal}}, clock, generatorID), nil
 }

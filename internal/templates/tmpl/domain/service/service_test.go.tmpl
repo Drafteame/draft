@@ -6,20 +6,32 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"{{.PackageName}}/{{ .DomainPath }}/service/mocks"
+	"{{.PackageName}}/pkg/providers"
+	prvdatetime "{{.PackageName}}/pkg/providers/datetime"
+	"{{.PackageName}}/pkg/providers/test/container"
+	"{{.PackageName}}/projects/framev2/pkg/datetime"
 )
 
 type testWrapper struct {
 	repo    *mocks.MockRepository
+	clock   datetime.Clock
 	service *Service
 }
 
 func newTestWrapper(t *testing.T) *testWrapper {
 	t.Helper()
 
+	mc := container.New(t)
 	repo := mocks.NewMockRepository(t)
+
+	clock := providers.MustAs[datetime.Clock](t.Context(), prvdatetime.ProvideClock,
+		providers.WithTestActor(t),
+		providers.WithContainer(mc),
+	)
 
 	return &testWrapper{
 		repo:    repo,
+		clock:   clock,
 		service: New(repo),
 	}
 }

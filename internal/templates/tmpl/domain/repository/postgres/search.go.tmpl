@@ -38,7 +38,7 @@ func (r *Repository) Search(ctx context.Context, opts options.SearchOptions) ([]
 
 	result := make([]domain.{{.DomainNamePascal}}, 0, len(daoModels))
 	for _, item := range daoModels {
-		result = append(result, daos.ToDomain(item))
+		result = append(result, daos.ToModel(item))
 	}
 
 	return result, total, nil
