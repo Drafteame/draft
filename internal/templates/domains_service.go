@@ -1,5 +1,9 @@
 package templates
 
+import (
+	"github.com/Drafteame/draft/internal/dtos"
+)
+
 type Service struct {
 	CreateGo        []byte
 	CreateTestGo    []byte
@@ -16,25 +20,37 @@ type Service struct {
 	ServiceTestGo   []byte
 	UpdateGo        []byte
 	UpdateTestGo    []byte
+	Dynamo          ServiceDynamo
 }
 
 func loadDomainsService(v *Service, data any) error {
-	loaders := []func(*Service, any) error{
-		loadServiceCreateGo,
-		loadServiceCreateTestGo,
-		loadServiceDeleteGo,
-		loadServiceDeleteTestGo,
-		loadServiceGetGo,
-		loadServiceGetTestGo,
-		loadServiceInterfaces,
-		loadServiceSearchGo,
-		loadServiceSearchTestGo,
-		loadServiceSearchOneGo,
-		loadServiceSearchOneTestGo,
-		loadServiceServiceGo,
-		loadServiceServiceTestGo,
-		loadServiceUpdateGo,
-		loadServiceUpdateTestGo,
+	var loaders []func(*Service, any) error
+
+	// Only load type-specific templates based on DBType
+	input, ok := data.(dtos.DomainInput)
+	if ok {
+		switch input.DBType {
+		case "postgres":
+			loaders = append(loaders,
+				loadServiceCreateGo,
+				loadServiceCreateTestGo,
+				loadServiceDeleteGo,
+				loadServiceDeleteTestGo,
+				loadServiceGetGo,
+				loadServiceGetTestGo,
+				loadServiceInterfaces,
+				loadServiceSearchGo,
+				loadServiceSearchTestGo,
+				loadServiceSearchOneGo,
+				loadServiceSearchOneTestGo,
+				loadServiceServiceGo,
+				loadServiceServiceTestGo,
+				loadServiceUpdateGo,
+				loadServiceUpdateTestGo,
+			)
+		case "dynamo":
+			loaders = append(loaders, loadServiceDynamo)
+		}
 	}
 
 	for _, loader := range loaders {
@@ -44,6 +60,10 @@ func loadDomainsService(v *Service, data any) error {
 	}
 
 	return nil
+}
+
+func loadServiceDynamo(v *Service, data any) error {
+	return loadDomainsServiceDynamo(&v.Dynamo, data)
 }
 
 func loadServiceCreateGo(v *Service, data any) error {
@@ -252,6 +272,70 @@ func loadServiceUpdateTestGo(v *Service, data any) error {
 	}
 
 	v.UpdateTestGo = content
+
+	return nil
+}
+
+type ServiceDynamo struct {
+	InterfacesGo []byte
+	ServiceGo    []byte
+	ProviderGo   []byte
+}
+
+func loadDomainsServiceDynamo(v *ServiceDynamo, data any) error {
+	loaders := []func(*ServiceDynamo, any) error{
+		loadServiceDynamoInterfacesGo,
+		loadServiceDynamoServiceGo,
+		loadServiceDynamoProviderGo,
+	}
+
+	for _, loader := range loaders {
+		if err := loader(v, data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func loadServiceDynamoInterfacesGo(v *ServiceDynamo, data any) error {
+	name := "domains/service/dynamo/interfaces.go"
+	path := "tmpl/domain/service/dynamo/interfaces.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.InterfacesGo = content
+
+	return nil
+}
+
+func loadServiceDynamoServiceGo(v *ServiceDynamo, data any) error {
+	name := "domains/service/dynamo/service.go"
+	path := "tmpl/domain/service/dynamo/service.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.ServiceGo = content
+
+	return nil
+}
+
+func loadServiceDynamoProviderGo(v *ServiceDynamo, data any) error {
+	name := "domains/service/dynamo/provider.go"
+	path := "tmpl/domain/service/dynamo/provider.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.ProviderGo = content
 
 	return nil
 }

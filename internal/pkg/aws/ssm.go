@@ -3,9 +3,10 @@ package aws
 import (
 	"context"
 
-	"github.com/Drafteame/draft/internal/pkg/log"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
 // GetParameter retrieves a parameter value from AWS SSM Parameter Store

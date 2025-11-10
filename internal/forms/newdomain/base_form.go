@@ -46,6 +46,7 @@ func baseForm(input *dtos.DomainInput) error {
 		inputs.WithValue(&input.DBType),
 		inputs.WithOptions(map[string]string{
 			"Postgres": "postgres",
+			"DynamoDB": "dynamo",
 		}),
 	)
 

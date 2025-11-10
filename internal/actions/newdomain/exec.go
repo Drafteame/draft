@@ -13,8 +13,11 @@ func (nd *NewDomain) exec() error {
 		nd.createAllDirs,
 		nd.createService,
 		nd.createRepository,
-		nd.createProviders,
-		nd.createDomain,
+	}
+
+	// Only create providers and domain for postgres
+	if nd.input.DBType == "postgres" {
+		creators = append(creators, nd.createProviders, nd.createDomain)
 	}
 
 	for _, creator := range creators {
@@ -30,10 +33,15 @@ func (nd *NewDomain) createAllDirs() error {
 	dirList := []string{
 		nd.input.DomainPath + "/service",
 		nd.input.DomainPath + "/repository",
-		nd.input.DomainPath + "/repository/builders",
-		nd.input.DomainPath + "/repository/daos",
-		nd.input.DomainPath + "/providers",
-		nd.input.DomainPath + "/domain/options",
+	}
+
+	if nd.input.DBType == "postgres" {
+		dirList = append(dirList,
+			nd.input.DomainPath+"/providers",
+			nd.input.DomainPath+"/repository/builders",
+			nd.input.DomainPath+"/repository/daos",
+			nd.input.DomainPath+"/domain/options",
+		)
 	}
 
 	for _, dir := range dirList {
@@ -46,6 +54,17 @@ func (nd *NewDomain) createAllDirs() error {
 }
 
 func (nd *NewDomain) createService() error {
+	switch nd.input.DBType {
+	case "postgres":
+		return nd.createPostgresService()
+	case "dynamo":
+		return nd.createDynamoService()
+	default:
+		return fmt.Errorf("unsupported service db type: %s", nd.input.DBType)
+	}
+}
+
+func (nd *NewDomain) createPostgresService() error {
 	fileList := []dtos.FileEntry{
 		{Path: nd.input.DomainPath + "/service/create.go", Data: nd.tmpl.Service.CreateGo},
 		{Path: nd.input.DomainPath + "/service/create_test.go", Data: nd.tmpl.Service.CreateTestGo},
@@ -73,10 +92,28 @@ func (nd *NewDomain) createService() error {
 	return nil
 }
 
+func (nd *NewDomain) createDynamoService() error {
+	fileList := []dtos.FileEntry{
+		{Path: nd.input.DomainPath + "/service/interfaces.go", Data: nd.tmpl.Service.Dynamo.InterfacesGo},
+		{Path: nd.input.DomainPath + "/service/service.go", Data: nd.tmpl.Service.Dynamo.ServiceGo},
+		{Path: nd.input.DomainPath + "/service/provider.go", Data: nd.tmpl.Service.Dynamo.ProviderGo},
+	}
+
+	for _, file := range fileList {
+		if err := files.Create(file.Path, file.Data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (nd *NewDomain) createRepository() error {
 	switch nd.input.DBType {
 	case "postgres":
 		return nd.createPostgresRepository()
+	case "dynamo":
+		return nd.createDynamoRepository()
 	default:
 		return fmt.Errorf("unsupported repository db type: %s", nd.input.DBType)
 	}
@@ -106,6 +143,22 @@ func (nd *NewDomain) createPostgresRepository() error {
 		{Path: nd.input.DomainPath + "/repository/daos/daos.go", Data: nd.tmpl.Repository.Postgres.Daos.DaosGo},
 		{Path: nd.input.DomainPath + "/repository/daos/delete.go", Data: nd.tmpl.Repository.Postgres.Daos.DeleteGo},
 		{Path: nd.input.DomainPath + "/repository/daos/update.go", Data: nd.tmpl.Repository.Postgres.Daos.UpdateGo},
+	}
+
+	for _, file := range fileList {
+		if err := files.Create(file.Path, file.Data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (nd *NewDomain) createDynamoRepository() error {
+	fileList := []dtos.FileEntry{
+		{Path: nd.input.DomainPath + "/repository/interfaces.go", Data: nd.tmpl.Repository.Dynamo.InterfacesGo},
+		{Path: nd.input.DomainPath + "/repository/repository.go", Data: nd.tmpl.Repository.Dynamo.RepositoryGo},
+		{Path: nd.input.DomainPath + "/repository/provider.go", Data: nd.tmpl.Repository.Dynamo.ProviderGo},
 	}
 
 	for _, file := range fileList {
