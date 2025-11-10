@@ -6,11 +6,16 @@ import (
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
 func (r *Repository) Delete(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error) {
-	entity, err := r.Get(ctx, id)
+	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.Delete")
+	defer span.Close(nil)
+
+	entity, err := r.Get(newCtx, id)
 	if err != nil {
+		_ = span.AddError(err)
 		return domain.{{.DomainNamePascal}}{}, err
 	}
 
@@ -21,8 +26,10 @@ func (r *Repository) Delete(ctx context.Context, id string) (domain.{{.DomainNam
 		DeletedAt: &now,
 	}
 
-	if err := r.driver.GetClient().Model(&daos.{{.DomainNamePascal}}{}).WithContext(ctx).Where("id = ?", id).Updates(update).Error; err != nil {
-		return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrDeleteRecord, err)
+	if err := r.driver.GetClient().Model(&daos.{{.DomainNamePascal}}{}).WithContext(newCtx).Where("id = ?", id).Updates(update).Error; err != nil {
+		dbErr := errors.Join(domain.ErrDeleteRecord, err)
+		_ = span.AddError(dbErr)
+		return domain.{{.DomainNamePascal}}{}, dbErr
 	}
 
 	entity.DeletedAt = &now
