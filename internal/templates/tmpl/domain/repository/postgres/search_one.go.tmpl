@@ -3,26 +3,24 @@ package repository
 import (
 	"context"
 
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
-	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
 // SearchOne finds the first record for the search options.
-func (r *Repository) SearchOne(ctx context.Context, filters options.SearchFilters) (daos.{{.DomainNamePascal}}, error) {
+func (r *Repository) SearchOne(ctx context.Context, filters options.SearchFilters) (domain.{{.DomainNamePascal}}, error) {
 	opts := options.NewSearchOptions().
 		SetFilters(filters).
 		Limit(1)
 
-	bdpList, _, err := r.Search(ctx, opts)
+	list, _, err := r.Search(ctx, opts)
 	if err != nil {
-		return daos.{{.DomainNamePascal}}{}, err
+		return domain.{{.DomainNamePascal}}{}, err
 	}
 
-	if len(bdpList) == 0 {
-		return daos.{{.DomainNamePascal}}{}, err
+	if len(list) == 0 {
+		return domain.{{.DomainNamePascal}}{}, domain.ErrRecordNotFound
 	}
 
-	bdp := bdpList[0]
-
-	return bdp, nil
+	return list[0], nil
 }

@@ -1,13 +1,13 @@
-package service_test
+package service
 
 import (
 	"context"
 
 	"github.com/stretchr/testify/assert"
 
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
-	prv{{.DomainNameLower}} "{{.PackageName}}/{{ .DomainPath }}/providers"
-	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/repository"
 	"{{.PackageName}}/{{ .DomainPath }}/service/mocks"
 )
 
@@ -18,13 +18,13 @@ func (ts *testSuite) TestSearchOneSuccess() {
 	repo := mocks.NewMockRepository(t)
 
 	w := newTestWrapper(t, withMocks(map[string]any{
-		prv{{.DomainNameLower}}.PrvRepository: repo,
+		repository.PrvRepository: repo,
 	}))
 
 	filters := options.NewSearchFilters()
 
 	repo.On("SearchOne", context.Background(), filters).
-		Return(daos.{{.DomainNamePascal}}{ID: "some-id"}, nil)
+		Return(domain.{{.DomainNamePascal}}{ID: "some-id"}, nil)
 
 	got, err := w.service.SearchOne(context.Background(), filters)
 	if err != nil {
@@ -41,7 +41,7 @@ func (ts *testSuite) TestSearchOneWhenRepositoryErrorShouldReturnTheSameError() 
 	repo := mocks.NewMockRepository(t)
 
 	w := newTestWrapper(t, withMocks(map[string]any{
-		prv{{.DomainNameLower}}.PrvRepository: repo,
+		repository.PrvRepository: repo,
 	}))
 
 	filters := options.NewSearchFilters()

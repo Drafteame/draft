@@ -13,7 +13,6 @@ func (nd *NewDomain) exec() error {
 		nd.createAllDirs,
 		nd.createService,
 		nd.createRepository,
-		nd.createProviders,
 		nd.createDomain,
 	}
 
@@ -32,7 +31,6 @@ func (nd *NewDomain) createAllDirs() error {
 		nd.input.DomainPath + "/repository",
 		nd.input.DomainPath + "/repository/builders",
 		nd.input.DomainPath + "/repository/daos",
-		nd.input.DomainPath + "/providers",
 		nd.input.DomainPath + "/domain/options",
 	}
 
@@ -62,6 +60,7 @@ func (nd *NewDomain) createService() error {
 		{Path: nd.input.DomainPath + "/service/service_test.go", Data: nd.tmpl.Service.ServiceTestGo},
 		{Path: nd.input.DomainPath + "/service/search_one.go", Data: nd.tmpl.Service.SearchOneGo},
 		{Path: nd.input.DomainPath + "/service/search_one_test.go", Data: nd.tmpl.Service.SearchOneTestGo},
+		{Path: nd.input.DomainPath + "/service/provide.go", Data: nd.tmpl.Service.ProvideGo},
 	}
 
 	for _, file := range fileList {
@@ -106,40 +105,7 @@ func (nd *NewDomain) createPostgresRepository() error {
 		{Path: nd.input.DomainPath + "/repository/daos/daos.go", Data: nd.tmpl.Repository.Postgres.Daos.DaosGo},
 		{Path: nd.input.DomainPath + "/repository/daos/delete.go", Data: nd.tmpl.Repository.Postgres.Daos.DeleteGo},
 		{Path: nd.input.DomainPath + "/repository/daos/update.go", Data: nd.tmpl.Repository.Postgres.Daos.UpdateGo},
-	}
-
-	for _, file := range fileList {
-		if err := files.Create(file.Path, file.Data); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (nd *NewDomain) createProviders() error {
-	fileList := []dtos.FileEntry{
-		{Path: nd.input.DomainPath + "/providers/generator.go", Data: nd.tmpl.Providers.GeneratorGo},
-		{Path: nd.input.DomainPath + "/providers/service.go", Data: nd.tmpl.Providers.ServiceGo},
-	}
-
-	for _, file := range fileList {
-		if err := files.Create(file.Path, file.Data); err != nil {
-			return err
-		}
-	}
-
-	switch nd.input.DBType {
-	case "postgres":
-		return nd.createPostgresProviders()
-	default:
-		return fmt.Errorf("unsupported providers db type: %s", nd.input.DBType)
-	}
-}
-
-func (nd *NewDomain) createPostgresProviders() error {
-	fileList := []dtos.FileEntry{
-		{Path: nd.input.DomainPath + "/providers/repository.go", Data: nd.tmpl.Providers.Postgres.RepositoryGo},
+		{Path: nd.input.DomainPath + "/repository/provide.go", Data: nd.tmpl.Repository.Postgres.ProvideGo},
 	}
 
 	for _, file := range fileList {

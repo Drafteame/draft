@@ -3,19 +3,20 @@ package repository
 import (
 	"context"
 
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
 	"{{.PackageName}}/{{ .DomainPath }}/repository/builders"
 	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
 // Search finds records for the search options.
-func (r *Repository) Search(ctx context.Context, opts options.SearchOptions) ([]daos.{{.DomainNamePascal}}, int64, error) {
-	var dao []daos.{{.DomainNamePascal}}
-	client := r.driver.GetClient().Model(&dao)
+func (r *Repository) Search(ctx context.Context, opts options.SearchOptions) ([]domain.{{.DomainNamePascal}}, int64, error) {
+	var daos []daos.{{.DomainNamePascal}}
+	client := r.driver.GetClient().Model(&daos)
 
 	client = builders.SearchOptions(client, opts)
 
-	err := client.WithContext(ctx).Find(&dao).Error
+	err := client.WithContext(ctx).Find(&daos).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -25,5 +26,14 @@ func (r *Repository) Search(ctx context.Context, opts options.SearchOptions) ([]
 		client.Offset(-1).Count(&total)
 	}
 
-	return dao, total, nil
+	result := make([]domain.{{.DomainNamePascal}}, 0, len(daos))
+	for _, dao := range daos {
+		model, err := domain.ToModel(dao)
+		if err != nil {
+			return nil, 0, err
+		}
+		result = append(result, model)
+	}
+
+	return result, total, nil
 }

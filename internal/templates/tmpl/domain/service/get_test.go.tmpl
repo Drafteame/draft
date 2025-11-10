@@ -1,4 +1,4 @@
-package service_test
+package service
 
 import (
 	"context"
@@ -7,8 +7,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
-	prv{{.DomainNameLower}} "{{.PackageName}}/{{ .DomainPath }}/providers"
-	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/repository"
 	"{{.PackageName}}/{{ .DomainPath }}/service/mocks"
 	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
 	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
@@ -21,10 +20,10 @@ func (ts *testSuite) TestSuccessGet() {
 	repo := mocks.NewMockRepository(t)
 
 	tw := newTestWrapper(t, withMocks(map[string]any{
-		prv{{.DomainNameLower}}.PrvRepository: repo,
+		repository.PrvRepository: repo,
 	}))
 
-	data := daos.{{.DomainNamePascal}}{
+	data := domain.{{.DomainNamePascal}}{
 		ID: "some-id",
 
 		// TODO: [generated] Add fields
@@ -54,7 +53,7 @@ func (ts *testSuite) TestNotFoundRecord() {
 	repo := mocks.NewMockRepository(t)
 
 	tw := newTestWrapper(t, withMocks(map[string]any{
-		prv{{.DomainNameLower}}.PrvRepository: repo,
+		repository.PrvRepository: repo,
 	}))
 
 	repo.On("Get", mock.MatchedBy(tmock.AnyContextMatcher()), "some-id").
@@ -72,7 +71,7 @@ func (ts *testSuite) TestUnexpectedError() {
 
 	tw := newTestWrapper(t)
 
-	db := tw.mu.Get(prvpostgres.ProviderName(prvpostgres.Prv{{ .DBName }})).(interface{ Close() error })
+	db := tw.mc.Get(prvpostgres.ProviderName(prvpostgres.Prv{{.DBProviderFuncName}})).(interface{ Close() error })
 	if err := db.Close(); err != nil {
 		t.Fatal(err)
 	}

@@ -10,7 +10,7 @@ import (
 	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
-func (r *Repository) Get(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error) {
+func (r *Repository) Get(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error) {
 	gormDB := r.driver.GetClient()
 
 	dao := daos.{{.DomainNamePascal}}{}
@@ -23,11 +23,11 @@ func (r *Repository) Get(ctx context.Context, id string) (daos.{{.DomainNamePasc
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrRecordNotFound, err)
+			return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrRecordNotFound, err)
 		}
 
-		return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
+		return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
 	}
 
-	return dao, nil
+	return domain.ToModel(dao)
 }

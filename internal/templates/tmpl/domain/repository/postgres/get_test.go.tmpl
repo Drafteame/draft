@@ -1,4 +1,4 @@
-package repository_test
+package repository
 
 import (
 	"context"
@@ -6,10 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	rposome "{{.PackageName}}/{{ .DomainPath }}/domain"
-	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
-	"{{.PackageName}}/projects/framev2/pkg/drivers/gorm"
 )
 
 func TestGet(t *testing.T) {
@@ -20,9 +18,9 @@ func TestGet(t *testing.T) {
 
 		tw := newTestWrapper(t)
 
-		driver := tw.mu.Get(prvpostgres.ProviderName(prvpostgres.Prv{{ .DBName }})).(gorm.Driver)
+		driver := tw.mc.Get(prvpostgres.ProviderName(prvpostgres.Prv{{.DBProviderFuncName}})).(gorm.Driver)
 
-		data := daos.{{.DomainNamePascal}}{
+		data := domain.{{.DomainNamePascal}}{
 			ID: "some-id",
 		}
 

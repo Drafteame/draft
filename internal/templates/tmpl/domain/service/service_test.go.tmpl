@@ -1,4 +1,4 @@
-package service_test
+package service
 
 import (
 	"testing"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	prv{{.DomainNameLower}} "{{.PackageName}}/{{ .DomainPath }}/providers"
 	"{{.PackageName}}/{{ .DomainPath }}/service"
 	"{{.PackageName}}/pkg/providers"
 	"{{.PackageName}}/pkg/providers/test/container"
@@ -14,7 +13,7 @@ import (
 )
 
 type testWrapper struct {
-	mu      *container.Container
+	mc      *container.Container
 	clock   datetime.Clock
 	service *service.Service
 }
@@ -42,24 +41,22 @@ func newTestWrapper(t *testing.T, opts ...testWrapperOption) *testWrapper {
 
 	clock := datetime.NewTestClock(time.Now())
 
-	mu := container.New(t)
+	mc := container.New(t)
 
 	for key, value := range options.mocks {
-		mu.Override(key, value)
+		mc.Override(key, value)
 	}
 
-	srv, err := prv{{.DomainNameLower}}.ProvideService(
+	srv := providers.MustAs[*service.Service](
+		t.Context(),
+		service.Provide,
 		providers.WithTestActor(t),
 		providers.WithClock(clock),
-		providers.WithContainer(mu),
+		providers.WithContainer(mc),
 	)
 
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	return &testWrapper{
-		mu:      mu,
+		mc:      mc,
 		clock:   clock,
 		service: srv,
 	}

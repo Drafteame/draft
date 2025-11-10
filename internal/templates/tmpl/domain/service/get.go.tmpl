@@ -4,18 +4,18 @@ import (
 	"context"
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
 func (s *Service) Get(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error) {
-	item, err := s.repo.Get(ctx, id)
+	newCtx, seg := tracer.BeginSubSegment(ctx, "domains.{{.DomainNameLower}}.service.Get")
+	defer seg.Close(nil)
+
+	item, err := s.repo.Get(newCtx, id)
 	if err != nil {
+		_ = seg.AddError(err)
 		return domain.{{.DomainNamePascal}}{}, err
 	}
 
-	model, err := domain.ToModel(item)
-	if err != nil {
-		return domain.{{.DomainNamePascal}}{}, err
-	}
-
-	return model, nil
+	return item, nil
 }

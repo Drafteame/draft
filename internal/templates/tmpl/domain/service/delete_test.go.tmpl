@@ -1,4 +1,4 @@
-package service_test
+package service
 
 import (
 	"context"
@@ -61,7 +61,7 @@ func (ts *testSuite) TestDeleteUnexpectedError() {
 		t.Fatal(err)
 	}
 
-	db := tw.mu.Get(prvpostgres.ProviderName(prvpostgres.Prv{{ .DBName }})).(interface{ Close() error })
+	db := tw.mc.Get(prvpostgres.ProviderName(prvpostgres.Prv{{.DBProviderFuncName}})).(interface{ Close() error })
 	if err := db.Close(); err != nil {
 		t.Fatal(err)
 	}

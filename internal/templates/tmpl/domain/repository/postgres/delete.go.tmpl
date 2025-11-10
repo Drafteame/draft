@@ -8,10 +8,10 @@ import (
 	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
-func (r *Repository) Delete(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error) {
+func (r *Repository) Delete(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error) {
 	entity, err := r.Get(ctx, id)
 	if err != nil {
-		return daos.{{.DomainNamePascal}}{}, err
+		return domain.{{.DomainNamePascal}}{}, err
 	}
 
 	now := r.clock.Now()
@@ -21,13 +21,10 @@ func (r *Repository) Delete(ctx context.Context, id string) (daos.{{.DomainNameP
 		DeletedAt: &now,
 	}
 
-	if err := r.driver.GetClient().Model(&update).WithContext(ctx).Updates(update).Error; err != nil {
-		return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrDeleteRecord, err)
+	if err := r.driver.GetClient().Model(&daos.{{.DomainNamePascal}}{}).WithContext(ctx).Where("id = ?", id).Updates(update).Error; err != nil {
+		return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrDeleteRecord, err)
 	}
 
-	if err := r.driver.GetClient().Unscoped().Find(&entity).Error; err != nil {
-		return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
-	}
-
+	entity.DeletedAt = &now
 	return entity, nil
 }

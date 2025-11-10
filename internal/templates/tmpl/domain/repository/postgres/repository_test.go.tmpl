@@ -1,30 +1,35 @@
-package repository_test
+package repository
 
 import (
+	"context"
 	"testing"
-	"time"
 
-	prv{{.DomainNameLower}} "{{.PackageName}}/{{ .DomainPath }}/providers"
 	"{{.PackageName}}/pkg/providers"
+	prvdatetime "{{.PackageName}}/pkg/providers/datetime"
+	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
 	"{{.PackageName}}/pkg/providers/test/container"
 	"{{.PackageName}}/projects/framev2/pkg/datetime"
+	"{{.PackageName}}/projects/framev2/pkg/drivers/gorm"
 )
 
 type testWrapper struct {
-	mu    *container.Container
-	clock datetime.Clock
-	repo  prv{{.DomainNameLower}}.Repository
+	mc              *container.Container
+	t               *testing.T
+	repo            *Repository
+	{{.DomainNameLower}}GormDriver gorm.Driver
+	clock           datetime.Clock
+	ctx             context.Context
 }
 
 type testWrapperOptions struct {
-	mocks map[string]any
+	overrides map[string]any
 }
 
 type testWrapperOption func(*testWrapperOptions)
 
-func withMocks(mocks map[string]any) testWrapperOption {
-	return func(o *testWrapperOptions) {
-		o.mocks = mocks
+func withOverrides(overrides map[string]any) testWrapperOption {
+	return func(opts *testWrapperOptions) {
+		opts.overrides = overrides
 	}
 }
 
@@ -32,32 +37,32 @@ func newTestWrapper(t *testing.T, opts ...testWrapperOption) *testWrapper {
 	t.Helper()
 
 	options := testWrapperOptions{}
-
-    for _, opt := range opts {
-        opt(&options)
-    }
-
-    clock := datetime.NewTestClock(time.Now())
-
-    mu := container.New(t)
-
-    for key, value := range options.mocks {
-        mu.Override(key, value)
-    }
-
-	repo, err := prv{{.DomainNameLower}}.ProvideRepository(
-		providers.WithTestActor(t),
-		providers.WithClock(clock),
-		providers.WithContainer(mu),
-	)
-
-	if err != nil {
-		t.Fatal(err)
+	for _, opt := range opts {
+		opt(&options)
 	}
 
+	mc := container.New(t)
+
+	if options.overrides != nil && len(options.overrides) > 0 {
+		for k, v := range options.overrides {
+			mc.Override(k, v)
+		}
+	}
+
+	repository := providers.MustAs[*Repository](t.Context(), Provide,
+		providers.WithTestActor(t),
+		providers.WithContainer(mc),
+	)
+
+	{{.DomainNameLower}}GormDriver := mc.Get(prvpostgres.ProviderName(prvpostgres.Prv{{.DBProviderFuncName}})).(gorm.Driver)
+	clock := mc.Get(prvdatetime.PrvClock).(datetime.Clock)
+
 	return &testWrapper{
-		mu:    mu,
-		clock: clock,
-		repo:  repo,
+		mc:              mc,
+		t:               t,
+		clock:           clock,
+		repo:            repository,
+		{{.DomainNameLower}}GormDriver: {{.DomainNameLower}}GormDriver,
+		ctx:             context.Background(),
 	}
 }
