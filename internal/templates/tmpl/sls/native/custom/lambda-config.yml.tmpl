@@ -1,4 +1,26 @@
 function:
-	{{ .LambdaName }}:
-		handler: {{if not .IsLegacy}}cmd/{{ end }}{{ .CustomTypePath }}/{{ .LambdaName }}/main.go
-		reservedConcurrency: 10
+  {{ .LambdaName }}:
+    handler: {{if not .IsLegacy}}cmd/{{ end }}{{ .CustomTypePath }}/{{ .LambdaName }}/main.go
+    reservedConcurrency: ${self:custom.reservedConcurrency.{{ .ReservedConcurrency }}}
+    # Example: Configure EventBridge bus event
+    # events:
+    #   - eventBridge:
+    #       eventBus: arn:aws:events:us-east-1:123456789012:event-bus/custom-bus
+    #       pattern:
+    #         source:
+    #           - custom.source
+    #         detail-type:
+    #           - MyDetailType
+    #         detail:
+    #           action:
+    #             - created
+    #             - updated
+    #
+    # Example: Configure default EventBridge (without custom bus)
+    # events:
+    #   - eventBridge:
+    #       pattern:
+    #         source:
+    #           - aws.ec2
+    #         detail-type:
+    #           - EC2 Instance State-change Notification
