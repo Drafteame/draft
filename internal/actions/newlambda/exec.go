@@ -14,6 +14,8 @@ func (nl *NewLambda) exec() error {
 		return nl.createSnsSqs()
 	case "cron":
 		return nl.createCron()
+	case "custom":
+		return nl.createCustom()
 	default:
 		return errors.New("unsupported lambda type")
 	}

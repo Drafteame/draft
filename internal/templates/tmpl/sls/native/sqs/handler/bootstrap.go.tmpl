@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 
-    "{{ .PackageName }}/config/loaders/parsers/yaml"
+	"{{ .PackageName }}/config/loaders/parsers/yaml"
 	"{{ .PackageName }}/pkg/config/loader"
 	"{{ .PackageName }}/pkg/config/loader/readers"
 	"{{ .PackageName }}/pkg/consumer"
@@ -14,9 +14,9 @@ import (
 	sqshelpers "{{ .PackageName }}/pkg/consumer/sqs/helpers"
 	"{{ .PackageName }}/pkg/lambda/decorators"
 	"{{ .PackageName }}/pkg/lambda/decorators/health"
-    "{{ .PackageName }}/projects/framev2/pkg/publisher/types"
-    "{{ .PackageName }}/projects/framev2/pkg/tracer"
-    "{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}sqs/{{ .LambdaName }}/handler/dtos"
+	"{{ .PackageName }}/projects/framev2/pkg/publisher/types"
+	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}sqs/{{ .LambdaName }}/handler/dtos"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}sqs/{{ .LambdaName }}/handler/worker"
 )
 
@@ -26,34 +26,34 @@ var embedFs embed.FS
 
 // Bootstrap is the entrypoint of the lambda
 func Bootstrap() any {
-    return decorators.Handle(
+	return decorators.Handle(
 		func(ctx context.Context, event events.SQSEvent) (events.SQSEventResponse, error) {
-            newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.sqs.{{ .LambdaName }}.handler.Bootstrap")
+			newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.sqs.{{ .LambdaName }}.handler.Bootstrap")
 			defer span.Close(nil)
 
-            loader.LoadConfigs(newCtx, loader.WithReaders(
-                readers.Embed(embedFs, "embed/.app-config.yaml", yaml.Parser()),
-            ))
+			loader.LoadConfigs(newCtx, loader.WithReaders(
+				readers.Embed(embedFs, "embed/.app-config.yaml", yaml.Parser()),
+			))
 
-            r, err := worker.ProvideResources(newCtx)
-            if err != nil {
-                _ = span.AddError(err)
-                return events.SQSEventResponse{}, err
-            }
+			r, err := worker.ProvideResources(newCtx)
+			if err != nil {
+				_ = span.AddError(err)
+				return events.SQSEventResponse{}, err
+			}
 
 			if health.CheckHealthRequest(newCtx) {
 				return events.SQSEventResponse{}, nil
 			}
 
-            errConsume := consumer.NewSqs(newCtx, event, worker.Worker(r)).
-                WithWorkerDecorators(consumerdecorators.IdempotencyOnDeadline[types.Event[dtos.Event]](
-                    worker.Action,
-                    r.GenerateIdempotencyKey,
-                    r.DelIdempotency,
-                )).
-                Consume()
+			errConsume := consumer.NewSqs(newCtx, event, worker.Worker(r)).
+				WithWorkerDecorators(consumerdecorators.IdempotencyOnDeadline[types.Event[dtos.Event]](
+					worker.Action,
+					r.GenerateIdempotencyKey,
+					r.DelIdempotency,
+				)).
+				Consume()
 
-            return sqshelpers.Response(newCtx, errConsume)
+			return sqshelpers.Response(newCtx, errConsume)
 		},
 	)
 }

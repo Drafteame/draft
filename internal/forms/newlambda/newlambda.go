@@ -26,6 +26,8 @@ func GetForm(input *dtos.LambdaInput) error {
 		return httpForm(input)
 	case "cron":
 		return cronForm(input)
+	case "custom":
+		return customForm(input)
 	default:
 		return fmt.Errorf("unknown lambda type: %s", input.LambdaType)
 	}
