@@ -1,4 +1,4 @@
-package repository_test
+package repository
 
 import (
 	"context"
@@ -6,10 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	rposome "{{.PackageName}}/{{ .DomainPath }}/domain"
-	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
-	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
-	"{{.PackageName}}/projects/framev2/pkg/drivers/gorm"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 )
 
 func TestGet(t *testing.T) {
@@ -20,22 +17,17 @@ func TestGet(t *testing.T) {
 
 		tw := newTestWrapper(t)
 
-		driver := tw.mu.Get(prvpostgres.ProviderName(prvpostgres.Prv{{ .DBName }})).(gorm.Driver)
-
-		data := daos.{{.DomainNamePascal}}{
-			ID: "some-id",
-		}
-
-		if err := driver.GetClient().Create(&data).Error; err != nil {
-			t.Fatal(err)
-		}
-
-		got, err := tw.repo.Get(context.TODO(), data.ID)
+		entity, err := tw.repo.Create(context.TODO(), domain.{{.DomainNamePascal}}{ID: "some-id"})
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		assert.Equal(t, data.ID, got.ID)
+		got, err := tw.repo.Get(context.TODO(), entity.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, entity.ID, got.ID)
 		assert.NotEmpty(t, got.CreatedAt)
 		assert.NotEmpty(t, got.UpdatedAt)
 	})
@@ -51,6 +43,6 @@ func TestGet(t *testing.T) {
 		}
 
 		assert.Error(t, err)
-		assert.ErrorIs(t, err, rposome.ErrRecordNotFound)
+		assert.ErrorIs(t, err, domain.ErrRecordNotFound)
 	})
 }

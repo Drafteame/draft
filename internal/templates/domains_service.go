@@ -16,6 +16,7 @@ type Service struct {
 	ServiceTestGo   []byte
 	UpdateGo        []byte
 	UpdateTestGo    []byte
+	ProvideGo       []byte
 }
 
 func loadDomainsService(v *Service, data any) error {
@@ -35,6 +36,7 @@ func loadDomainsService(v *Service, data any) error {
 		loadServiceServiceTestGo,
 		loadServiceUpdateGo,
 		loadServiceUpdateTestGo,
+		loadServiceProvideGo,
 	}
 
 	for _, loader := range loaders {
@@ -252,6 +254,20 @@ func loadServiceUpdateTestGo(v *Service, data any) error {
 	}
 
 	v.UpdateTestGo = content
+
+	return nil
+}
+
+func loadServiceProvideGo(v *Service, data any) error {
+	name := "domains/service/postgres/provide.go"
+	path := "tmpl/domain/service/postgres/provide.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.ProvideGo = content
 
 	return nil
 }

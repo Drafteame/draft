@@ -3,27 +3,43 @@ package repository
 import (
 	"context"
 
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
 	"{{.PackageName}}/{{ .DomainPath }}/repository/builders"
 	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
 // Search finds records for the search options.
-func (r *Repository) Search(ctx context.Context, opts options.SearchOptions) ([]daos.{{.DomainNamePascal}}, int64, error) {
-	var dao []daos.{{.DomainNamePascal}}
-	client := r.driver.GetClient().Model(&dao)
+func (r *Repository) Search(ctx context.Context, opts options.SearchOptions) ([]domain.{{.DomainNamePascal}}, int64, error) {
+	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.Search")
+	defer span.Close(nil)
+
+	var daoModels []daos.{{.DomainNamePascal}}
+	client := r.driver.GetClient().Model(&daoModels)
 
 	client = builders.SearchOptions(client, opts)
 
-	err := client.WithContext(ctx).Find(&dao).Error
+	client = client.WithContext(newCtx)
+
+	err := client.Find(&daoModels).Error
 	if err != nil {
+		_ = span.AddError(err)
 		return nil, 0, err
 	}
 
 	var total int64
 	if opts.Pagination.Limit != 1 {
-		client.Offset(-1).Count(&total)
+		if err := client.Offset(-1).Count(&total).Error; err != nil {
+			_ = span.AddError(err)
+			return nil, 0, err
+		}
 	}
 
-	return dao, total, nil
+	result := make([]domain.{{.DomainNamePascal}}, 0, len(daoModels))
+	for _, item := range daoModels {
+		result = append(result, daos.ToModel(item))
+	}
+
+	return result, total, nil
 }

@@ -1,4 +1,4 @@
-package service_test
+package service
 
 import (
 	"context"
@@ -9,9 +9,6 @@ import (
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
-	prv{{.DomainNameLower}} "{{.PackageName}}/{{ .DomainPath }}/providers"
-	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
-	"{{.PackageName}}/{{ .DomainPath }}/service/mocks"
 	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
 )
 
@@ -19,20 +16,16 @@ func (ts *testSuite) TestSuccessUpdate() {
 	t := ts.T()
 	t.Parallel()
 
-	repo := mocks.NewMockRepository(t)
+	tw := newTestWrapper(t)
 
-	tw := newTestWrapper(t, withMocks(map[string]any{
-		prv{{.DomainNameLower}}.PrvRepository: repo,
-	}))
-
-	data := daos.{{.DomainNamePascal}}{
+	data := domain.{{.DomainNamePascal}}{
 		ID:        "some-id",
 		CreatedAt: tw.clock.Now().Add(-time.Hour),
 		UpdatedAt: tw.clock.Now(),
 	}
 
 	// TODO: [generated] Add fields and remove mock.Anything
-	repo.On("Update", mock.MatchedBy(tmock.AnyContextMatcher()), "some-id", mock.Anything).
+	tw.repo.On("Update", tmock.AnyContext(), "some-id", mock.Anything).
 		Return(data, nil)
 
 	got, err := tw.service.Update(context.TODO(), "some-id", options.UpdateFields{})
@@ -49,6 +42,9 @@ func (ts *testSuite) TestErrorUpdatingInexistentRecord() {
 	t.Parallel()
 
 	tw := newTestWrapper(t)
+
+	tw.repo.On("Update", tmock.AnyContext(), "some-id", mock.Anything).
+		Return(domain.{{.DomainNamePascal}}{}, domain.ErrRecordNotFound)
 
 	got, err := tw.service.Update(context.TODO(), "some-id", options.UpdateFields{})
 
