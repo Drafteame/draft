@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
-	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
 )
 
 func TestGet(t *testing.T) {
@@ -18,22 +17,17 @@ func TestGet(t *testing.T) {
 
 		tw := newTestWrapper(t)
 
-		driver := tw.mc.Get(prvpostgres.ProviderName(prvpostgres.Prv{{.DBProviderFuncName}})).(gorm.Driver)
-
-		data := domain.{{.DomainNamePascal}}{
-			ID: "some-id",
-		}
-
-		if err := driver.GetClient().Create(&data).Error; err != nil {
-			t.Fatal(err)
-		}
-
-		got, err := tw.repo.Get(context.TODO(), data.ID)
+		entity, err := tw.repo.Create(context.TODO(), domain.{{.DomainNamePascal}}{ID: "some-id"})
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		assert.Equal(t, data.ID, got.ID)
+		got, err := tw.repo.Get(context.TODO(), entity.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, entity.ID, got.ID)
 		assert.NotEmpty(t, got.CreatedAt)
 		assert.NotEmpty(t, got.UpdatedAt)
 	})
@@ -49,6 +43,6 @@ func TestGet(t *testing.T) {
 		}
 
 		assert.Error(t, err)
-		assert.ErrorIs(t, err, rposome.ErrRecordNotFound)
+		assert.ErrorIs(t, err, domain.ErrRecordNotFound)
 	})
 }

@@ -2,14 +2,12 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
-	"{{.PackageName}}/{{ .DomainPath }}/repository"
-	"{{.PackageName}}/{{ .DomainPath }}/service/mocks"
-	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
 	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
 )
 
@@ -17,22 +15,18 @@ func (ts *testSuite) TestSuccessGet() {
 	t := ts.T()
 	t.Parallel()
 
-	repo := mocks.NewMockRepository(t)
-
-	tw := newTestWrapper(t, withMocks(map[string]any{
-		repository.PrvRepository: repo,
-	}))
+	tw := newTestWrapper(t)
 
 	data := domain.{{.DomainNamePascal}}{
 		ID: "some-id",
 
 		// TODO: [generated] Add fields
 
-		CreatedAt: tw.clock.Now(),
-		UpdatedAt: tw.clock.Now(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
-	repo.On("Get", mock.MatchedBy(tmock.AnyContextMatcher()), "some-id").
+	tw.repo.On("Get", mock.MatchedBy(tmock.AnyContextMatcher()), "some-id").
 		Return(data, nil)
 
 	got, err := tw.service.Get(context.TODO(), "some-id")
@@ -50,14 +44,10 @@ func (ts *testSuite) TestNotFoundRecord() {
 	t := ts.T()
 	t.Parallel()
 
-	repo := mocks.NewMockRepository(t)
+	tw := newTestWrapper(t)
 
-	tw := newTestWrapper(t, withMocks(map[string]any{
-		repository.PrvRepository: repo,
-	}))
-
-	repo.On("Get", mock.MatchedBy(tmock.AnyContextMatcher()), "some-id").
-		Return(daos.{{.DomainNamePascal}}{}, domain.ErrRecordNotFound)
+	tw.repo.On("Get", mock.MatchedBy(tmock.AnyContextMatcher()), "some-id").
+		Return(domain.{{.DomainNamePascal}}{}, domain.ErrRecordNotFound)
 
 	got, err := tw.service.Get(context.TODO(), "some-id")
 
@@ -71,10 +61,8 @@ func (ts *testSuite) TestUnexpectedError() {
 
 	tw := newTestWrapper(t)
 
-	db := tw.mc.Get(prvpostgres.ProviderName(prvpostgres.Prv{{.DBProviderFuncName}})).(interface{ Close() error })
-	if err := db.Close(); err != nil {
-		t.Fatal(err)
-	}
+	tw.repo.On("Get", mock.MatchedBy(tmock.AnyContextMatcher()), "some-id").
+		Return(domain.{{.DomainNamePascal}}{}, domain.ErrUnexpected)
 
 	got, err := tw.service.Get(context.TODO(), "some-id")
 

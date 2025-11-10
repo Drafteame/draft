@@ -2,6 +2,8 @@ package daos
 
 import (
 	"time"
+
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 )
 
 const DBPrefix = "{{.DBPrefix}}"
@@ -18,4 +20,28 @@ type {{.DomainNamePascal}} struct {
 
 func (t {{.DomainNamePascal}}) TableName() string {
 	return "{{.TableName}}"
+}
+
+func FromDomain(m domain.{{.DomainNamePascal}}) {{.DomainNamePascal}} {
+	return {{.DomainNamePascal}}{
+		ID: m.ID,
+
+		// TODO: [generated] Add fields
+
+		CreatedAt: m.CreatedAt,
+		UpdatedAt: m.UpdatedAt,
+		DeletedAt: m.DeletedAt,
+	}
+}
+
+func ToDomain(m {{.DomainNamePascal}}) domain.{{.DomainNamePascal}} {
+	return domain.{{.DomainNamePascal}}{
+		ID: m.ID,
+
+		// TODO: [generated] Add fields
+
+		CreatedAt: m.CreatedAt,
+		UpdatedAt: m.UpdatedAt,
+		DeletedAt: m.DeletedAt,
+	}
 }

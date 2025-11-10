@@ -44,6 +44,6 @@ func TestDelete(t *testing.T) {
 		}
 
 		assert.Error(t, err)
-		assert.ErrorIs(t, err, rposome.ErrRecordNotFound)
+		assert.ErrorIs(t, err, domain.ErrRecordNotFound)
 	})
 }

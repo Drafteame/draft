@@ -4,9 +4,10 @@ import (
 	"context"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
-	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
+	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
 )
 
 func (ts *testSuite) TestDeleteSuccess() {
@@ -15,27 +16,18 @@ func (ts *testSuite) TestDeleteSuccess() {
 
 	tw := newTestWrapper(t)
 
-	got, err := tw.service.Create(context.TODO(), domain.{{.DomainNamePascal}}{})
+	expected := domain.{{.DomainNamePascal}}{ID: "some-id"}
+
+	tw.repo.On("Delete", mock.MatchedBy(tmock.AnyContextMatcher()), expected.ID).
+		Return(expected, nil)
+
+	deleted, err := tw.service.Delete(context.TODO(), expected.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	deleted, err := tw.service.Delete(context.TODO(), got.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Equal(t, got.ID, deleted.ID)
+	assert.Equal(t, expected.ID, deleted.ID)
 	assert.IsType(t, domain.{{.DomainNamePascal}}{}, deleted)
-	assert.NotEmpty(t, deleted.DeletedAt)
-
-	get, err := tw.service.Get(context.TODO(), got.ID)
-	if err == nil {
-		t.Fatal("Record not deleted")
-	}
-
-	assert.ErrorIs(t, err, domain.ErrRecordNotFound)
-	assert.Empty(t, get)
 }
 
 func (ts *testSuite) TestDeleteNotFoundRecord() {
@@ -43,6 +35,9 @@ func (ts *testSuite) TestDeleteNotFoundRecord() {
 	t.Parallel()
 
 	tw := newTestWrapper(t)
+
+	tw.repo.On("Delete", mock.MatchedBy(tmock.AnyContextMatcher()), "some-id").
+		Return(domain.{{.DomainNamePascal}}{}, domain.ErrRecordNotFound)
 
 	got, err := tw.service.Delete(context.TODO(), "some-id")
 
@@ -56,17 +51,10 @@ func (ts *testSuite) TestDeleteUnexpectedError() {
 
 	tw := newTestWrapper(t)
 
-	got, err := tw.service.Create(context.TODO(), domain.{{.DomainNamePascal}}{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	tw.repo.On("Delete", mock.MatchedBy(tmock.AnyContextMatcher()), "some-id").
+		Return(domain.{{.DomainNamePascal}}{}, domain.ErrUnexpected)
 
-	db := tw.mc.Get(prvpostgres.ProviderName(prvpostgres.Prv{{.DBProviderFuncName}})).(interface{ Close() error })
-	if err := db.Close(); err != nil {
-		t.Fatal(err)
-	}
-
-	deleted, err := tw.service.Delete(context.TODO(), got.ID)
+	deleted, err := tw.service.Delete(context.TODO(), "some-id")
 	if err == nil {
 		t.Fatal("Expected error")
 	}

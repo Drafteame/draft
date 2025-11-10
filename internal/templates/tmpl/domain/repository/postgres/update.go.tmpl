@@ -16,10 +16,7 @@ func (r *Repository) Update(ctx context.Context, id string, fields options.Updat
 
 	updated := daos.ToUpdateDAO(id, fields)
 
-	dao, err := domain.ToDAO(entity)
-	if err != nil {
-		return domain.{{.DomainNamePascal}}{}, err
-	}
+	dao := daos.FromDomain(entity)
 
 	if err := r.driver.GetClient().Model(&dao).Updates(updated).Error; err != nil {
 		return domain.{{.DomainNamePascal}}{}, err

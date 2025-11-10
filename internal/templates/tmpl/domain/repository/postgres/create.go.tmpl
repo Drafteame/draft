@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
 func (r *Repository) Create(ctx context.Context, entity domain.{{.DomainNamePascal}}) (domain.{{.DomainNamePascal}}, error) {
@@ -18,10 +19,7 @@ func (r *Repository) Create(ctx context.Context, entity domain.{{.DomainNamePasc
 		entity.ID = id
 	}
 
-	dao, err := domain.ToDAO(entity)
-	if err != nil {
-		return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
-	}
+	dao := daos.FromDomain(entity)
 
 	if err := r.driver.GetClient().WithContext(ctx).Create(&dao).Error; err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {

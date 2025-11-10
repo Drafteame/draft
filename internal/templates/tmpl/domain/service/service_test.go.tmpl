@@ -2,63 +2,25 @@ package service
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 
-	"{{.PackageName}}/{{ .DomainPath }}/service"
-	"{{.PackageName}}/pkg/providers"
-	"{{.PackageName}}/pkg/providers/test/container"
-	"{{.PackageName}}/projects/framev2/pkg/datetime"
+	"{{.PackageName}}/{{ .DomainPath }}/service/mocks"
 )
 
 type testWrapper struct {
-	mc      *container.Container
-	clock   datetime.Clock
-	service *service.Service
+	repo    *mocks.MockRepository
+	service *Service
 }
 
-type testWrapperOptions struct {
-	mocks map[string]any
-}
-
-type testWrapperOption func(*testWrapperOptions)
-
-func withMocks(mocks map[string]any) testWrapperOption {
-	return func(o *testWrapperOptions) {
-		o.mocks = mocks
-	}
-}
-
-func newTestWrapper(t *testing.T, opts ...testWrapperOption) *testWrapper {
+func newTestWrapper(t *testing.T) *testWrapper {
 	t.Helper()
 
-	options := testWrapperOptions{}
-
-	for _, opt := range opts {
-		opt(&options)
-	}
-
-	clock := datetime.NewTestClock(time.Now())
-
-	mc := container.New(t)
-
-	for key, value := range options.mocks {
-		mc.Override(key, value)
-	}
-
-	srv := providers.MustAs[*service.Service](
-		t.Context(),
-		service.Provide,
-		providers.WithTestActor(t),
-		providers.WithClock(clock),
-		providers.WithContainer(mc),
-	)
+	repo := mocks.NewMockRepository(t)
 
 	return &testWrapper{
-		mc:      mc,
-		clock:   clock,
-		service: srv,
+		repo:    repo,
+		service: New(repo),
 	}
 }
 

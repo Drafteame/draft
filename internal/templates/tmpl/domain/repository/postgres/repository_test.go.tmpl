@@ -10,6 +10,7 @@ import (
 	"{{.PackageName}}/pkg/providers/test/container"
 	"{{.PackageName}}/projects/framev2/pkg/datetime"
 	"{{.PackageName}}/projects/framev2/pkg/drivers/gorm"
+	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
 type testWrapper struct {
@@ -56,6 +57,11 @@ func newTestWrapper(t *testing.T, opts ...testWrapperOption) *testWrapper {
 
 	{{.DomainNameLower}}GormDriver := mc.Get(prvpostgres.ProviderName(prvpostgres.Prv{{.DBProviderFuncName}})).(gorm.Driver)
 	clock := mc.Get(prvdatetime.PrvClock).(datetime.Clock)
+
+	db := {{.DomainNameLower}}GormDriver.GetClient()
+	if err := db.AutoMigrate(&daos.{{.DomainNamePascal}}{}); err != nil {
+		t.Fatalf("failed to migrate schema: %v", err)
+	}
 
 	return &testWrapper{
 		mc:              mc,

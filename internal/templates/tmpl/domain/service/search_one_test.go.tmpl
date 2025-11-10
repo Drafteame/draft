@@ -7,23 +7,17 @@ import (
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
-	"{{.PackageName}}/{{ .DomainPath }}/repository"
-	"{{.PackageName}}/{{ .DomainPath }}/service/mocks"
 )
 
 func (ts *testSuite) TestSearchOneSuccess() {
 	t := ts.T()
 	t.Parallel()
 
-	repo := mocks.NewMockRepository(t)
-
-	w := newTestWrapper(t, withMocks(map[string]any{
-		repository.PrvRepository: repo,
-	}))
+	w := newTestWrapper(t)
 
 	filters := options.NewSearchFilters()
 
-	repo.On("SearchOne", context.Background(), filters).
+	w.repo.On("SearchOne", context.Background(), filters).
 		Return(domain.{{.DomainNamePascal}}{ID: "some-id"}, nil)
 
 	got, err := w.service.SearchOne(context.Background(), filters)
@@ -38,16 +32,12 @@ func (ts *testSuite) TestSearchOneWhenRepositoryErrorShouldReturnTheSameError() 
 	t := ts.T()
 	t.Parallel()
 
-	repo := mocks.NewMockRepository(t)
-
-	w := newTestWrapper(t, withMocks(map[string]any{
-		repository.PrvRepository: repo,
-	}))
+	w := newTestWrapper(t)
 
 	filters := options.NewSearchFilters()
 
-	repo.On("SearchOne", context.Background(), filters).
-		Return(daos.{{.DomainNamePascal}}{}, assert.AnError)
+	w.repo.On("SearchOne", context.Background(), filters).
+		Return(domain.{{.DomainNamePascal}}{}, assert.AnError)
 
 	got, err := w.service.SearchOne(context.Background(), filters)
 	if err == nil {

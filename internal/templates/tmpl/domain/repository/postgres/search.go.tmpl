@@ -11,12 +11,12 @@ import (
 
 // Search finds records for the search options.
 func (r *Repository) Search(ctx context.Context, opts options.SearchOptions) ([]domain.{{.DomainNamePascal}}, int64, error) {
-	var daos []daos.{{.DomainNamePascal}}
-	client := r.driver.GetClient().Model(&daos)
+	var daoModels []daos.{{.DomainNamePascal}}
+	client := r.driver.GetClient().Model(&daoModels)
 
 	client = builders.SearchOptions(client, opts)
 
-	err := client.WithContext(ctx).Find(&daos).Error
+	err := client.WithContext(ctx).Find(&daoModels).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -26,13 +26,9 @@ func (r *Repository) Search(ctx context.Context, opts options.SearchOptions) ([]
 		client.Offset(-1).Count(&total)
 	}
 
-	result := make([]domain.{{.DomainNamePascal}}, 0, len(daos))
-	for _, dao := range daos {
-		model, err := domain.ToModel(dao)
-		if err != nil {
-			return nil, 0, err
-		}
-		result = append(result, model)
+	result := make([]domain.{{.DomainNamePascal}}, 0, len(daoModels))
+	for _, item := range daoModels {
+		result = append(result, daos.ToDomain(item))
 	}
 
 	return result, total, nil
