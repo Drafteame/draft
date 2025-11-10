@@ -1,21 +1,21 @@
 package worker
 
 import (
-    "context"
+	"context"
 
-    "{{ .PackageName }}/pkg/providers"
-    prvidempotency "{{ .PackageName }}/pkg/providers/idempotency"
+	"{{ .PackageName }}/pkg/providers"
+	prvidempotency "{{ .PackageName }}/pkg/providers/idempotency"
 	"{{ .PackageName }}/projects/framev2/pkg/tracer"
 
 )
 
 type Resources struct {
 	IdemService       IdempotencyService
-    // TODO: resources
+	// TODO: resources
 }
 
 func ProvideResources(ctx context.Context, opts ...providers.Option) (*Resources, error) {
-    _, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.snssqs.{{ .LambdaName }}.handler.worker.ProvideResources")
+	_, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.snssqs.{{ .LambdaName }}.handler.worker.ProvideResources")
 	defer span.Close(nil)
 
 	idemService, err := prvidempotency.ProvideTurbo(opts...) // TODO: change to correct idempotency provider
@@ -24,10 +24,10 @@ func ProvideResources(ctx context.Context, opts ...providers.Option) (*Resources
 		return nil, err
 	}
 
-    // TODO: Implement your resources logic here
+	// TODO: Implement your resources logic here
 
 	return &Resources{
 		IdemService:       idemService,
-        // TODO: resources
-    }, nil
+		// TODO: resources
+	}, nil
 }

@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"embed"
-	"os"
 
   "{{ .PackageName }}/config/loaders/parsers/yaml"
 	"{{ .PackageName }}/pkg/config/loader"
@@ -36,9 +35,9 @@ func Bootstrap() any {
 				return dtos.Output{}, err
 			}
 
-      if health.CheckHealthRequest(newCtx) {
-        return dtos.Output{}, nil
-      }
+	  if health.CheckHealthRequest(newCtx) {
+		return dtos.Output{}, nil
+	  }
 
 			return worker.Worker(r)(newCtx, input)
 		},

@@ -1,10 +1,10 @@
 package worker
 
 import (
-    "context"
+	"context"
 
-    "{{ .PackageName }}/pkg/consumer/base"
-    "{{ .PackageName }}/projects/framev2/pkg/log"
+	"{{ .PackageName }}/pkg/consumer/base"
+	"{{ .PackageName }}/projects/framev2/pkg/log"
 	"{{ .PackageName }}/projects/framev2/pkg/publisher/types"
 	"{{ .PackageName }}/projects/framev2/pkg/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}snssqs/{{ .LambdaName }}/handler/dtos"
@@ -16,14 +16,14 @@ const (
 )
 
 func Worker(r *Resources) base.Worker[types.Event[dtos.Event]] {
-    return func(ctx context.Context, event types.Event[dtos.Event]) error {
-        newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.snssqs.{{ .LambdaName }}.handler.worker.Worker")
-    	defer segment.Close(nil)
+	return func(ctx context.Context, event types.Event[dtos.Event]) error {
+		newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.snssqs.{{ .LambdaName }}.handler.worker.Worker")
+		defer segment.Close(nil)
 
-        // TODO: Implement your worker logic here
+		// TODO: Implement your worker logic here
 
-        log.Get().DebugContext(newCtx, "finish {{ .LambdaName }} worker")
+		log.Get().DebugContext(newCtx, "finish {{ .LambdaName }} worker")
 
-        return nil
-    }
+		return nil
+	}
 }

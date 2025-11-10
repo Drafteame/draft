@@ -34,7 +34,7 @@ var repoInstance Repository
 // If the STAGE environment variable is not set, it provides a test repository.
 func ProvideRepository(opts ...providers.Option) (Repository, error) {
   if os.Getenv("STAGE") == "" {
-    return provideTestRepository(opts...)
+	return provideTestRepository(opts...)
   }
 
   var initErr error
@@ -51,7 +51,7 @@ func ProvideRepository(opts ...providers.Option) (Repository, error) {
   })
 
   if initErr != nil {
-    return nil, initErr
+	return nil, initErr
   }
 
   return repoInstance, nil
@@ -61,20 +61,20 @@ func ProvideRepository(opts ...providers.Option) (Repository, error) {
 func provideTestRepository(opts ...providers.Option) (Repository, error) {
   options, err := providers.BuildOptions(opts...)
   if err != nil {
-    return nil, err
+	return nil, err
   }
 
   if options.Container.Exists(PrvRepository) {
-    svc, ok := options.Container.Get(PrvRepository).(Repository)
-    if !ok {
-      return nil, fmt.Errorf("saved object in '%s' doesn't implement provider Repository interface", PrvRepository)
-    }
-    return svc, nil
+	svc, ok := options.Container.Get(PrvRepository).(Repository)
+	if !ok {
+	  return nil, fmt.Errorf("saved object in '%s' doesn't implement provider Repository interface", PrvRepository)
+	}
+	return svc, nil
   }
 
   repo, err := createRepoInstance(opts...)
   if err != nil {
-    return nil, err
+	return nil, err
   }
 
   options.Container.Set(PrvRepository, repo)
@@ -86,17 +86,17 @@ func provideTestRepository(opts ...providers.Option) (Repository, error) {
 func createRepoInstance(opts ...providers.Option) (*repository.Repository, error) {
   gen, err := ProvideGeneratorID(opts...)
   if err != nil {
-    return nil, err
+	return nil, err
   }
 
   clock, err := prvclock.ProvideClock(opts...)
   if err != nil {
-    return nil, err
+	return nil, err
   }
 
   driver, err := prvpostgres.Provide{{.DBProviderFuncName}}(opts...)
   if err != nil {
-    return nil, err
+	return nil, err
   }
 
   repo := repository.New(driver, clock, gen)
