@@ -10,7 +10,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        draftVersion = "1.15.4";
+        draftVersion = "1.16.0";
       in
       {
         devShell = pkgs.mkShell {
@@ -43,7 +43,7 @@
           env.CGO_ENABLED = false;
           env.GOWORK = "off";
 
-          vendorHash = "sha256-bPM6EjmVVLf73WRufRoRPqcxtsBkmKxbL\/a7BtokDDk=";
+          vendorHash = "sha256-gZ0HCo\/Wr3I+JvjnkyFxHBQfv\/JP0c\/hBr71nK4rHj0=";
 
           meta = {
             description = "CLI tool for creating services and lambdas on Draftea monorepo";
