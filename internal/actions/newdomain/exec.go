@@ -15,9 +15,8 @@ func (nd *NewDomain) exec() error {
 		nd.createRepository,
 	}
 
-	// Only create providers and domain for postgres
 	if nd.input.DBType == "postgres" {
-		creators = append(creators, nd.createDomain, nd.createDomainProviders, nd.createGlobalProviders)
+		creators = append(creators, nd.createDomain, nd.createGlobalProviders)
 	}
 
 	for _, creator := range creators {
@@ -38,7 +37,6 @@ func (nd *NewDomain) createAllDirs() error {
 	// Only create postgres-specific directories
 	if nd.input.DBType == "postgres" {
 		dirList = append(dirList,
-			nd.input.DomainPath+"/providers",
 			nd.input.DomainPath+"/repository/builders",
 			nd.input.DomainPath+"/repository/daos",
 			nd.input.DomainPath+"/domain/options",
