@@ -10,18 +10,31 @@ import (
 )
 
 func (nd *NewDomain) exec() error {
-	creators := []func() error{
-		nd.createAllDirs,
-		nd.createService,
-		nd.createRepository,
+	// 1. Create directory structure
+	if err := nd.createAllDirs(); err != nil {
+		return err
 	}
 
+	// 2. Create domain layer (postgres only)
 	if nd.input.DBType == data.DBTypePostgres {
-		creators = append(creators, nd.createDomain, nd.createGlobalProviders)
+		if err := nd.createDomain(); err != nil {
+			return err
+		}
 	}
 
-	for _, creator := range creators {
-		if err := creator(); err != nil {
+	// 3. Create service layer
+	if err := nd.createService(); err != nil {
+		return err
+	}
+
+	// 4. Create repository layer
+	if err := nd.createRepository(); err != nil {
+		return err
+	}
+
+	// 5. Create global providers (postgres only)
+	if nd.input.DBType == data.DBTypePostgres {
+		if err := nd.createGlobalProviders(); err != nil {
 			return err
 		}
 	}
