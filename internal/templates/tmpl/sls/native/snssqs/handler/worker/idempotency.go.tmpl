@@ -1,10 +1,10 @@
 package worker
 
 import (
-    "context"
-    "fmt"
+	"context"
+	"fmt"
 
-    "{{ .PackageName }}/projects/framev2/pkg/logger"
+	"{{ .PackageName }}/projects/framev2/pkg/logger"
 	"{{ .PackageName }}/projects/framev2/pkg/publisher/types"
 	"{{ .PackageName }}/projects/framev2/pkg/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}snssqs/{{ .LambdaName }}/handler/dtos"

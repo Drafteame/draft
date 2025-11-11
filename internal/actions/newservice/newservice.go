@@ -118,8 +118,8 @@ func (ns *NewService) getEntries() []dtos.FileEntry {
 	lambdaPath := "/cmd/plain/"
 	if ns.input.IsLegacy {
 		lambdaPath = "/plain/"
-
 	}
+
 	entries = []dtos.FileEntry{
 		{Path: lambdaPath + ns.input.LambdaName + "/main.go", Data: ns.tmpl.Lambda.Plain.MainGo},
 		{Path: lambdaPath + ns.input.LambdaName + "/lambda-config.yml", Data: ns.tmpl.Lambda.Plain.LambdaConfigYAML},

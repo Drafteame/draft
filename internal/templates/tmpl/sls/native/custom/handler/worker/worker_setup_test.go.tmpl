@@ -1,0 +1,74 @@
+package worker
+
+import (
+	"context"
+	"encoding/json"
+	"testing"
+
+	"github.com/Drafteame/api/pkg/providers"
+	"github.com/Drafteame/api/pkg/providers/test/container"
+)
+
+type testWrapper struct {
+	// Real worker with real resources (contains real services, use cases, repositories)
+	worker func(ctx context.Context, input json.RawMessage) (any, error)
+
+	// Real resources from provider
+	resources *Resources
+
+	// Test container for managing dependencies
+	mc *container.Container
+}
+
+type testWrapperOptions struct {
+	overrides map[string]any
+}
+
+type testWrapperOption func(*testWrapperOptions)
+
+func withOverrides(overrides map[string]any) testWrapperOption {
+	return func(opts *testWrapperOptions) {
+		opts.overrides = overrides
+	}
+}
+
+func newTestWrapper(t *testing.T, opts ...testWrapperOption) *testWrapper {
+	t.Helper()
+
+	options := testWrapperOptions{}
+	for _, opt := range opts {
+		opt(&options)
+	}
+
+	// Create test container
+	mc := container.New(t)
+
+	// Apply overrides if provided
+	if options.overrides != nil {
+		for k, v := range options.overrides {
+			mc.Override(k, v)
+		}
+	}
+
+	// Use the main provider (ProvideResources) - builds REAL worker with REAL services
+	// Container automatically provides mocked infrastructure
+	r := providers.MustAs[*Resources](t.Context(), ProvideResources,
+		providers.WithTestActor(t),
+		providers.WithContainer(mc),
+	)
+
+	// TODO: Get mocked infrastructure from container if needed
+	// Example:
+	// sqsMock := mc.Get(prvqueues.ProvideNameMock(prvqueues.PrvMyQueue)).(*sqsmocks.AwsSqsClient)
+	// snsMock := mc.Get(prvtopics.ProvideNameMock(prvtopics.PrvMyTopic)).(*snsmocks.AwsSnsClient)
+
+	// TODO: Get real databases from container if needed
+	// Example:
+	// usersPG := mc.Get(prvpostgres.ProviderName(prvpostgres.PrvUsers)).(gorm.Driver)
+
+	return &testWrapper{
+		worker:    Worker(r),
+		resources: r,
+		mc:        mc,
+	}
+}
