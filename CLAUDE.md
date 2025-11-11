@@ -50,6 +50,10 @@ draft local:setup
 draft local:migrate:up
 draft local:migrate:down
 draft local:migrate:force
+
+# Sentry project management
+draft sentry:project:create
+draft sentry:project:delete
 ```
 
 ### Global Flags
@@ -82,8 +86,8 @@ Key action patterns:
 
 ### Template System
 Templates are embedded at compile time using `//go:embed` in `internal/templates/`. Template types:
-- **Serverless templates** (`tmpl/sls/`): Service boilerplate, Lambda functions (HTTP, Cron, SQS, SNS+SQS, Plain)
-- **Domain templates** (`tmpl/domain/`): Domain-driven design layers (domain, service, repository with Postgres support)
+- **Serverless templates** (`tmpl/sls/`): Service boilerplate, Lambda functions (HTTP, Cron, SQS, SNS+SQS, Plain, Custom)
+- **Domain templates** (`tmpl/domain/`): Domain-driven design layers (domain, service, repository with Postgres and DynamoDB support)
 
 Templates use Go's `text/template` and are loaded via `loadTemplate()` helper.
 
@@ -94,6 +98,17 @@ The tool generates different Lambda structures based on trigger type:
 - **SQS**: Queue-based processing with idempotency
 - **SNS+SQS**: Combined SNS topic and SQS queue processing
 - **Plain**: Generic Lambda for custom event sources
+- **Custom**: User-defined custom event sources with configurable type path and optional idempotency
+
+### Domain Generation
+When creating domains with `draft new:domain`, the tool prompts for:
+- Domain path (automatically prefixed with `domains/` if not present)
+- Database type selection (Postgres or DynamoDB)
+- Database-specific configuration (table names, prefixes, etc.)
+
+Domain structure varies by database type:
+- **Postgres**: Full CRUD with service layer, repository layer, builders, DAOs, providers, and domain models with search/filter capabilities
+- **DynamoDB**: Simplified structure with repository and service layers optimized for NoSQL patterns
 
 ### Project Detection
 `internal/project/` contains utilities for:
@@ -158,3 +173,14 @@ The project uses Nix flakes (`flake.nix`) for:
 - Version management of Nix modules
 - Script `update-nix-hashes.sh` updates vendor hashes
 - `internal/pkg/version/nix/` checks Nix module versions on startup
+
+## Development Notes
+
+### Current Branch State
+The current working branch may contain merge conflicts or work in progress. Key files to check:
+- `internal/actions/newdomain/exec.go` - Contains logic for creating domains with both Postgres and DynamoDB support
+- `internal/templates/domains_*.go` - Template loaders for domain generation
+
+### Recent Features
+- **DynamoDB Support**: Added in commit `fda92fc`. Domains can now be generated with DynamoDB as the backing database
+- **Custom Lambda Type**: New lambda type allowing custom event sources with configurable type paths

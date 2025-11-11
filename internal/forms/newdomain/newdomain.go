@@ -21,6 +21,10 @@ func GetForm(input *dtos.DomainInput) error {
 		if err := postgresForm(input); err != nil {
 			return err
 		}
+	case "dynamo":
+		if err := dynamoForm(input); err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("database type %s not supported", input.DBType)
 	}

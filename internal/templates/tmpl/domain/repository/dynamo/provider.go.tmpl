@@ -5,14 +5,12 @@ import (
 	"sync"
 
 	"{{.PackageName}}/pkg/providers"
-	prvdatetime "{{.PackageName}}/pkg/providers/datetime"
-	prvgenerator "{{.PackageName}}/pkg/providers/generators/nanoid/tableid"
-	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
 	"{{.PackageName}}/projects/framev2/pkg/stage"
+	dynamov2 "{{.PackageName}}/pkg/providers/dynamo/v2"
 	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
-const PrvRepo = "domains.{{ .DomainNameLower }}.repository"
+const PrvRepository = "domains.{{ .DomainNameLower }}.repository"
 
 var (
 	instance any
@@ -53,8 +51,8 @@ func provideTest(ctx context.Context, opt ...providers.Option) (any, error) {
 		return nil, err
 	}
 
-	if options.Container.Exists(PrvRepo) {
-		return options.Container.Get(PrvRepo), nil
+	if options.Container.Exists(PrvRepository) {
+		return options.Container.Get(PrvRepository), nil
 	}
 
 	aux, err := createInstance(ctx, opt...)
@@ -62,25 +60,20 @@ func provideTest(ctx context.Context, opt ...providers.Option) (any, error) {
 		return nil, err
 	}
 
-	options.Container.Set(PrvRepo, aux)
+	options.Container.Set(PrvRepository, aux)
 
 	return aux, nil
 }
 
-func createInstance(ctx context.Context, opts ...providers.Option) (any, error) {
+func createInstance(ctx context.Context, opts ...providers.Option) (*Repository, error) {
 	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.createInstance")
 	defer span.Close(nil)
 
-	postgres{{.DomainNamePascal}}, err := prvpostgres.Provide{{.DBProviderFuncName}}(opts...)
+	dynamoDriver, err := providers.As[Dynamo](newCtx, dynamov2.Provide, opts...)
 	if err != nil {
 		_ = span.AddError(err)
 		return nil, err
 	}
 
-	clock := providers.MustAs[Clock](newCtx, prvdatetime.ProvideClock, opts...)
-
-	generatorID := providers.MustAs[GeneratorID](newCtx, prvgenerator.Provide{{.DomainNamePascal}}, opts...)
-
-	return New(postgres{{.DomainNamePascal}}, clock, generatorID), nil
+	return New(dynamoDriver), nil
 }
-
