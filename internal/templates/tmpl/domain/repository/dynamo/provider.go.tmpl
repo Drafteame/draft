@@ -66,7 +66,7 @@ func provideTest(ctx context.Context, opt ...providers.Option) (any, error) {
 }
 
 func createInstance(ctx context.Context, opts ...providers.Option) (*Repository, error) {
-	newCtx, span := tracer.BeginSubSegment(ctx, "domains.a.repository.createInstance")
+	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.createInstance")
 	defer span.Close(nil)
 
 	dynamoDriver, err := providers.As[Dynamo](newCtx, dynamov2.Provide, opts...)
