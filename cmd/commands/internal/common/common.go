@@ -17,6 +17,26 @@ func ChDir(cmd *cobra.Command) {
 	}
 
 	if err := os.Chdir(workDir); err != nil {
-		log.Exitf(1, "Failed to change working directory: %v", err)
+		log.Exitf(1, "failed to change working directory: %v", err)
 	}
+}
+
+// GetBoolFlag retrieves a boolean flag value from a cobra command.
+// Logs an error and exits if the flag cannot be retrieved.
+func GetBoolFlag(cmd *cobra.Command, name string) bool {
+	val, err := cmd.Flags().GetBool(name)
+	if err != nil {
+		log.Exitf(1, "failed to obtain %s flag: %s", name, err.Error())
+	}
+	return val
+}
+
+// GetStringFlag retrieves a string flag value from a cobra command.
+// Logs an error and exits if the flag cannot be retrieved.
+func GetStringFlag(cmd *cobra.Command, name string) string {
+	val, err := cmd.Flags().GetString(name)
+	if err != nil {
+		log.Exitf(1, "failed to obtain %s flag: %s", name, err.Error())
+	}
+	return val
 }

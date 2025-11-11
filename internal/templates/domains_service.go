@@ -1,10 +1,48 @@
 package templates
 
 import (
+	appdata "github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 )
 
 type Service struct {
+	Postgres ServicePostgres
+	Dynamo   ServiceDynamo
+}
+
+func loadDomainsService(v *Service, data any) error {
+	input, ok := data.(dtos.DomainInput)
+	if !ok {
+		return nil
+	}
+
+	var loaders []func(*Service, any) error
+
+	switch input.DBType {
+	case appdata.DBTypePostgres:
+		loaders = append(loaders, loadServicePostgres)
+	case appdata.DBTypeDynamo:
+		loaders = append(loaders, loadServiceDynamo)
+	}
+
+	for _, loader := range loaders {
+		if err := loader(v, data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func loadServicePostgres(v *Service, data any) error {
+	return loadDomainsServicePostgres(&v.Postgres, data)
+}
+
+func loadServiceDynamo(v *Service, data any) error {
+	return loadDomainsServiceDynamo(&v.Dynamo, data)
+}
+
+type ServicePostgres struct {
 	CreateGo        []byte
 	CreateTestGo    []byte
 	DeleteGo        []byte
@@ -21,38 +59,26 @@ type Service struct {
 	UpdateGo        []byte
 	UpdateTestGo    []byte
 	ProvideGo       []byte
-	Dynamo          ServiceDynamo
 }
 
-func loadDomainsService(v *Service, data any) error {
-	var loaders []func(*Service, any) error
-
-	// Only load type-specific templates based on DBType
-	input, ok := data.(dtos.DomainInput)
-	if ok {
-		switch input.DBType {
-		case "postgres":
-			loaders = append(loaders,
-				loadServiceCreateGo,
-				loadServiceCreateTestGo,
-				loadServiceDeleteGo,
-				loadServiceDeleteTestGo,
-				loadServiceGetGo,
-				loadServiceGetTestGo,
-				loadServiceInterfaces,
-				loadServiceSearchGo,
-				loadServiceSearchTestGo,
-				loadServiceSearchOneGo,
-				loadServiceSearchOneTestGo,
-				loadServiceServiceGo,
-				loadServiceServiceTestGo,
-				loadServiceUpdateGo,
-				loadServiceUpdateTestGo,
-				loadServiceProvideGo,
-			)
-		case "dynamo":
-			loaders = append(loaders, loadServiceDynamo)
-		}
+func loadDomainsServicePostgres(v *ServicePostgres, data any) error {
+	loaders := []func(*ServicePostgres, any) error{
+		loadServicePostgresCreateGo,
+		loadServicePostgresCreateTestGo,
+		loadServicePostgresDeleteGo,
+		loadServicePostgresDeleteTestGo,
+		loadServicePostgresGetGo,
+		loadServicePostgresGetTestGo,
+		loadServicePostgresInterfacesGo,
+		loadServicePostgresSearchGo,
+		loadServicePostgresSearchTestGo,
+		loadServicePostgresSearchOneGo,
+		loadServicePostgresSearchOneTestGo,
+		loadServicePostgresServiceGo,
+		loadServicePostgresServiceTestGo,
+		loadServicePostgresUpdateGo,
+		loadServicePostgresUpdateTestGo,
+		loadServicePostgresProvideGo,
 	}
 
 	for _, loader := range loaders {
@@ -64,13 +90,9 @@ func loadDomainsService(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceDynamo(v *Service, data any) error {
-	return loadDomainsServiceDynamo(&v.Dynamo, data)
-}
-
-func loadServiceCreateGo(v *Service, data any) error {
-	name := "domains/service/create.go"
-	path := "tmpl/domain/service/create.go.tmpl"
+func loadServicePostgresCreateGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/create.go"
+	path := "tmpl/domain/service/postgres/create.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -82,9 +104,9 @@ func loadServiceCreateGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceCreateTestGo(v *Service, data any) error {
-	name := "domains/service/create_test.go"
-	path := "tmpl/domain/service/create_test.go.tmpl"
+func loadServicePostgresCreateTestGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/create_test.go"
+	path := "tmpl/domain/service/postgres/create_test.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -96,9 +118,9 @@ func loadServiceCreateTestGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceDeleteGo(v *Service, data any) error {
-	name := "domains/service/delete.go"
-	path := "tmpl/domain/service/delete.go.tmpl"
+func loadServicePostgresDeleteGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/delete.go"
+	path := "tmpl/domain/service/postgres/delete.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -110,9 +132,9 @@ func loadServiceDeleteGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceDeleteTestGo(v *Service, data any) error {
-	name := "domains/service/delete_test.go"
-	path := "tmpl/domain/service/delete_test.go.tmpl"
+func loadServicePostgresDeleteTestGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/delete_test.go"
+	path := "tmpl/domain/service/postgres/delete_test.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -124,9 +146,9 @@ func loadServiceDeleteTestGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceGetGo(v *Service, data any) error {
-	name := "domains/service/get.go"
-	path := "tmpl/domain/service/get.go.tmpl"
+func loadServicePostgresGetGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/get.go"
+	path := "tmpl/domain/service/postgres/get.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -138,9 +160,9 @@ func loadServiceGetGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceGetTestGo(v *Service, data any) error {
-	name := "domains/service/get_test.go"
-	path := "tmpl/domain/service/get_test.go.tmpl"
+func loadServicePostgresGetTestGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/get_test.go"
+	path := "tmpl/domain/service/postgres/get_test.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -152,9 +174,9 @@ func loadServiceGetTestGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceInterfaces(v *Service, data any) error {
-	name := "domains/service/interfaces.go"
-	path := "tmpl/domain/service/interfaces.go.tmpl"
+func loadServicePostgresInterfacesGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/interfaces.go"
+	path := "tmpl/domain/service/postgres/interfaces.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -166,9 +188,9 @@ func loadServiceInterfaces(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceSearchGo(v *Service, data any) error {
-	name := "domains/service/search.go"
-	path := "tmpl/domain/service/search.go.tmpl"
+func loadServicePostgresSearchGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/search.go"
+	path := "tmpl/domain/service/postgres/search.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -180,9 +202,9 @@ func loadServiceSearchGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceSearchTestGo(v *Service, data any) error {
-	name := "domains/service/search_test.go"
-	path := "tmpl/domain/service/search_test.go.tmpl"
+func loadServicePostgresSearchTestGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/search_test.go"
+	path := "tmpl/domain/service/postgres/search_test.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -194,9 +216,9 @@ func loadServiceSearchTestGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceSearchOneGo(v *Service, data any) error {
-	name := "domains/service/search_one.go"
-	path := "tmpl/domain/service/search_one.go.tmpl"
+func loadServicePostgresSearchOneGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/search_one.go"
+	path := "tmpl/domain/service/postgres/search_one.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -208,9 +230,9 @@ func loadServiceSearchOneGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceSearchOneTestGo(v *Service, data any) error {
-	name := "domains/service/search_one_test.go"
-	path := "tmpl/domain/service/search_one_test.go.tmpl"
+func loadServicePostgresSearchOneTestGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/search_one_test.go"
+	path := "tmpl/domain/service/postgres/search_one_test.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -222,9 +244,9 @@ func loadServiceSearchOneTestGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceServiceGo(v *Service, data any) error {
-	name := "domains/service/service.go"
-	path := "tmpl/domain/service/service.go.tmpl"
+func loadServicePostgresServiceGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/service.go"
+	path := "tmpl/domain/service/postgres/service.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -236,9 +258,9 @@ func loadServiceServiceGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceServiceTestGo(v *Service, data any) error {
-	name := "domains/service/service_test.go"
-	path := "tmpl/domain/service/service_test.go.tmpl"
+func loadServicePostgresServiceTestGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/service_test.go"
+	path := "tmpl/domain/service/postgres/service_test.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -250,9 +272,9 @@ func loadServiceServiceTestGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceUpdateGo(v *Service, data any) error {
-	name := "domains/service/update.go"
-	path := "tmpl/domain/service/update.go.tmpl"
+func loadServicePostgresUpdateGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/update.go"
+	path := "tmpl/domain/service/postgres/update.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -264,9 +286,9 @@ func loadServiceUpdateGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceUpdateTestGo(v *Service, data any) error {
-	name := "domains/service/update_test.go"
-	path := "tmpl/domain/service/update_test.go.tmpl"
+func loadServicePostgresUpdateTestGo(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/update_test.go"
+	path := "tmpl/domain/service/postgres/update_test.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, domain)
 	if err != nil {
@@ -278,7 +300,7 @@ func loadServiceUpdateTestGo(v *Service, data any) error {
 	return nil
 }
 
-func loadServiceProvideGo(v *Service, data any) error {
+func loadServicePostgresProvideGo(v *ServicePostgres, data any) error {
 	name := "domains/service/postgres/provide.go"
 	path := "tmpl/domain/service/postgres/provide.go.tmpl"
 

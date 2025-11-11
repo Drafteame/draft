@@ -1,5 +1,9 @@
 package newdomain
 
+import (
+	"github.com/Drafteame/draft/internal/data"
+)
+
 func (nd *NewDomain) postCreate() error {
 	actions := []func() error{
 		nd.mockery,
@@ -7,7 +11,7 @@ func (nd *NewDomain) postCreate() error {
 	}
 
 	// Only add postgres models for postgres DB
-	if nd.input.DBType == "postgres" {
+	if nd.input.DBType == data.DBTypePostgres {
 		actions = append([]func() error{nd.postgresModels}, actions...)
 	}
 

@@ -24,9 +24,20 @@ func (nd *NewDomain) Exec() error {
 
 	nd.tmpl = tmpl
 
-	if errExec := nd.exec(); errExec != nil {
-		return errExec
+	if err := nd.preCreate(); err != nil {
+		return err
+	}
+
+	if err := nd.exec(); err != nil {
+		return err
 	}
 
 	return nd.postCreate()
+}
+
+// preCreate performs validation and setup before domain creation
+func (nd *NewDomain) preCreate() error {
+	// Future validations can be added here
+	// Example: check if domain path already exists
+	return nil
 }
