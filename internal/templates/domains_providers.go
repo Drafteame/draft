@@ -13,17 +13,15 @@ type Providers struct {
 }
 
 func loadDomainsProviders(v *Providers, data any) error {
-	var loaders []func(*Providers, any) error
+	loaders := []func(*Providers, any) error{
+		loadProvidersGeneratorGo,
+		loadProvidersServiceGo,
+	}
 
-	// Only load providers for postgres
+	// Only load postgres-specific providers for postgres
 	input, ok := data.(dtos.DomainInput)
 	if ok && input.DBType == appdata.DBTypePostgres {
-		loaders = []func(*Providers, any) error{
-			loadProvidersGeneratorGo,
-			loadProvidersServiceGo,
-			loadProvidersPostgres,
-			loadProvidersGeneratorsNanoidTableid,
-		}
+		loaders = append(loaders, loadProvidersPostgres, loadProvidersGeneratorsNanoidTableid)
 	}
 
 	for _, loader := range loaders {

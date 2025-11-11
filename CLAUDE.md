@@ -61,6 +61,10 @@ draft sentry:project:delete
 - `-d, --debug`: Enable debug mode
 - `-t, --tty`: TTY mode (default: true)
 
+### Service and Lambda Specific Flags
+- `--use-dig`: Use Uber Dig for dependency injection instead of default pattern
+- `-l, --legacy-path`: Path to legacy service (use legacy folder structure)
+
 ## Architecture
 
 ### Command Structure
@@ -174,16 +178,19 @@ Services use Pkl (configuration language) for app config:
 
 ### Placeholder Tag System
 The codebase uses placeholder comments to mark insertion points for incremental additions:
-- `data.NextImportTag` - Marks where to insert new imports in `deps.go`
-- `data.NextLambdaImportTag` - Marks where to insert new lambda references in `serverless.yml`
+- `data.NextImportTag` (`//draft:next-import`) - Marks where to insert new imports in `deps.go`
+- `data.NextLambdaImportTag` (`#draft:next-lambda-import`) - Marks where to insert new lambda references in `serverless.yml`
+- `data.NextDbModelTag` (`//draft:next-db-model`) - Marks where to insert new database models in Postgres provider test migrations
 
-Post-create hooks use string replacement to insert new content while preserving the tag for future additions. This pattern avoids AST parsing for file manipulation.
+Post-create hooks use string replacement to insert new content while preserving the tag for future additions. This pattern avoids AST parsing for file manipulation. The tags are defined in `internal/data/tags.go`.
 
 ## Nix Integration
 The project uses Nix flakes (`flake.nix`) for:
 - Version management of Nix modules
-- Script `update-nix-hashes.sh` updates vendor hashes
-- `internal/pkg/version/nix/` checks Nix module versions on startup
+- Script `update-nix-hashes.sh` updates vendor hashes for the Nix flake
+- `internal/pkg/nix-metadata/` checks Nix module versions on startup
+- Nix metadata is stored in `$HOME/.config/.nix-metadata.json` containing system info, git user info, and version information
+- The tool prompts for Nix module updates if version is outdated (checked every 24 hours, prompts every 2 hours if declined)
 
 ## Key Implementation Patterns
 
@@ -203,6 +210,11 @@ New lambdas are added to existing files via string replacement:
 2. `addToServerlessYAML()` - Adds lambda reference to `serverless.yml`
 3. `format()` - Runs goimports/gofmt on modified files
 4. `restoreDepsTag()` - Re-adds placeholder tag for next insertion
+
+New domains have a different post-create flow:
+1. `postgresModels()` (Postgres only) - Adds domain DAOs to provider test migrations using `NextDbModelTag`
+2. `mockery()` - Adds domain service/repository packages to `.mockery.yml` and runs mockery to generate mocks
+3. `format()` - Runs goimports/gofmt on generated files
 
 ### Global State Usage
 Minimal global state in `internal/data/`:

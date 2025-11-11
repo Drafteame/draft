@@ -10,31 +10,18 @@ import (
 )
 
 func (nd *NewDomain) exec() error {
-	// 1. Create directory structure
-	if err := nd.createAllDirs(); err != nil {
-		return err
+	creators := []func() error{
+		nd.createAllDirs,
+		nd.createService,
+		nd.createRepository,
 	}
 
-	// 2. Create domain layer (postgres only)
 	if nd.input.DBType == data.DBTypePostgres {
-		if err := nd.createDomain(); err != nil {
-			return err
-		}
+		creators = append(creators, nd.createDomain, nd.createGlobalProviders)
 	}
 
-	// 3. Create service layer
-	if err := nd.createService(); err != nil {
-		return err
-	}
-
-	// 4. Create repository layer
-	if err := nd.createRepository(); err != nil {
-		return err
-	}
-
-	// 5. Create nanoid provider (postgres only)
-	if nd.input.DBType == data.DBTypePostgres {
-		if err := nd.createNanoidProvider(); err != nil {
+	for _, creator := range creators {
+		if err := creator(); err != nil {
 			return err
 		}
 	}
@@ -187,7 +174,7 @@ func (nd *NewDomain) createDomain() error {
 	return nd.createFiles(fileList)
 }
 
-func (nd *NewDomain) createNanoidProvider() error {
+func (nd *NewDomain) createGlobalProviders() error {
 	fileList := []dtos.FileEntry{
 		{Path: "pkg/providers/generators/nanoid/tableid/" + nd.input.DomainNameLower + ".go", Data: nd.tmpl.Providers.GeneratorsNanoidTableid.ProvideGo},
 	}
