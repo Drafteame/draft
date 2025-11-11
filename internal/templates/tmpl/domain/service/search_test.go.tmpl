@@ -1,15 +1,12 @@
-package service_test
+package service
 
 import (
 	"context"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
-	prv{{.DomainNameLower}} "{{.PackageName}}/{{ .DomainPath }}/providers"
-	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
-	"{{.PackageName}}/{{ .DomainPath }}/service/mocks"
 	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
 )
 
@@ -17,13 +14,9 @@ func (ts *testSuite) TestSearchSuccess() {
 	t := ts.T()
 	t.Parallel()
 
-	repo := mocks.NewMockRepository(t)
+	w := newTestWrapper(t)
 
-	w := newTestWrapper(t, withMocks(map[string]any{
-		prv{{.DomainNameLower}}.PrvRepository: repo,
-	}))
-
-	data := []daos.{{.DomainNamePascal}}{
+	data := []domain.{{.DomainNamePascal}}{
 		{ID: "someid-1"},
 		{ID: "someid-2"},
 		{ID: "someid-3"},
@@ -32,7 +25,7 @@ func (ts *testSuite) TestSearchSuccess() {
 	opts := options.NewSearchOptions().
 		Limit(10)
 
-	repo.On("Search", mock.MatchedBy(tmock.AnyContextMatcher()), opts).
+	w.repo.On("Search", tmock.AnyContext(), opts).
 		Return(data, int64(3), nil)
 
 	got, total, err := w.service.Search(context.TODO(), opts)
@@ -48,20 +41,16 @@ func (ts *testSuite) TestSearchWhenLimitIsZeroShouldAppliedTheDefaultLimit() {
 	t := ts.T()
 	t.Parallel()
 
-	repo := mocks.NewMockRepository(t)
+	w := newTestWrapper(t)
 
-	w := newTestWrapper(t, withMocks(map[string]any{
-		prv{{.DomainNameLower}}.PrvRepository: repo,
-	}))
-
-	data := []daos.{{.DomainNamePascal}}{
+	data := []domain.{{.DomainNamePascal}}{
 		{ID: "someid-1"},
 		{ID: "someid-2"},
 		{ID: "someid-3"},
 	}
 
 	optsWithDefaultLimit := options.NewSearchOptions().Limit(options.DefaultPaginationLimit)
-	repo.On("Search", mock.MatchedBy(tmock.AnyContextMatcher()), optsWithDefaultLimit).
+	w.repo.On("Search", tmock.AnyContext(), optsWithDefaultLimit).
 		Return(data, int64(3), nil)
 
 	opts := options.NewSearchOptions()
@@ -78,20 +67,16 @@ func (ts *testSuite) TestSearchWhenLimitIsGreaterThanTheMaxShouldAppliedTheMaxLi
 	t := ts.T()
 	t.Parallel()
 
-	repo := mocks.NewMockRepository(t)
+	w := newTestWrapper(t)
 
-	w := newTestWrapper(t, withMocks(map[string]any{
-		prv{{.DomainNameLower}}.PrvRepository: repo,
-	}))
-
-	data := []daos.{{.DomainNamePascal}}{
+	data := []domain.{{.DomainNamePascal}}{
 		{ID: "someid-1"},
 		{ID: "someid-2"},
 		{ID: "someid-3"},
 	}
 
 	optsWithMaxLimit := options.NewSearchOptions().Limit(options.MaxPaginationLimit)
-	repo.On("Search", context.TODO(), optsWithMaxLimit).Return(data, int64(3), nil)
+	w.repo.On("Search", tmock.AnyContext(), optsWithMaxLimit).Return(data, int64(3), nil)
 
 	opts := options.NewSearchOptions().Limit(9999)
 	got, total, err := w.service.Search(context.TODO(), opts)
@@ -107,20 +92,16 @@ func (ts *testSuite) TestSearchWhenOffsetIsLowerThanZeroShouldBeZero() {
 	t := ts.T()
 	t.Parallel()
 
-	repo := mocks.NewMockRepository(t)
+	w := newTestWrapper(t)
 
-	w := newTestWrapper(t, withMocks(map[string]any{
-		prv{{.DomainNameLower}}.PrvRepository: repo,
-	}))
-
-	data := []daos.{{.DomainNamePascal}}{
+	data := []domain.{{.DomainNamePascal}}{
 		{ID: "someid-1"},
 		{ID: "someid-2"},
 		{ID: "someid-3"},
 	}
 
 	optsWithMaxLimit := options.NewSearchOptions().Offset(0)
-	repo.On("Search", mock.MatchedBy(tmock.AnyContextMatcher()), optsWithMaxLimit).
+	w.repo.On("Search", tmock.AnyContext(), optsWithMaxLimit).
 		Return(data, int64(3), nil)
 
 	opts := options.NewSearchOptions().Offset(-1)
@@ -137,14 +118,10 @@ func (ts *testSuite) TestSearchWhenRepositoryErrorShouldReturnError() {
 	t := ts.T()
 	t.Parallel()
 
-	repo := mocks.NewMockRepository(t)
-
-	w := newTestWrapper(t, withMocks(map[string]any{
-		prv{{.DomainNameLower}}.PrvRepository: repo,
-	}))
+	w := newTestWrapper(t)
 
 	opts := options.NewSearchOptions()
-	repo.On("Search", mock.MatchedBy(tmock.AnyContextMatcher()), opts).
+	w.repo.On("Search", tmock.AnyContext(), opts).
 		Return(nil, int64(0), assert.AnError)
 
 	got, total, err := w.service.Search(context.TODO(), opts)

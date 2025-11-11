@@ -1,0 +1,42 @@
+package handler
+
+import (
+	"context"
+	"embed"
+	"encoding/json"
+
+	"{{ .PackageName }}/config/loaders/parsers/yaml"
+	"{{ .PackageName }}/pkg/config/loader"
+	"{{ .PackageName }}/pkg/config/loader/readers"
+	"{{ .PackageName }}/pkg/lambda/decorators"
+	"{{ .PackageName }}/pkg/lambda/decorators/health"
+  "{{ .PackageName }}/pkg/providers"
+	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}{{ .CustomTypePath }}/{{ .LambdaName }}/handler/worker"
+)
+
+
+//go:embed embed/*.yaml
+var embedFs embed.FS
+
+// Bootstrap is the entrypoint of the lambda
+func Bootstrap() any {
+	return decorators.Handle(
+		func(ctx context.Context, input json.RawMessage) (any, error) {
+			newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.{{ .CustomTypePath }}.{{ .LambdaName }}.handler.Bootstrap")
+			defer span.Close(nil)
+
+			loader.LoadConfigs(newCtx, loader.WithReaders(
+				readers.Embed(embedFs, "embed/.app-config.yaml", yaml.Parser(), readers.IsRequired()),
+			))
+
+			r := providers.MustAs[*worker.Resources](newCtx, worker.ProvideResources)
+
+			if health.CheckHealthRequest(newCtx) {
+				return nil, nil
+			}
+
+			return worker.Worker(r)(newCtx, input)
+		},
+	)
+}

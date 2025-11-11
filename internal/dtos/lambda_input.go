@@ -7,6 +7,7 @@ type LambdaInput struct {
 	ServiceName         string
 	LambdaName          string
 	LambdaType          string
+	CustomTypePath      string
 	FrameVersion        string
 	QueueARN            string
 	HTTPPath            string
@@ -19,4 +20,5 @@ type LambdaInput struct {
 	IsLegacy            bool
 	UseDig              bool
 	ReservedConcurrency string
+	UseIdempotency      bool
 }

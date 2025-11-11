@@ -5,10 +5,11 @@ import (
 )
 
 type Providers struct {
-	GeneratorGo []byte
-	ProvidersGo []byte
-	ServiceGo   []byte
-	Postgres    ProvidersPostgres
+	GeneratorGo             []byte
+	ProvidersGo             []byte
+	ServiceGo               []byte
+	Postgres                ProvidersPostgres
+	GeneratorsNanoidTableid ProvidersGeneratorsNanoidTableid
 }
 
 func loadDomainsProviders(v *Providers, data any) error {
@@ -17,9 +18,10 @@ func loadDomainsProviders(v *Providers, data any) error {
 		loadProvidersServiceGo,
 	}
 
+	// Only load postgres-specific providers for postgres
 	input, ok := data.(dtos.DomainInput)
 	if ok && input.DBType == "postgres" {
-		loaders = append(loaders, loadProvidersPostgres)
+		loaders = append(loaders, loadProvidersPostgres, loadProvidersGeneratorsNanoidTableid)
 	}
 
 	for _, loader := range loaders {
@@ -91,6 +93,42 @@ func loadProvidersPostgresRepositoryGo(v *ProvidersPostgres, data any) error {
 	}
 
 	v.RepositoryGo = content
+
+	return nil
+}
+
+func loadProvidersGeneratorsNanoidTableid(v *Providers, data any) error {
+	return loadDomainProvidersGeneratorsNanoidTableid(&v.GeneratorsNanoidTableid, data)
+}
+
+type ProvidersGeneratorsNanoidTableid struct {
+	ProvideGo []byte
+}
+
+func loadDomainProvidersGeneratorsNanoidTableid(v *ProvidersGeneratorsNanoidTableid, data any) error {
+	loaders := []func(*ProvidersGeneratorsNanoidTableid, any) error{
+		loadProvidersGeneratorsNanoidTableidProvideGo,
+	}
+
+	for _, loader := range loaders {
+		if err := loader(v, data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func loadProvidersGeneratorsNanoidTableidProvideGo(v *ProvidersGeneratorsNanoidTableid, data any) error {
+	name := "domains/providers/generators/nanoid/tableid/provide.go"
+	path := "tmpl/domain/providers/generators/nanoid/tableid/provide.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.ProvideGo = content
 
 	return nil
 }

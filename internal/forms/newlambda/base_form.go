@@ -72,6 +72,7 @@ func baseForm(input *dtos.LambdaInput) error {
 			"SNS+SQS": "snssqs",
 			"HTTP":    "http",
 			"Cron":    "cron",
+			"Custom":  "custom",
 		}),
 	)
 

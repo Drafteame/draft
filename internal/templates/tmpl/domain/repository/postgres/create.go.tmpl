@@ -7,30 +7,37 @@ import (
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
-func (r *Repository) Create(ctx context.Context, entity daos.{{.DomainNamePascal}}) (daos.{{.DomainNamePascal}}, error) {
+func (r *Repository) Create(ctx context.Context, entity domain.{{.DomainNamePascal}}) (domain.{{.DomainNamePascal}}, error) {
+	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.Create")
+	defer span.Close(nil)
+
 	if entity.ID == "" {
 		id, err := r.genID.Generate()
 		if err != nil {
-			return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
+			err = errors.Join(domain.ErrUnexpected, err)
+			_ = span.AddError(err)
+			return domain.{{.DomainNamePascal}}{}, err
 		}
 
 		entity.ID = id
 	}
 
-	if err := r.driver.GetClient().WithContext(ctx).Create(&entity).Error; err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
-			return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrDuplicatedRecord, err)
+	dao := daos.FromModel(entity)
+
+	if dbErr := r.driver.GetClient().WithContext(newCtx).Create(&dao).Error; dbErr != nil {
+		if strings.Contains(dbErr.Error(), "duplicate key") {
+			err := errors.Join(domain.ErrDuplicatedRecord, dbErr)
+			_ = span.AddError(err)
+			return domain.{{.DomainNamePascal}}{}, err
 		}
 
-		return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
+		err := errors.Join(domain.ErrUnexpected, dbErr)
+		_ = span.AddError(err)
+		return domain.{{.DomainNamePascal}}{}, err
 	}
 
-	createdEntity, err := r.Get(ctx, entity.ID)
-	if err != nil {
-		return daos.{{.DomainNamePascal}}{}, err
-	}
-
-	return createdEntity, nil
+	return r.Get(newCtx, entity.ID)
 }

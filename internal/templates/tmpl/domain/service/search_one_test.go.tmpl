@@ -1,30 +1,25 @@
-package service_test
+package service
 
 import (
 	"context"
 
 	"github.com/stretchr/testify/assert"
 
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
-	prv{{.DomainNameLower}} "{{.PackageName}}/{{ .DomainPath }}/providers"
-	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
-	"{{.PackageName}}/{{ .DomainPath }}/service/mocks"
+	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
 )
 
 func (ts *testSuite) TestSearchOneSuccess() {
 	t := ts.T()
 	t.Parallel()
 
-	repo := mocks.NewMockRepository(t)
-
-	w := newTestWrapper(t, withMocks(map[string]any{
-		prv{{.DomainNameLower}}.PrvRepository: repo,
-	}))
+	w := newTestWrapper(t)
 
 	filters := options.NewSearchFilters()
 
-	repo.On("SearchOne", context.Background(), filters).
-		Return(daos.{{.DomainNamePascal}}{ID: "some-id"}, nil)
+	w.repo.On("SearchOne", tmock.AnyContext(), filters).
+		Return(domain.{{.DomainNamePascal}}{ID: "some-id"}, nil)
 
 	got, err := w.service.SearchOne(context.Background(), filters)
 	if err != nil {
@@ -38,16 +33,12 @@ func (ts *testSuite) TestSearchOneWhenRepositoryErrorShouldReturnTheSameError() 
 	t := ts.T()
 	t.Parallel()
 
-	repo := mocks.NewMockRepository(t)
-
-	w := newTestWrapper(t, withMocks(map[string]any{
-		prv{{.DomainNameLower}}.PrvRepository: repo,
-	}))
+	w := newTestWrapper(t)
 
 	filters := options.NewSearchFilters()
 
-	repo.On("SearchOne", context.Background(), filters).
-		Return(daos.{{.DomainNamePascal}}{}, assert.AnError)
+	w.repo.On("SearchOne", tmock.AnyContext(), filters).
+		Return(domain.{{.DomainNamePascal}}{}, assert.AnError)
 
 	got, err := w.service.SearchOne(context.Background(), filters)
 	if err == nil {

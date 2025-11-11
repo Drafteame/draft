@@ -6,12 +6,12 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 
-    "{{ .PackageName }}/config/loaders/parsers/yaml"
+	"{{ .PackageName }}/config/loaders/parsers/yaml"
 	"{{ .PackageName }}/pkg/config/loader"
 	"{{ .PackageName }}/pkg/config/loader/readers"
 	"{{ .PackageName }}/pkg/lambda/decorators"
 	"{{ .PackageName }}/pkg/lambda/decorators/health"
-    "{{ .PackageName }}/projects/framev2/pkg/tracer"
+	"{{ .PackageName }}/projects/framev2/pkg/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}cron/{{ .LambdaName }}/handler/worker"
 )
 
@@ -36,9 +36,9 @@ func Bootstrap() any {
 				return nil, err
 			}
 
-            if health.CheckHealthRequest(newCtx) {
-                return nil, nil
-            }
+			if health.CheckHealthRequest(newCtx) {
+				return nil, nil
+			}
 
 			return worker.Worker(r)(newCtx, event)
 		},

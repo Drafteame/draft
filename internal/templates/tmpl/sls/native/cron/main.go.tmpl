@@ -2,9 +2,9 @@ package main
 
 import (
 	"{{ .PackageName }}/pkg/lambda"
-    "{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}cron/{{ .LambdaName }}/handler"
+	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}cron/{{ .LambdaName }}/handler"
 )
 
 func main() {
-    lambda.Start(handler.Bootstrap())
+	lambda.Start(handler.Bootstrap())
 }

@@ -36,9 +36,9 @@ func (nd *NewDomain) mockery() error {
 }
 
 func (nd *NewDomain) addMockeryPackages() error {
-	paths := []string{
-		nd.input.PackageName + "/" + nd.input.DomainPath + "/service",
-		nd.input.PackageName + "/" + nd.input.DomainPath + "/repository",
+	paths := map[string]string{
+		nd.input.PackageName + "/" + nd.input.DomainPath + "/service":    nd.input.DomainPath + "/service/mocks",
+		nd.input.PackageName + "/" + nd.input.DomainPath + "/repository": nd.input.DomainPath + "/repository/mocks",
 	}
 
 	mockeryConfig, err := files.Read(".mockery.yml")
@@ -52,8 +52,20 @@ func (nd *NewDomain) addMockeryPackages() error {
 		return err
 	}
 
-	for _, path := range paths {
-		config["packages"].(map[string]any)[path] = map[string]any{}
+	packages, ok := config["packages"].(map[string]any)
+	if !ok {
+		return fmt.Errorf("packages key not found or invalid in .mockery.yml")
+	}
+
+	for pkgPath, mocksDir := range paths {
+		packages[pkgPath] = map[string]any{
+			"config": map[string]any{
+				"all":       true,
+				"dir":       mocksDir,
+				"filename":  "mock_{{.InterfaceName}}.go",
+				"inpackage": false,
+			},
+		}
 	}
 
 	newConfig, err := yaml.Marshal(config)

@@ -6,12 +6,17 @@ import (
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
-func (r *Repository) Delete(ctx context.Context, id string) (daos.{{.DomainNamePascal}}, error) {
-	entity, err := r.Get(ctx, id)
+func (r *Repository) Delete(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error) {
+	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.Delete")
+	defer span.Close(nil)
+
+	entity, err := r.Get(newCtx, id)
 	if err != nil {
-		return daos.{{.DomainNamePascal}}{}, err
+		_ = span.AddError(err)
+		return domain.{{.DomainNamePascal}}{}, err
 	}
 
 	now := r.clock.Now()
@@ -21,13 +26,12 @@ func (r *Repository) Delete(ctx context.Context, id string) (daos.{{.DomainNameP
 		DeletedAt: &now,
 	}
 
-	if err := r.driver.GetClient().Model(&update).WithContext(ctx).Updates(update).Error; err != nil {
-		return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrDeleteRecord, err)
+	if err := r.driver.GetClient().Model(&daos.{{.DomainNamePascal}}{}).WithContext(newCtx).Where("id = ?", id).Updates(update).Error; err != nil {
+		dbErr := errors.Join(domain.ErrDeleteRecord, err)
+		_ = span.AddError(dbErr)
+		return domain.{{.DomainNamePascal}}{}, dbErr
 	}
 
-	if err := r.driver.GetClient().Unscoped().Find(&entity).Error; err != nil {
-		return daos.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
-	}
-
+	entity.DeletedAt = &now
 	return entity, nil
 }

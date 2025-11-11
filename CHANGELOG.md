@@ -1,3 +1,15 @@
+## v1.16.0 (2025-11-10)
+
+
+- chore(ci): update vendor hash for version 1.16.0
+- feat: custom lambda (#158)
+
+## v1.15.4 (2025-11-10)
+
+
+- chore(ci): update vendor hash for version 1.15.4
+- fix: postgres domain (#159)
+
 ## v1.15.3 (2025-11-07)
 
 

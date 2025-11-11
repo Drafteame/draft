@@ -57,6 +57,7 @@ type RepositoryPostgres struct {
 	SearchOneTestGo  []byte
 	UpdateGo         []byte
 	UpdateTestGo     []byte
+	ProvideGo        []byte
 	Builders         RepositoryPostgresBuilders
 	Daos             RepositoryPostgresDaos
 }
@@ -78,6 +79,7 @@ func loadDomainsRepositoryPostgres(v *RepositoryPostgres, data any) error {
 		loadRepositoryPostgresSearchOneGoTest,
 		loadRepositoryPostgresUpdateGo,
 		loadRepositoryPostgresUpdateGoTest,
+		loadRepositoryPostgresProvideGo,
 		loadRepositoryPostgresBuilders,
 		loadRepositoryPostgresDaos,
 	}
@@ -297,6 +299,20 @@ func loadRepositoryPostgresUpdateGoTest(v *RepositoryPostgres, data any) error {
 	}
 
 	v.UpdateTestGo = content
+
+	return nil
+}
+
+func loadRepositoryPostgresProvideGo(v *RepositoryPostgres, data any) error {
+	name := "domains/repository/postgres/provide.go"
+	path := "tmpl/domain/repository/postgres/provide.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.ProvideGo = content
 
 	return nil
 }

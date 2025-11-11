@@ -5,23 +5,18 @@ import (
 	"errors"
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
 func (s *Service) Create(ctx context.Context, m domain.{{.DomainNamePascal}}) (domain.{{.DomainNamePascal}}, error) {
-	dao, err := domain.ToDAO(m)
-	if err != nil {
-		return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
-	}
+	newCtx, seg := tracer.BeginSubSegment(ctx, "domains.{{.DomainNameLower}}.service.Create")
+	defer seg.Close(nil)
 
-	dao, err = s.repo.Create(ctx, dao)
+	created, err := s.repo.Create(newCtx, m)
 	if err != nil {
+		_ = seg.AddError(err)
 		return domain.{{.DomainNamePascal}}{}, err
 	}
 
-	newModel, errToModel := domain.ToModel(dao)
-    	if errToModel != nil {
-    		return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, errToModel)
-    	}
-
-    	return newModel, nil
+	return created, nil
 }
