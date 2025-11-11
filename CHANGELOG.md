@@ -1,3 +1,9 @@
+## v1.17.1 (2025-11-11)
+
+
+- chore(ci): update vendor hash for version 1.17.1
+- chore: complete code refactor (#163)
+
 ## v1.17.0 (2025-11-11)
 
 
