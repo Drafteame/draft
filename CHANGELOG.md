@@ -1,3 +1,9 @@
+## v1.17.0 (2025-11-11)
+
+
+- chore(ci): update vendor hash for version 1.17.0
+- feat: add support for DynamoDB in new domain creation (scaffolding only) (#157)
+
 ## v1.16.1 (2025-11-11)
 
 
