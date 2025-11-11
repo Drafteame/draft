@@ -1,3 +1,10 @@
+## v1.16.1 (2025-11-11)
+
+
+- chore(ci): update vendor hash for version 1.16.1
+- chore: save (#162)
+- ci: add job to upload artifact (#161)
+
 ## v1.16.0 (2025-11-10)
 
 
