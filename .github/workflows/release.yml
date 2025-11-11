@@ -20,7 +20,7 @@ jobs:
     outputs:
       version: ${{ steps.bump.outputs.version }}
     steps:
-      - name: Check out
+      - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
@@ -92,7 +92,7 @@ jobs:
     needs:
       - bump_version
     steps:
-      - name: Check out
+      - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
