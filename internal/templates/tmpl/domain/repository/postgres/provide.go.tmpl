@@ -24,7 +24,7 @@ func Provide(ctx context.Context, opt ...providers.Option) (any, error) {
 	defer span.Close(nil)
 
 	if stage.IsTest() {
-		return provideTestRepository(ctx, opt...)
+		return provideTest(ctx, opt...)
 	}
 
 	var err error
@@ -47,7 +47,7 @@ func Provide(ctx context.Context, opt ...providers.Option) (any, error) {
 	return instance, nil
 }
 
-func provideTestRepository(ctx context.Context, opt ...providers.Option) (any, error) {
+func provideTest(ctx context.Context, opt ...providers.Option) (any, error) {
 	options, err := providers.BuildOptions(opt...)
 	if err != nil {
 		return nil, err
