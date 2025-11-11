@@ -2,11 +2,11 @@ package repository
 
 import (
 	"context"
-	"os"
 	"sync"
 
 	"{{.PackageName}}/pkg/providers"
-	dynamov2 "github.com/Drafteame/api/pkg/providers/dynamo/v2"
+	"{{.PackageName}}/projects/framev2/pkg/stage"
+	dynamov2 "{{.PackageName}}/pkg/providers/dynamo/v2"
 	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
