@@ -15,21 +15,21 @@ func (nd *NewDomain) exec() error {
 		return err
 	}
 
-	// 2. Create domain layer (postgres only)
-	if nd.input.DBType == data.DBTypePostgres {
-		if err := nd.createDomain(); err != nil {
-			return err
-		}
-	}
-
-	// 3. Create service layer
+	// 2. Create service layer
 	if err := nd.createService(); err != nil {
 		return err
 	}
 
-	// 4. Create repository layer
+	// 3. Create repository layer
 	if err := nd.createRepository(); err != nil {
 		return err
+	}
+
+	// 4. Create domain layer (postgres only)
+	if nd.input.DBType == data.DBTypePostgres {
+		if err := nd.createDomain(); err != nil {
+			return err
+		}
 	}
 
 	// 5. Create global providers (postgres only)
