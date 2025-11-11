@@ -3,24 +3,38 @@ package newdomain
 import (
 	"fmt"
 
+	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/pkg/dirs"
 	"github.com/Drafteame/draft/internal/pkg/files"
 )
 
 func (nd *NewDomain) exec() error {
-	creators := []func() error{
-		nd.createAllDirs,
-		nd.createService,
-		nd.createRepository,
+	// 1. Create directory structure
+	if err := nd.createAllDirs(); err != nil {
+		return err
 	}
 
-	if nd.input.DBType == "postgres" {
-		creators = append(creators, nd.createDomain, nd.createGlobalProviders)
+	// 2. Create service layer
+	if err := nd.createService(); err != nil {
+		return err
 	}
 
-	for _, creator := range creators {
-		if err := creator(); err != nil {
+	// 3. Create repository layer
+	if err := nd.createRepository(); err != nil {
+		return err
+	}
+
+	// 4. Create domain layer (postgres only)
+	if nd.input.DBType == data.DBTypePostgres {
+		if err := nd.createDomain(); err != nil {
+			return err
+		}
+	}
+
+	// 5. Create global providers (postgres only)
+	if nd.input.DBType == data.DBTypePostgres {
+		if err := nd.createGlobalProviders(); err != nil {
 			return err
 		}
 	}
@@ -35,7 +49,7 @@ func (nd *NewDomain) createAllDirs() error {
 	}
 
 	// Only create postgres-specific directories
-	if nd.input.DBType == "postgres" {
+	if nd.input.DBType == data.DBTypePostgres {
 		dirList = append(dirList,
 			nd.input.DomainPath+"/repository/builders",
 			nd.input.DomainPath+"/repository/daos",
@@ -55,35 +69,17 @@ func (nd *NewDomain) createAllDirs() error {
 
 func (nd *NewDomain) createService() error {
 	switch nd.input.DBType {
-	case "postgres":
+	case data.DBTypePostgres:
 		return nd.createPostgresService()
-	case "dynamo":
+	case data.DBTypeDynamo:
 		return nd.createDynamoService()
 	default:
 		return fmt.Errorf("unsupported service db type: %s", nd.input.DBType)
 	}
 }
 
-func (nd *NewDomain) createPostgresService() error {
-	fileList := []dtos.FileEntry{
-		{Path: nd.input.DomainPath + "/service/create.go", Data: nd.tmpl.Service.CreateGo},
-		{Path: nd.input.DomainPath + "/service/create_test.go", Data: nd.tmpl.Service.CreateTestGo},
-		{Path: nd.input.DomainPath + "/service/delete.go", Data: nd.tmpl.Service.DeleteGo},
-		{Path: nd.input.DomainPath + "/service/delete_test.go", Data: nd.tmpl.Service.DeleteTestGo},
-		{Path: nd.input.DomainPath + "/service/get.go", Data: nd.tmpl.Service.GetGo},
-		{Path: nd.input.DomainPath + "/service/get_test.go", Data: nd.tmpl.Service.GetTestGo},
-		{Path: nd.input.DomainPath + "/service/interfaces.go", Data: nd.tmpl.Service.InterfacesGo},
-		{Path: nd.input.DomainPath + "/service/search.go", Data: nd.tmpl.Service.SearchGo},
-		{Path: nd.input.DomainPath + "/service/search_test.go", Data: nd.tmpl.Service.SearchTestGo},
-		{Path: nd.input.DomainPath + "/service/update.go", Data: nd.tmpl.Service.UpdateGo},
-		{Path: nd.input.DomainPath + "/service/update_test.go", Data: nd.tmpl.Service.UpdateTestGo},
-		{Path: nd.input.DomainPath + "/service/service.go", Data: nd.tmpl.Service.ServiceGo},
-		{Path: nd.input.DomainPath + "/service/service_test.go", Data: nd.tmpl.Service.ServiceTestGo},
-		{Path: nd.input.DomainPath + "/service/search_one.go", Data: nd.tmpl.Service.SearchOneGo},
-		{Path: nd.input.DomainPath + "/service/search_one_test.go", Data: nd.tmpl.Service.SearchOneTestGo},
-		{Path: nd.input.DomainPath + "/service/provide.go", Data: nd.tmpl.Service.ProvideGo},
-	}
-
+// createFiles creates all files from the provided file list
+func (nd *NewDomain) createFiles(fileList []dtos.FileEntry) error {
 	for _, file := range fileList {
 		if err := files.Create(file.Path, file.Data); err != nil {
 			return err
@@ -91,6 +87,29 @@ func (nd *NewDomain) createPostgresService() error {
 	}
 
 	return nil
+}
+
+func (nd *NewDomain) createPostgresService() error {
+	fileList := []dtos.FileEntry{
+		{Path: nd.input.DomainPath + "/service/create.go", Data: nd.tmpl.Service.Postgres.CreateGo},
+		{Path: nd.input.DomainPath + "/service/create_test.go", Data: nd.tmpl.Service.Postgres.CreateTestGo},
+		{Path: nd.input.DomainPath + "/service/delete.go", Data: nd.tmpl.Service.Postgres.DeleteGo},
+		{Path: nd.input.DomainPath + "/service/delete_test.go", Data: nd.tmpl.Service.Postgres.DeleteTestGo},
+		{Path: nd.input.DomainPath + "/service/get.go", Data: nd.tmpl.Service.Postgres.GetGo},
+		{Path: nd.input.DomainPath + "/service/get_test.go", Data: nd.tmpl.Service.Postgres.GetTestGo},
+		{Path: nd.input.DomainPath + "/service/interfaces.go", Data: nd.tmpl.Service.Postgres.InterfacesGo},
+		{Path: nd.input.DomainPath + "/service/search.go", Data: nd.tmpl.Service.Postgres.SearchGo},
+		{Path: nd.input.DomainPath + "/service/search_test.go", Data: nd.tmpl.Service.Postgres.SearchTestGo},
+		{Path: nd.input.DomainPath + "/service/update.go", Data: nd.tmpl.Service.Postgres.UpdateGo},
+		{Path: nd.input.DomainPath + "/service/update_test.go", Data: nd.tmpl.Service.Postgres.UpdateTestGo},
+		{Path: nd.input.DomainPath + "/service/service.go", Data: nd.tmpl.Service.Postgres.ServiceGo},
+		{Path: nd.input.DomainPath + "/service/service_test.go", Data: nd.tmpl.Service.Postgres.ServiceTestGo},
+		{Path: nd.input.DomainPath + "/service/search_one.go", Data: nd.tmpl.Service.Postgres.SearchOneGo},
+		{Path: nd.input.DomainPath + "/service/search_one_test.go", Data: nd.tmpl.Service.Postgres.SearchOneTestGo},
+		{Path: nd.input.DomainPath + "/service/provide.go", Data: nd.tmpl.Service.Postgres.ProvideGo},
+	}
+
+	return nd.createFiles(fileList)
 }
 
 func (nd *NewDomain) createDynamoService() error {
@@ -100,20 +119,14 @@ func (nd *NewDomain) createDynamoService() error {
 		{Path: nd.input.DomainPath + "/service/provider.go", Data: nd.tmpl.Service.Dynamo.ProviderGo},
 	}
 
-	for _, file := range fileList {
-		if err := files.Create(file.Path, file.Data); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return nd.createFiles(fileList)
 }
 
 func (nd *NewDomain) createRepository() error {
 	switch nd.input.DBType {
-	case "postgres":
+	case data.DBTypePostgres:
 		return nd.createPostgresRepository()
-	case "dynamo":
+	case data.DBTypeDynamo:
 		return nd.createDynamoRepository()
 	default:
 		return fmt.Errorf("unsupported repository db type: %s", nd.input.DBType)
@@ -147,13 +160,7 @@ func (nd *NewDomain) createPostgresRepository() error {
 		{Path: nd.input.DomainPath + "/repository/provide.go", Data: nd.tmpl.Repository.Postgres.ProvideGo},
 	}
 
-	for _, file := range fileList {
-		if err := files.Create(file.Path, file.Data); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return nd.createFiles(fileList)
 }
 
 func (nd *NewDomain) createDynamoRepository() error {
@@ -163,42 +170,7 @@ func (nd *NewDomain) createDynamoRepository() error {
 		{Path: nd.input.DomainPath + "/repository/provider.go", Data: nd.tmpl.Repository.Dynamo.ProviderGo},
 	}
 
-	for _, file := range fileList {
-		if err := files.Create(file.Path, file.Data); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (nd *NewDomain) createDomainProviders() error {
-	fileList := []dtos.FileEntry{
-		{Path: nd.input.DomainPath + "/providers/generator.go", Data: nd.tmpl.Providers.GeneratorGo},
-		{Path: nd.input.DomainPath + "/providers/service.go", Data: nd.tmpl.Providers.ServiceGo},
-	}
-
-	for _, file := range fileList {
-		if err := files.Create(file.Path, file.Data); err != nil {
-			return err
-		}
-	}
-
-	return nd.createPostgresProviders()
-}
-
-func (nd *NewDomain) createPostgresProviders() error {
-	fileList := []dtos.FileEntry{
-		{Path: nd.input.DomainPath + "/providers/repository.go", Data: nd.tmpl.Providers.Postgres.RepositoryGo},
-	}
-
-	for _, file := range fileList {
-		if err := files.Create(file.Path, file.Data); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return nd.createFiles(fileList)
 }
 
 func (nd *NewDomain) createDomain() error {
@@ -212,13 +184,7 @@ func (nd *NewDomain) createDomain() error {
 		{Path: nd.input.DomainPath + "/domain/errors.go", Data: nd.tmpl.Domain.ErrorsGo},
 	}
 
-	for _, file := range fileList {
-		if err := files.Create(file.Path, file.Data); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return nd.createFiles(fileList)
 }
 
 func (nd *NewDomain) createGlobalProviders() error {
@@ -226,11 +192,5 @@ func (nd *NewDomain) createGlobalProviders() error {
 		{Path: "pkg/providers/generators/nanoid/tableid/" + nd.input.DomainNameLower + ".go", Data: nd.tmpl.Providers.GeneratorsNanoidTableid.ProvideGo},
 	}
 
-	for _, file := range fileList {
-		if err := files.Create(file.Path, file.Data); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return nd.createFiles(fileList)
 }

@@ -61,6 +61,10 @@ draft sentry:project:delete
 - `-d, --debug`: Enable debug mode
 - `-t, --tty`: TTY mode (default: true)
 
+### Service and Lambda Specific Flags
+- `--use-dig`: Use Uber Dig for dependency injection instead of default pattern
+- `-l, --legacy-path`: Path to legacy service (use legacy folder structure)
+
 ## Architecture
 
 ### Command Structure
@@ -74,22 +78,23 @@ Commands are registered in `main.go` using Cobra. Each command lives in `cmd/com
 - `config` - Configuration management
 
 ### Action Layer
-The `internal/actions/` directory contains the business logic for each command. Actions are responsible for:
-- Gathering user input via interactive forms (`internal/forms/`)
-- Generating files from templates (`internal/templates/`)
-- Executing post-creation tasks (formatting, running external tools)
+The `internal/actions/` directory contains the business logic for each command. All creation actions follow a consistent 3-phase lifecycle:
+
+1. **preCreate()** - Pre-execution hooks (e.g., Sentry project setup for new services)
+2. **exec()** - Core logic with type-specific switch statements for lambda types or database types
+3. **postCreate()** - Post-execution tasks (code formatting, file updates, running external tools)
 
 Key action patterns:
-- `New()` factory function creates action instances with input DTOs
-- `Exec()` orchestrates the entire action lifecycle
-- `preCreate()`, `exec()`, `postCreate()` for lifecycle hooks
+- `New(input)` factory function creates action instances with input DTOs from forms
+- `Exec()` orchestrates the entire lifecycle: preCreate → exec → postCreate
+- Actions interact with template system to generate files, then manipulate existing files in postCreate
 
 ### Template System
 Templates are embedded at compile time using `//go:embed` in `internal/templates/`. Template types:
 - **Serverless templates** (`tmpl/sls/`): Service boilerplate, Lambda functions (HTTP, Cron, SQS, SNS+SQS, Plain, Custom)
 - **Domain templates** (`tmpl/domain/`): Domain-driven design layers (domain, service, repository with Postgres and DynamoDB support)
 
-Templates use Go's `text/template` and are loaded via `loadTemplate()` helper.
+Templates use Go's `text/template` and are loaded via `loadTemplate()` helper. Template factories return `[]byte` after rendering with data context from input DTOs.
 
 ### Lambda Types
 The tool generates different Lambda structures based on trigger type:
@@ -110,10 +115,11 @@ Domain structure varies by database type:
 - **Postgres**: Full CRUD with service layer, repository layer, builders, DAOs, providers, and domain models with search/filter capabilities
 - **DynamoDB**: Simplified structure with repository and service layers optimized for NoSQL patterns
 
-### Project Detection
+### Project Detection and Name Normalization
 `internal/project/` contains utilities for:
-- Extracting Go module names from `go.mod`
-- Normalizing service names (kebab-case for folders, snake_case for packages)
+- Extracting Go module names from `go.mod` via `GetPackage()` - stored in `data.Meta.PackageName`
+- `NormalizeServiceName()` - Converts to kebab-case for folder names (e.g., "My Service" → "my-service")
+- `NormalizeServicePackage()` - Converts to snake_case for Go package names (e.g., "My Service" → "my_service")
 - Locating services in monorepos
 
 ### Legacy vs Modern Structure
@@ -131,10 +137,11 @@ Determined by the `-l` flag or interactive prompts.
 - Uses goroutine pools limited by CPU count
 
 ### Forms and User Input
-`internal/forms/` provides interactive CLI prompts using `charmbracelet/huh`:
-- Multi-step forms for service/lambda/domain creation
-- Input validation and conditional fields
-- Support for TTY and non-TTY modes
+`internal/forms/` provides interactive CLI prompts using `charmbracelet/huh` with functional options pattern:
+- Multi-step forms for service/lambda/domain creation (e.g., baseForm → frameDetails → type-specific forms)
+- Input validation and conditional fields based on previous selections
+- Support for TTY and non-TTY modes (CI/CD compatibility)
+- Generic options pattern: `inputs.Text()`, `inputs.Select()`, `inputs.Confirm()` with `WithDescription`, `WithValue`, `WithValidation`, etc.
 
 ## Configuration Files
 
@@ -163,24 +170,54 @@ Services use Pkl (configuration language) for app config:
 - PR titles must also follow conventional commit format
 
 ### Code Organization
-- `internal/pkg/` contains reusable utilities (files, exec, crypto, AWS, etc.)
-- `internal/dtos/` for data transfer objects
-- `internal/data/` for shared data structures and flags
+- `internal/pkg/` contains reusable utilities (files, exec, crypto, AWS, build, log, etc.)
+- `internal/dtos/` for data transfer objects passed between commands, forms, and actions
+- `internal/data/` for global state (flags, metadata, placeholder tags)
 - `cmd/commands/internal/common/` for command-level shared code
+- `internal/project/` for project detection and name normalization
+
+### Placeholder Tag System
+The codebase uses placeholder comments to mark insertion points for incremental additions:
+- `data.NextImportTag` (`//draft:next-import`) - Marks where to insert new imports in `deps.go`
+- `data.NextLambdaImportTag` (`#draft:next-lambda-import`) - Marks where to insert new lambda references in `serverless.yml`
+- `data.NextDbModelTag` (`//draft:next-db-model`) - Marks where to insert new database models in Postgres provider test migrations
+
+Post-create hooks use string replacement to insert new content while preserving the tag for future additions. This pattern avoids AST parsing for file manipulation. The tags are defined in `internal/data/tags.go`.
 
 ## Nix Integration
 The project uses Nix flakes (`flake.nix`) for:
 - Version management of Nix modules
-- Script `update-nix-hashes.sh` updates vendor hashes
-- `internal/pkg/version/nix/` checks Nix module versions on startup
+- Script `update-nix-hashes.sh` updates vendor hashes for the Nix flake
+- `internal/pkg/nix-metadata/` checks Nix module versions on startup
+- Nix metadata is stored in `$HOME/.config/.nix-metadata.json` containing system info, git user info, and version information
+- The tool prompts for Nix module updates if version is outdated (checked every 24 hours, prompts every 2 hours if declined)
 
-## Development Notes
+## Key Implementation Patterns
 
-### Current Branch State
-The current working branch may contain merge conflicts or work in progress. Key files to check:
-- `internal/actions/newdomain/exec.go` - Contains logic for creating domains with both Postgres and DynamoDB support
-- `internal/templates/domains_*.go` - Template loaders for domain generation
+### Type-Based Dispatch
+Lambda and domain creation use switch statements on type strings rather than polymorphism:
+```go
+switch nl.input.LambdaType {
+case "plain": return nl.createPlain()
+case "http":  return nl.createHttp()
+// etc.
+}
+```
 
-### Recent Features
-- **DynamoDB Support**: Added in commit `fda92fc`. Domains can now be generated with DynamoDB as the backing database
-- **Custom Lambda Type**: New lambda type allowing custom event sources with configurable type paths
+### Post-Create File Updates
+New lambdas are added to existing files via string replacement:
+1. `addToDepsGo()` - Inserts import into `deps.go` before placeholder tag
+2. `addToServerlessYAML()` - Adds lambda reference to `serverless.yml`
+3. `format()` - Runs goimports/gofmt on modified files
+4. `restoreDepsTag()` - Re-adds placeholder tag for next insertion
+
+New domains have a different post-create flow:
+1. `postgresModels()` (Postgres only) - Adds domain DAOs to provider test migrations using `NextDbModelTag`
+2. `mockery()` - Adds domain service/repository packages to `.mockery.yml` and runs mockery to generate mocks
+3. `format()` - Runs goimports/gofmt on generated files
+
+### Global State Usage
+Minimal global state in `internal/data/`:
+- `data.Flags` - CLI flags (WorkingDir, Debug, TTY, NoSentry)
+- `data.Meta` - Project metadata loaded from `go.mod` at startup
+- Placeholder tag constants for file manipulation

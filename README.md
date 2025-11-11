@@ -1,75 +1,834 @@
-# Draft 
+# Draft
 
 ![draft-logo](https://github.com/user-attachments/assets/bfa3d186-5576-4d85-9366-61cbe792e8f8)
 
-CLI tool to hel create Service and Lambda folder structures for Draftea Backend Services.
+A CLI tool to scaffold services, Lambda functions, and domain layers for Draftea Backend Services. Draft generates standardized project structures following best practices for serverless applications built with Go.
+
+---
+
+## Table of Contents
+
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Creating a Service](#creating-a-service)
+  - [Creating a Lambda Function](#creating-a-lambda-function)
+  - [Creating a Domain Layer](#creating-a-domain-layer)
+  - [Invoking Lambdas Locally](#invoking-lambdas-locally)
+  - [Local Development](#local-development)
+  - [Sentry Management](#sentry-management)
+  - [Global Flags](#global-flags)
+- [Development](#development)
+  - [Project Structure](#project-structure)
+  - [Architecture Overview](#architecture-overview)
+  - [Adding a New Command](#adding-a-new-command)
+  - [Template System](#template-system)
+  - [Development Workflow](#development-workflow)
+  - [Code Standards](#code-standards)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
 
 ## Requirements
 
-- Golang 1.23.x
+- **Go**: 1.23.x or higher
+- **Task**: For running development commands (optional)
+- **Husky**: For git hooks (optional)
 
 ## Installation
 
+Install Draft globally using Go:
+
 ```bash
-go install github.com/draftea/draft@latest
+go install github.com/Drafteame/draft@latest
 ```
+
+Verify the installation:
+
+```bash
+draft --version
+```
+
+---
 
 ## Usage
 
-### Create Service
+### Creating a Service
 
-First locate yourself inside the service folder of the monorepo, the execute next command:
+Create a new serverless service with boilerplate code, configuration files, and initial Lambda functions.
+
+#### Basic Usage
+
+Navigate to the service folder in your monorepo and run:
 
 ```bash
 draft new:service
 ```
 
-This will prompt you to fill the service details to create the folder structure and its files.
+This launches an interactive form to configure your service:
 
-![Screenshot 2024-11-18 at 5 52 52 p m](https://github.com/user-attachments/assets/bdf7d12c-2b6e-4b40-bfc7-2dbfb20abb16)
+![Screenshot 2024-11-18 at 5 52 52 p m](https://github.com/user-attachments/assets/bdf7d12c-2b6e-4b40-bfc7-2dbfb20abb16)
 
----
-If you run the command outside the project root folder you can pass a flag to specify the path to it:
+#### Flags
 
 ```bash
+# Specify working directory
 draft new:service -w path/to/project
+
+# Create in legacy path structure (for main-api or game-engine)
+draft new:service -l path/to/legacy/service
+
+# Use Uber Dig for dependency injection
+draft new:service --use-dig
+
+# Disable TTY mode (useful in CI/CD)
+draft new:service -t=false
 ```
+
+#### What Gets Created
+
+- `serverless.yml` - Serverless Framework configuration
+- `package.json` - Node.js dependencies for Serverless plugins
+- `config/` - Application and Serverless configuration files
+- `cmd/` - Initial Lambda function (HTTP, Cron, SQS, etc.)
+- `deps.go` - Dependency injection setup
+
 ---
 
-If you want to create the service in a legacy path (main-api or game-engine) you can pass a flag to specify the path to it:
-```bash
-draft new:service -l <path/to/service>
-```
+### Creating a Lambda Function
 
-### Create Lambda
+Add a new Lambda function to an existing service.
 
-First locate yourself inside the project root folder of the monorepo, the execute next command:
+#### Basic Usage
+
+Navigate to your project root and run:
 
 ```bash
 draft new:lambda
 ```
 
-This will prompt you to fill the lambda details to create the folder structure and its files.
+![Screenshot 2024-11-18 at 5 54 17 p m](https://github.com/user-attachments/assets/902a4e37-af2b-44b1-8851-0b98619c1aed)
 
-![Screenshot 2024-11-18 at 5 54 17 p m](https://github.com/user-attachments/assets/902a4e37-af2b-44b1-8851-0b98619c1aed)
+#### Lambda Types
 
-If you run the command outside the project root folder you can pass a flag to specify the path to it:
+Draft supports multiple Lambda trigger types:
+
+| Type | Description | Use Case |
+|------|-------------|----------|
+| **HTTP** | API Gateway triggered | REST APIs, webhooks |
+| **Cron** | EventBridge scheduled | Periodic tasks, cleanup jobs |
+| **SQS** | SQS queue processing | Async processing, decoupling |
+| **SNS+SQS** | SNS topic + SQS queue | Pub/sub with queue buffering |
+| **Plain** | Generic event source | Custom event sources |
+| **Custom** | User-defined type | Custom event sources with specific paths |
+
+#### Flags
 
 ```bash
+# Specify working directory
 draft new:lambda -w path/to/project
+
+# Create in legacy path structure
+draft new:lambda -l path/to/legacy/service
+
+# Use Uber Dig for dependency injection
+draft new:lambda --use-dig
 ```
 
-### Invoke Lambda
+#### What Gets Created
 
-First locate yourself inside the project root folder of the monorepo, the execute next command:
+For an HTTP Lambda:
+- `cmd/http/<lambda-name>/main.go` - Lambda entry point
+- `cmd/http/<lambda-name>/handler/` - Business logic
+- `cmd/http/<lambda-name>/handler/dtos/` - Request/response models
+- `cmd/http/<lambda-name>/handler/worker/` - Core processing logic
+- `cmd/http/<lambda-name>/lambda-config.yml` - Lambda-specific config
+
+---
+
+### Creating a Domain Layer
+
+Generate a complete domain layer following Domain-Driven Design principles.
+
+#### Basic Usage
 
 ```bash
-# Simple invoke useful for http lambdas
+draft new:domain
+```
+
+#### Database Support
+
+Draft supports multiple database backends:
+
+| Database | Features |
+|----------|----------|
+| **Postgres** | Full CRUD, search with filters/pagination, repository builders, DAOs, domain models |
+| **DynamoDB** | Simplified repository pattern, optimized for NoSQL |
+
+#### Flags
+
+```bash
+# Specify working directory
+draft new:domain -w path/to/project
+```
+
+#### What Gets Created (Postgres)
+
+```
+domains/<domain-name>/
+├── domain/
+│   ├── domain.go          # Domain models
+│   ├── errors.go          # Domain-specific errors
+│   └── options/           # Search, filter, pagination options
+├── service/
+│   ├── interfaces.go      # Service interfaces
+│   ├── service.go         # Service implementation
+│   ├── create.go          # Create operation
+│   ├── get.go             # Get operation
+│   ├── update.go          # Update operation
+│   ├── delete.go          # Delete operation
+│   ├── search.go          # Search with filters
+│   ├── search_one.go      # Search single record
+│   ├── provide.go         # Dependency injection
+│   └── *_test.go          # Unit tests
+└── repository/
+    ├── interfaces.go      # Repository interfaces
+    ├── repository.go      # Repository implementation
+    ├── create.go          # Create operation
+    ├── get.go             # Get operation
+    ├── update.go          # Update operation
+    ├── delete.go          # Delete operation
+    ├── search.go          # Search with filters
+    ├── search_one.go      # Search single record
+    ├── provide.go         # Dependency injection
+    ├── builders/          # Query builders
+    ├── daos/              # Data access objects
+    └── *_test.go          # Unit tests
+```
+
+#### What Gets Created (DynamoDB)
+
+```
+domains/<domain-name>/
+├── service/
+│   ├── interfaces.go
+│   ├── service.go
+│   └── provider.go
+└── repository/
+    ├── interfaces.go
+    ├── repository.go
+    └── provider.go
+```
+
+---
+
+### Invoking Lambdas Locally
+
+Test Lambda functions locally without deploying to AWS.
+
+#### Basic Usage
+
+```bash
+# Simple invocation (useful for HTTP Lambdas)
 draft invoke path/to/lambda
 
-# Invoke with event data
-draft invoke --body '{"some": "body"}' path/to/lambda
+# With event data inline
+draft invoke --body '{"key": "value"}' path/to/lambda
 
-# Invoke with event data from json file
-draft invoke --body-file path/to/body.json path/to/lambda
+# With event data from file
+draft invoke --body-file event.json path/to/lambda
 ```
+
+#### Example Event File
+
+```json
+{
+  "httpMethod": "POST",
+  "path": "/api/users",
+  "body": "{\"name\":\"John Doe\"}",
+  "headers": {
+    "Content-Type": "application/json"
+  }
+}
+```
+
+---
+
+### Local Development
+
+Set up and manage local development environment.
+
+#### Setup Local Environment
+
+```bash
+draft local:setup
+```
+
+This creates:
+- Docker Compose configuration
+- Local database setup
+- Environment variables
+
+#### Database Migrations
+
+```bash
+# Run migrations up
+draft local:migrate:up
+
+# Rollback migrations
+draft local:migrate:down
+
+# Force migration version
+draft local:migrate:force <version>
+```
+
+---
+
+### Sentry Management
+
+Manage Sentry projects for error tracking.
+
+#### Create Sentry Project
+
+```bash
+draft sentry:project:create
+```
+
+#### Delete Sentry Project
+
+```bash
+draft sentry:project:delete
+```
+
+---
+
+### Global Flags
+
+These flags are available for all commands:
+
+| Flag | Short | Description | Default |
+|------|-------|-------------|---------|
+| `--working-dir` | `-w` | Working directory for the command | Current directory |
+| `--debug` | `-d` | Enable debug mode with verbose logging | `false` |
+| `--tty` | `-t` | Enable TTY mode for interactive prompts | `true` |
+
+#### Example
+
+```bash
+draft new:lambda -w /path/to/project -d -t=false
+```
+
+---
+
+## Development
+
+### Project Structure
+
+```
+draft/
+├── cmd/
+│   ├── main.go                    # Application entry point
+│   └── commands/                  # Cobra command definitions
+│       ├── root.go                # Root command with global flags
+│       ├── newservice/            # Service creation command
+│       ├── newlambda/             # Lambda creation command
+│       ├── newdomain/             # Domain creation command
+│       ├── local/                 # Local development commands
+│       ├── sentry/                # Sentry management commands
+│       └── internal/common/       # Shared command utilities
+├── internal/
+│   ├── actions/                   # Business logic for commands
+│   │   ├── newservice/            # Service creation logic
+│   │   ├── newlambda/             # Lambda creation logic
+│   │   ├── newdomain/             # Domain creation logic
+│   │   ├── local/                 # Local development logic
+│   │   └── sentry/                # Sentry management logic
+│   ├── forms/                     # Interactive CLI forms
+│   │   ├── newservice/            # Service configuration forms
+│   │   ├── newlambda/             # Lambda configuration forms
+│   │   └── newdomain/             # Domain configuration forms
+│   ├── templates/                 # Code generation templates
+│   │   ├── templates.go           # Template loading infrastructure
+│   │   ├── service_templates.go   # Service templates
+│   │   ├── lambda_*.go            # Lambda type templates
+│   │   ├── domains_*.go           # Domain templates
+│   │   └── tmpl/                  # Embedded template files
+│   │       ├── sls/               # Serverless templates
+│   │       └── domain/            # Domain templates
+│   ├── dtos/                      # Data transfer objects
+│   │   ├── service_input.go       # Service configuration
+│   │   ├── lambda_input.go        # Lambda configuration
+│   │   ├── domain_input.go        # Domain configuration
+│   │   └── file_entry.go          # File creation DTO
+│   ├── data/                      # Global state and constants
+│   │   ├── flags.go               # Global CLI flags
+│   │   ├── meta.go                # Project metadata
+│   │   ├── tags.go                # Template placeholder tags
+│   │   ├── database.go            # Database type constants
+│   │   └── paths.go               # Common path constants
+│   └── pkg/                       # Reusable utilities
+│       ├── files/                 # File I/O operations
+│       ├── dirs/                  # Directory operations
+│       ├── exec/                  # Command execution
+│       ├── inputs/                # Form input helpers
+│       ├── log/                   # Logging utilities
+│       ├── format/                # Code formatting
+│       ├── constants/             # Shared constants
+│       └── ...                    # Other utilities
+├── Taskfile.yml                   # Task runner configuration
+├── go.mod                         # Go module definition
+└── README.md                      # This file
+```
+
+---
+
+### Architecture Overview
+
+Draft follows a layered architecture with clear separation of concerns:
+
+```
+┌─────────────────────────────────────────────┐
+│             Command Layer                    │
+│         (cmd/commands/*)                    │
+│  - Parse flags                               │
+│  - Call forms                                │
+│  - Execute actions                           │
+└─────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────┐
+│              Forms Layer                     │
+│         (internal/forms/*)                  │
+│  - Interactive prompts                       │
+│  - Input validation                          │
+│  - Populate DTOs                             │
+└─────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────┐
+│             Action Layer                     │
+│         (internal/actions/*)                │
+│  - Business logic                            │
+│  - Lifecycle: preCreate → exec → postCreate │
+│  - File generation                           │
+└─────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────┐
+│            Template Layer                    │
+│         (internal/templates/*)              │
+│  - Embedded templates                        │
+│  - Template loading                          │
+│  - Content generation                        │
+└─────────────────────────────────────────────┘
+```
+
+#### Key Patterns
+
+1. **Action Lifecycle**: All creation actions follow a 3-phase lifecycle:
+   - `preCreate()` - Validation and setup
+   - `exec()` - Core file creation logic
+   - `postCreate()` - Formatting and cleanup
+
+2. **Template Embedding**: Templates are embedded at compile time using `//go:embed`
+
+3. **Functional Options**: Forms use functional options pattern for flexibility
+
+4. **Type-Based Dispatch**: Lambda and domain types use switch statements on type strings
+
+---
+
+### Adding a New Command
+
+Follow these steps to add a new command to Draft:
+
+#### 1. Create Command Structure
+
+Create a new directory under `cmd/commands/`:
+
+```bash
+mkdir -p cmd/commands/mynewcommand
+```
+
+#### 2. Define the Command
+
+Create `cmd/commands/mynewcommand/mynewcommand.go`:
+
+```go
+package mynewcommand
+
+import (
+    "github.com/spf13/cobra"
+    "github.com/Drafteame/draft/cmd/commands/internal/common"
+    "github.com/Drafteame/draft/internal/actions/mynewcommand"
+    "github.com/Drafteame/draft/internal/data"
+    "github.com/Drafteame/draft/internal/dtos"
+    "github.com/Drafteame/draft/internal/forms/mynewcommand"
+    "github.com/Drafteame/draft/internal/pkg/log"
+)
+
+var myNewCommandCmd = &cobra.Command{
+    Use:   "my:new:command",
+    Short: "Brief description of the command",
+    Long:  "Detailed description of what the command does",
+    Run:   run,
+}
+
+func init() {
+    // Add command-specific flags
+    myNewCommandCmd.Flags().Bool("my-flag", false, "Description of flag")
+}
+
+func run(cmd *cobra.Command, _ []string) {
+    // Change to working directory if specified
+    common.ChDir(cmd)
+
+    // Load project metadata
+    data.LoadMeta()
+
+    // Extract flags
+    myFlag := common.GetBoolFlag(cmd, "my-flag")
+
+    // Create input DTO
+    input := dtos.MyNewCommandInput{
+        MyFlag: myFlag,
+    }
+
+    // Run form to collect user input
+    if err := mynewcommand.GetForm(&input); err != nil {
+        log.Exitf(1, "failed to collect input: %s", err.Error())
+    }
+
+    // Execute action
+    if err := mynewcommand.New(input).Exec(); err != nil {
+        log.Exitf(1, "failed to execute command: %s", err.Error())
+    }
+
+    log.Success("Command completed successfully")
+}
+
+func GetCmd() *cobra.Command {
+    return myNewCommandCmd
+}
+```
+
+#### 3. Register the Command
+
+Add to `cmd/commands/root.go`:
+
+```go
+import (
+    "github.com/Drafteame/draft/cmd/commands/mynewcommand"
+)
+
+func init() {
+    // ... existing commands ...
+    rootCmd.AddCommand(mynewcommand.GetCmd())
+}
+```
+
+#### 4. Create DTO
+
+Create `internal/dtos/mynewcommand_input.go`:
+
+```go
+package dtos
+
+type MyNewCommandInput struct {
+    PackageName string
+    MyFlag      bool
+    // Add fields needed for your command
+}
+```
+
+#### 5. Create Form
+
+Create `internal/forms/mynewcommand/mynewcommand.go`:
+
+```go
+package mynewcommand
+
+import (
+    "github.com/Drafteame/draft/internal/data"
+    "github.com/Drafteame/draft/internal/dtos"
+    "github.com/Drafteame/draft/internal/pkg/inputs"
+)
+
+func GetForm(input *dtos.MyNewCommandInput) error {
+    input.PackageName = data.Meta.PackageName
+
+    // Add form fields
+    err := inputs.Text("Field Name:",
+        inputs.WithValue(&input.FieldName),
+        inputs.WithDescription[string]("Help text"),
+        inputs.WithValidation(func(val string) error {
+            if val == "" {
+                return errors.New("field cannot be empty")
+            }
+            return nil
+        }),
+    )
+
+    return err
+}
+```
+
+#### 6. Create Action
+
+Create `internal/actions/mynewcommand/mynewcommand.go`:
+
+```go
+package mynewcommand
+
+import (
+    "github.com/Drafteame/draft/internal/dtos"
+)
+
+type MyNewCommand struct {
+    input dtos.MyNewCommandInput
+}
+
+func New(input dtos.MyNewCommandInput) *MyNewCommand {
+    return &MyNewCommand{
+        input: input,
+    }
+}
+
+func (m *MyNewCommand) Exec() error {
+    if err := m.preCreate(); err != nil {
+        return err
+    }
+
+    if err := m.exec(); err != nil {
+        return err
+    }
+
+    return m.postCreate()
+}
+
+func (m *MyNewCommand) preCreate() error {
+    // Validation and setup
+    return nil
+}
+
+func (m *MyNewCommand) exec() error {
+    // Core logic
+    return nil
+}
+
+func (m *MyNewCommand) postCreate() error {
+    // Cleanup and formatting
+    return nil
+}
+```
+
+#### 7. Add Templates (if needed)
+
+If your command generates files, create templates:
+
+1. Create template directory: `internal/templates/tmpl/mycommand/`
+2. Add template files with `.tmpl` extension
+3. Create template loader in `internal/templates/`
+
+---
+
+### Template System
+
+#### Creating Templates
+
+Templates use Go's `text/template` syntax:
+
+```go
+// File: internal/templates/tmpl/mycommand/file.go.tmpl
+package {{.PackageName}}
+
+// Generated with Draft
+func {{.FunctionName}}() {
+    // Your code here
+}
+```
+
+#### Loading Templates
+
+Create a template loader:
+
+```go
+//go:embed tmpl/mycommand
+var myCommandTemplates embed.FS
+
+func loadMyCommandTemplate(data any) ([]byte, error) {
+    name := "mycommand/file.go"
+    path := "tmpl/mycommand/file.go.tmpl"
+    return loadTemplate(name, path, data, myCommandTemplates)
+}
+```
+
+#### Using Templates in Actions
+
+```go
+func (m *MyNewCommand) exec() error {
+    content, err := templates.LoadMyCommandTemplate(m.input)
+    if err != nil {
+        return err
+    }
+
+    return files.Create("output/file.go", content)
+}
+```
+
+---
+
+### Development Workflow
+
+#### Prerequisites
+
+Install development dependencies:
+
+```bash
+# Install Task runner
+go install github.com/go-task/task/v3/cmd/task@latest
+
+# Install Husky for git hooks
+task hooks
+```
+
+#### Common Tasks
+
+```bash
+# Format code
+task format
+
+# Run linters
+task lint
+
+# Install git hooks
+task hooks
+```
+
+#### Building
+
+```bash
+# Install locally
+go install
+
+# Build for specific platform
+GOOS=linux GOARCH=amd64 go build -o draft-linux
+
+# Build for all platforms (uses goreleaser)
+goreleaser build --snapshot --clean
+```
+
+#### Testing
+
+Currently, there is no test suite. When adding tests:
+
+```bash
+# Run all tests
+go test ./...
+
+# Run tests with coverage
+go test -cover ./...
+
+# Run tests for specific package
+go test ./internal/actions/newlambda/...
+```
+
+---
+
+### Code Standards
+
+#### Linting
+
+The project uses `revive` and `go vet`:
+
+```bash
+task lint
+```
+
+Configuration is in `revive.toml`.
+
+#### Code Formatting
+
+Use `goimports-reviser` for imports and formatting:
+
+```bash
+task format
+```
+
+#### Commit Messages
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: add new lambda type
+fix: correct directory creation bug
+docs: update README with examples
+refactor: extract common flag helpers
+chore: update dependencies
+```
+
+Enforced by Commitizen (`.cz.toml`) and git hooks.
+
+#### Pull Requests
+
+PR titles must follow conventional commit format:
+
+```
+feat(lambda): add support for custom event sources
+fix(domain): correct postgres template paths
+docs: improve development guide in README
+```
+
+Enforced by `.github/workflows/pull_request.yml`.
+
+---
+
+## Contributing
+
+We welcome contributions! Please follow these guidelines:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feat/my-new-feature`
+3. **Make your changes** following the code standards
+4. **Run linters**: `task lint`
+5. **Format code**: `task format`
+6. **Commit with conventional commits**: `git commit -m "feat: add new feature"`
+7. **Push to your fork**: `git push origin feat/my-new-feature`
+8. **Open a Pull Request**
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/Drafteame/draft.git
+cd draft
+
+# Install dependencies
+go mod download
+
+# Install git hooks
+task hooks
+
+# Build and install locally
+go install
+
+# Verify installation
+draft --version
+```
+
+---
+
+## License
+
+[Add your license information here]
+
+---
+
+## Support
+
+For issues, questions, or contributions:
+
+- **GitHub Issues**: [https://github.com/Drafteame/draft/issues](https://github.com/Drafteame/draft/issues)
+- **Documentation**: See `CLAUDE.md` for detailed architecture information
+
+---
+
+**Built with ❤️ by the Draftea team**

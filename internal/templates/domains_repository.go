@@ -1,6 +1,7 @@
 package templates
 
 import (
+	appdata "github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 )
 
@@ -18,9 +19,9 @@ func loadDomainsRepository(v *Repository, data any) error {
 	var loaders []func(*Repository, any) error
 
 	switch input.DBType {
-	case "postgres":
+	case appdata.DBTypePostgres:
 		loaders = append(loaders, loadRepositoryPostgres)
-	case "dynamo":
+	case appdata.DBTypeDynamo:
 		loaders = append(loaders, loadRepositoryDynamo)
 	}
 

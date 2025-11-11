@@ -1,27 +1,29 @@
 package templates
 
 import (
+	appdata "github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 )
 
 type Providers struct {
 	GeneratorGo             []byte
-	ProvidersGo             []byte
 	ServiceGo               []byte
 	Postgres                ProvidersPostgres
 	GeneratorsNanoidTableid ProvidersGeneratorsNanoidTableid
 }
 
 func loadDomainsProviders(v *Providers, data any) error {
-	loaders := []func(*Providers, any) error{
-		loadProvidersGeneratorGo,
-		loadProvidersServiceGo,
-	}
+	var loaders []func(*Providers, any) error
 
-	// Only load postgres-specific providers for postgres
+	// Only load providers for postgres
 	input, ok := data.(dtos.DomainInput)
-	if ok && input.DBType == "postgres" {
-		loaders = append(loaders, loadProvidersPostgres, loadProvidersGeneratorsNanoidTableid)
+	if ok && input.DBType == appdata.DBTypePostgres {
+		loaders = []func(*Providers, any) error{
+			loadProvidersGeneratorGo,
+			loadProvidersServiceGo,
+			loadProvidersPostgres,
+			loadProvidersGeneratorsNanoidTableid,
+		}
 	}
 
 	for _, loader := range loaders {

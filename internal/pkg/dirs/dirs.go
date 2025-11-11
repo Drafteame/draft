@@ -2,12 +2,14 @@ package dirs
 
 import (
 	"os"
+
+	"github.com/Drafteame/draft/internal/pkg/constants"
 )
 
-// Create creates directories.
+// Create creates directories with default permissions.
 func Create(paths ...string) error {
 	for _, path := range paths {
-		if err := os.MkdirAll(path, 0755); err != nil {
+		if err := os.MkdirAll(path, constants.DefaultDirMode); err != nil {
 			return err
 		}
 	}
