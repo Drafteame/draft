@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/alecthomas/chroma v0.10.0
 	github.com/aws/aws-sdk-go-v2/config v1.31.17
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.67.0
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.67.1
 	github.com/charmbracelet/huh v0.8.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20251110114415-25888d17260b
 	github.com/charmbracelet/lipgloss v1.1.0
