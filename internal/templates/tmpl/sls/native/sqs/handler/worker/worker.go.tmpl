@@ -5,19 +5,17 @@ import (
 
 	"{{ .PackageName }}/pkg/consumer/base"
 	"{{ .PackageName }}/projects/framev2/pkg/log"
-	"{{ .PackageName }}/projects/framev2/pkg/publisher/types"
 	"{{ .PackageName }}/projects/framev2/pkg/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}sqs/{{ .LambdaName }}/handler/dtos"
 )
 
 const (
 	Action = "" // TODO: set action name
-	target = "" // TODO: set target name
 )
 
 func Worker(r *Resources) base.Worker[dtos.Event] {
-	return func(ctx context.Context, event types.Event[dtos.Event]) error {
-		newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.sqs.{{ .LambdaName }}.handler.worker.Worker")
+	return func(ctx context.Context, event dtos.Event) error {
+		_, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.sqs.{{ .LambdaName }}.handler.worker.Worker")
 		defer segment.Close(nil)
 
 		// TODO: Implement your worker logic here
