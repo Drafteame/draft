@@ -1,12 +1,28 @@
 package templates
 
+import (
+	appdata "github.com/Drafteame/draft/internal/data"
+	"github.com/Drafteame/draft/internal/dtos"
+)
+
 type Repository struct {
 	Postgres RepositoryPostgres
+	Dynamo   RepositoryDynamo
 }
 
 func loadDomainsRepository(v *Repository, data any) error {
-	loaders := []func(*Repository, any) error{
-		loadRepositoryPostgres,
+	input, ok := data.(dtos.DomainInput)
+	if !ok {
+		return nil
+	}
+
+	var loaders []func(*Repository, any) error
+
+	switch input.DBType {
+	case appdata.DBTypePostgres:
+		loaders = append(loaders, loadRepositoryPostgres)
+	case appdata.DBTypeDynamo:
+		loaders = append(loaders, loadRepositoryDynamo)
 	}
 
 	for _, loader := range loaders {
@@ -20,6 +36,10 @@ func loadDomainsRepository(v *Repository, data any) error {
 
 func loadRepositoryPostgres(v *Repository, data any) error {
 	return loadDomainsRepositoryPostgres(&v.Postgres, data)
+}
+
+func loadRepositoryDynamo(v *Repository, data any) error {
+	return loadDomainsRepositoryDynamo(&v.Dynamo, data)
 }
 
 type RepositoryPostgres struct {
@@ -38,6 +58,7 @@ type RepositoryPostgres struct {
 	SearchOneTestGo  []byte
 	UpdateGo         []byte
 	UpdateTestGo     []byte
+	ProvideGo        []byte
 	Builders         RepositoryPostgresBuilders
 	Daos             RepositoryPostgresDaos
 }
@@ -59,6 +80,7 @@ func loadDomainsRepositoryPostgres(v *RepositoryPostgres, data any) error {
 		loadRepositoryPostgresSearchOneGoTest,
 		loadRepositoryPostgresUpdateGo,
 		loadRepositoryPostgresUpdateGoTest,
+		loadRepositoryPostgresProvideGo,
 		loadRepositoryPostgresBuilders,
 		loadRepositoryPostgresDaos,
 	}
@@ -282,6 +304,20 @@ func loadRepositoryPostgresUpdateGoTest(v *RepositoryPostgres, data any) error {
 	return nil
 }
 
+func loadRepositoryPostgresProvideGo(v *RepositoryPostgres, data any) error {
+	name := "domains/repository/postgres/provide.go"
+	path := "tmpl/domain/repository/postgres/provide.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.ProvideGo = content
+
+	return nil
+}
+
 func loadRepositoryPostgresBuilders(v *RepositoryPostgres, data any) error {
 	return loadDomainsRepositoryPostgresBuilders(&v.Builders, data)
 }
@@ -430,6 +466,70 @@ func loadRepositoryPostgresDaosUpdateGo(v *RepositoryPostgresDaos, data any) err
 	}
 
 	v.UpdateGo = content
+
+	return nil
+}
+
+type RepositoryDynamo struct {
+	InterfacesGo []byte
+	RepositoryGo []byte
+	ProviderGo   []byte
+}
+
+func loadDomainsRepositoryDynamo(v *RepositoryDynamo, data any) error {
+	loaders := []func(*RepositoryDynamo, any) error{
+		loadRepositoryDynamoInterfacesGo,
+		loadRepositoryDynamoRepositoryGo,
+		loadRepositoryDynamoProviderGo,
+	}
+
+	for _, loader := range loaders {
+		if err := loader(v, data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func loadRepositoryDynamoInterfacesGo(v *RepositoryDynamo, data any) error {
+	name := "domains/repository/dynamo/interfaces.go"
+	path := "tmpl/domain/repository/dynamo/interfaces.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.InterfacesGo = content
+
+	return nil
+}
+
+func loadRepositoryDynamoRepositoryGo(v *RepositoryDynamo, data any) error {
+	name := "domains/repository/dynamo/repository.go"
+	path := "tmpl/domain/repository/dynamo/repository.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.RepositoryGo = content
+
+	return nil
+}
+
+func loadRepositoryDynamoProviderGo(v *RepositoryDynamo, data any) error {
+	name := "domains/repository/dynamo/provider.go"
+	path := "tmpl/domain/repository/dynamo/provider.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.ProviderGo = content
 
 	return nil
 }

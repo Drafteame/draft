@@ -1,7 +1,6 @@
 package setup
 
 type Input struct {
-	WorkingDir   string
 	Prune        bool
 	BypassDocker bool
 }

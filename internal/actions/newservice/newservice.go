@@ -14,22 +14,24 @@ type NewService struct {
 	input dtos.ServiceInput
 }
 
-func GetAction(input dtos.ServiceInput) (*NewService, error) {
-	tmpl, err := templates.NewServiceTemplates(input)
-	if err != nil {
-		return nil, err
-	}
-
-	return &NewService{input: input, tmpl: tmpl}, nil
+func New(input dtos.ServiceInput) *NewService {
+	return &NewService{input: input}
 }
 
 func (ns *NewService) Exec() error {
-	if err := ns.preCreate(); err != nil {
+	tmpl, err := templates.NewServiceTemplates(ns.input)
+	if err != nil {
 		return err
 	}
 
-	if err := ns.exec(); err != nil {
-		return err
+	ns.tmpl = tmpl
+
+	if errPre := ns.preCreate(); errPre != nil {
+		return errPre
+	}
+
+	if errExec := ns.exec(); errExec != nil {
+		return errExec
 	}
 
 	return ns.postCreate()
@@ -58,7 +60,6 @@ func (ns *NewService) createServerless() error {
 
 func (ns *NewService) createAllDirs() error {
 	folders := []string{
-		ns.input.ServicePath + "/cmd/plain",
 		ns.input.ServicePath + "/config/app",
 		ns.input.ServicePath + "/config/sls",
 	}
@@ -67,8 +68,17 @@ func (ns *NewService) createAllDirs() error {
 }
 
 func (ns *NewService) createLambdaFolders() error {
+	lambdaPath := ns.input.ServicePath + "/cmd/" + ns.input.LambdaType + "/" + ns.input.LambdaName
+
+	if ns.input.IsLegacy {
+		lambdaPath = ns.input.ServicePath + "/" + ns.input.LambdaType + "/" + ns.input.LambdaName
+	}
+
 	folders := []string{
-		ns.input.ServicePath + "/cmd/" + ns.input.LambdaType + "/" + ns.input.LambdaName + "/handler",
+		lambdaPath + "/handler",
+		lambdaPath + "/handler/worker",
+		lambdaPath + "/handler/embed",
+		lambdaPath + "/handler/dtos",
 	}
 
 	return dirs.Create(folders...)
@@ -97,18 +107,27 @@ func (ns *NewService) getFileList() []dtos.FileEntry {
 		{Path: "/config/sls/iam.yml", Data: ns.tmpl.Config.Sls.IamYAML},
 	}
 
-	if ns.input.FrameVersion == "v2" {
-		entries = append(entries, ns.getFrameV2Entries()...)
-	}
+	entries = append(entries, ns.getEntries()...)
 
 	return entries
 }
 
-func (ns *NewService) getFrameV2Entries() []dtos.FileEntry {
-	return []dtos.FileEntry{
-		{Path: "/cmd/plain/" + ns.input.LambdaName + "/main.go", Data: ns.tmpl.Lambda.Plain.MainGo},
-		{Path: "/cmd/plain/" + ns.input.LambdaName + "/lambda-config.yml", Data: ns.tmpl.Lambda.Plain.LambdaConfigYAML},
-		{Path: "/cmd/plain/" + ns.input.LambdaName + "/handler/handler.go", Data: ns.tmpl.Lambda.Plain.Handler.HandlerGo},
-		{Path: "/cmd/plain/" + ns.input.LambdaName + "/handler/bootstrap.go", Data: ns.tmpl.Lambda.Plain.Handler.BootstrapGo},
+func (ns *NewService) getEntries() []dtos.FileEntry {
+	var entries []dtos.FileEntry
+
+	lambdaPath := "/cmd/plain/"
+	if ns.input.IsLegacy {
+		lambdaPath = "/plain/"
 	}
+
+	entries = []dtos.FileEntry{
+		{Path: lambdaPath + ns.input.LambdaName + "/main.go", Data: ns.tmpl.Lambda.Plain.MainGo},
+		{Path: lambdaPath + ns.input.LambdaName + "/lambda-config.yml", Data: ns.tmpl.Lambda.Plain.LambdaConfigYAML},
+		{Path: lambdaPath + ns.input.LambdaName + "/handler/bootstrap.go", Data: ns.tmpl.Lambda.Plain.Handler.BootstrapGo},
+		{Path: lambdaPath + ns.input.LambdaName + "/handler/worker/worker.go", Data: ns.tmpl.Lambda.Plain.Handler.WorkerGo},
+		{Path: lambdaPath + ns.input.LambdaName + "/handler/worker/resources.go", Data: ns.tmpl.Lambda.Plain.Handler.ResourcesGo},
+		{Path: lambdaPath + ns.input.LambdaName + "/handler/dtos/dto.go", Data: ns.tmpl.Lambda.Plain.Handler.DtosGo},
+		{Path: lambdaPath + ns.input.LambdaName + "/handler/embed/_.yaml", Data: ns.tmpl.Lambda.Plain.Handler.EmbedYML},
+	}
+	return entries
 }

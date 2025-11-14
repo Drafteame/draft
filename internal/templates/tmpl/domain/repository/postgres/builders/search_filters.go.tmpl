@@ -22,7 +22,7 @@ func buildSearchFilters(gormDB *gorm.DB, filters options.SearchFilters) *gorm.DB
 }
 
 func buildNotDeletedFilter(query *gorm.DB, filters options.SearchFilters) *gorm.DB {
-    return query.Where("deleted_at IS NULL")
+	return query.Where("deleted_at IS NULL")
 }
 
 // TODO: add filter builders functions

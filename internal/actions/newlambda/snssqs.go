@@ -10,13 +10,28 @@ func (nl *NewLambda) createSnsSqs() error {
 		return err
 	}
 
+	if err := dirs.Create(nl.lambdaPath + "/handler/worker"); err != nil {
+		return err
+	}
+
+	if err := dirs.Create(nl.lambdaPath + "/handler/embed"); err != nil {
+		return err
+	}
+
+	if err := dirs.Create(nl.lambdaPath + "/handler/dtos"); err != nil {
+		return err
+	}
+
 	filesEntries := []dtos.FileEntry{
 		{Path: "/main.go", Data: nl.tmpl.SnsSqs.MainGo},
 		{Path: "/lambda-config.yml", Data: nl.tmpl.SnsSqs.LambdaConfigYAML},
-		{Path: "/handler/handler.go", Data: nl.tmpl.SnsSqs.Handler.HandlerGo},
-		{Path: "/handler/worker.go", Data: nl.tmpl.SnsSqs.Handler.WorkerGo},
 		{Path: "/handler/bootstrap.go", Data: nl.tmpl.SnsSqs.Handler.BootstrapGo},
-		{Path: "/handler/provider.go", Data: nl.tmpl.SnsSqs.Handler.ProviderGo},
+		{Path: "/handler/worker/worker.go", Data: nl.tmpl.SnsSqs.Handler.WorkerGo},
+		{Path: "/handler/worker/resources.go", Data: nl.tmpl.SnsSqs.Handler.ResourcesGo},
+		{Path: "/handler/worker/idempotency.go", Data: nl.tmpl.SnsSqs.Handler.IdempotencyGo},
+		{Path: "/handler/worker/interfaces.go", Data: nl.tmpl.SnsSqs.Handler.InterfacesGo},
+		{Path: "/handler/embed/_.yaml", Data: nl.tmpl.SnsSqs.Handler.EmbedYML},
+		{Path: "/handler/dtos/dto.go", Data: nl.tmpl.SnsSqs.Handler.DtosGo},
 	}
 
 	return nl.createFiles(filesEntries...)

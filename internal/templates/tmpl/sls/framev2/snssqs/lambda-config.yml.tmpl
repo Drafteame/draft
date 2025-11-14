@@ -1,7 +1,0 @@
-function:
-  {{ .LambdaName }}:
-    handler: {{if not .IsLegacy}}cmd/{{ end }}snssqs/{{ .LambdaName }}/main.go
-    reservedConcurrency: 10
-    events:
-      - sqs:
-          arn: '{{ .QueueARN }}'

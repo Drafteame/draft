@@ -8,6 +8,7 @@ import (
 	"github.com/Masterminds/semver"
 
 	"github.com/Drafteame/draft/internal/pkg/files"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
 const nixMetadataPath = "$HOME/.config/.nix-metadata.json"
@@ -35,13 +36,13 @@ func (n *NixMetadata) ShouldRunUpdateScript() bool {
 
 func (n *NixMetadata) ParseCurrentVersion() {
 	if n.Version == "" {
-		println("Current version not found in nix metadata")
+		log.Debug("Current version not found in nix metadata")
 		return
 	}
 
 	parsedVersion, err := semver.NewVersion(n.Version)
 	if err != nil {
-		_, _ = fmt.Printf("Error parsing current version: %v\n", err)
+		log.Debugf("Error parsing current nix modules version: %v", err)
 		return
 	}
 
@@ -57,12 +58,12 @@ func (n *NixMetadata) UpdateLastNixVersionCheck() error {
 
 	metadata, err := json.MarshalIndent(n, "", "	")
 	if err != nil {
-		_, _ = fmt.Printf("Error updating nix-metadata: %v\n", err)
+		log.Debugf("Error updating nix-metadata: %v", err)
 		return err
 	}
 
 	if err := files.Create(nixMetadataPath, metadata); err != nil {
-		_, _ = fmt.Printf("Error updating nix-metadata: %v\n", err)
+		log.Debugf("Error updating nix-metadata: %v", err)
 		return err
 	}
 
@@ -74,12 +75,12 @@ func (n *NixMetadata) UpdateLastNegativeUpdatePrompt() error {
 
 	metadata, err := json.MarshalIndent(n, "", "	")
 	if err != nil {
-		_, _ = fmt.Printf("Error updating nix-metadata: %v\n", err)
+		log.Debugf("Error updating nix-metadata: %v", err)
 		return err
 	}
 
 	if err := files.Create(nixMetadataPath, metadata); err != nil {
-		_, _ = fmt.Printf("Error updating nix-metadata: %v\n", err)
+		log.Debugf("Error updating nix-metadata: %v", err)
 		return err
 	}
 

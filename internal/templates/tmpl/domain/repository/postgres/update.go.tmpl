@@ -3,21 +3,30 @@ package repository
 import (
 	"context"
 
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
 	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
-func (r *Repository) Update(ctx context.Context, id string, fields options.UpdateFields) (daos.{{.DomainNamePascal}}, error) {
-	entity, err := r.Get(ctx, id)
+func (r *Repository) Update(ctx context.Context, id string, fields options.UpdateFields) (domain.{{.DomainNamePascal}}, error) {
+	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.Update")
+	defer span.Close(nil)
+
+	entity, err := r.Get(newCtx, id)
 	if err != nil {
-		return daos.{{.DomainNamePascal}}{}, err
+		_ = span.AddError(err)
+		return domain.{{.DomainNamePascal}}{}, err
 	}
 
 	updated := daos.ToUpdateDAO(id, fields)
 
-	if err := r.driver.GetClient().Model(&entity).Updates(updated).Error; err != nil {
-		return daos.{{.DomainNamePascal}}{}, err
+	dao := daos.FromModel(entity)
+
+	if err := r.driver.GetClient().Model(&dao).WithContext(newCtx).Updates(updated).Error; err != nil {
+		_ = span.AddError(err)
+		return domain.{{.DomainNamePascal}}{}, err
 	}
 
-	return entity, nil
+	return r.Get(newCtx, id)
 }

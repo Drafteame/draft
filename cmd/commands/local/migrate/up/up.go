@@ -1,15 +1,15 @@
 package up
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
 
+	"github.com/Drafteame/draft/cmd/commands/internal/common"
+	"github.com/Drafteame/draft/cmd/commands/local/migrate/internal/flags"
 	comm "github.com/Drafteame/draft/internal/actions/local/migrate/command"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
-var migrateUpCmd = cobra.Command{
+var migrateUpCmd = &cobra.Command{
 	Use:   "local:migrate:up [flags] ",
 	Short: "Execute migrate up command to apply all pending migrations",
 	Long:  "Execute migrations using go migrate over all databases or a specific one",
@@ -17,62 +17,32 @@ var migrateUpCmd = cobra.Command{
 }
 
 func GetCmd() *cobra.Command {
-	return &migrateUpCmd
+	return migrateUpCmd
 }
 
 func init() {
-	migrateUpCmd.Flags().StringP("database", "D", "", "database name")
-	migrateUpCmd.Flags().StringP("local-migrate-config", "c", ".local-migrate-config.yml", "path to the migrations config file")
-	migrateUpCmd.Flags().Bool("all", false, "migrate all databases")
-	migrateUpCmd.Flags().String("group", "", "DB migrations group name")
+	flags.Register(migrateUpCmd)
 }
 
 func run(cmd *cobra.Command, _ []string) {
-	defer func() {
-		if r := recover(); r != nil {
-			_, _ = fmt.Printf("%v\n", r)
-			os.Exit(1)
-		}
-	}()
+	common.ChDir(cmd)
 
-	workingDir, err := cmd.Parent().Flags().GetString("working-dir")
-	if err != nil {
-		panic(err)
-	}
-
-	database, err := cmd.Flags().GetString("database")
-	if err != nil {
-		panic(err)
-	}
-
-	localMigrateConfig, err := cmd.Flags().GetString("local-migrate-config")
-	if err != nil {
-		panic(err)
-	}
-
-	all, err := cmd.Flags().GetBool("all")
-	if err != nil {
-		panic(err)
-	}
-
-	group, err := cmd.Flags().GetString("group")
-	if err != nil {
-		panic(err)
-	}
+	f := flags.GetFlags(cmd)
 
 	command := "up"
 
 	input := comm.Input{
 		Command:            command,
-		WorkingDir:         workingDir,
-		Database:           database,
-		LocalMigrateConfig: localMigrateConfig,
-		Group:              group,
-		All:                all,
+		Database:           f.Database,
+		LocalMigrateConfig: f.Config,
+		Group:              f.Group,
+		All:                f.All,
 	}
 
 	errExec := comm.New(input).Exec()
 	if errExec != nil {
-		panic(errExec)
+		log.Exitf(1, "failed to execute command: %s", errExec.Error())
 	}
+
+	log.Success("Migration up completed")
 }

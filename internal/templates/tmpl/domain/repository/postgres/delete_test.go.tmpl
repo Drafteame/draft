@@ -1,4 +1,4 @@
-package repository_test
+package repository
 
 import (
 	"context"
@@ -6,8 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	rposome "{{.PackageName}}/{{ .DomainPath }}/domain"
-	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 )
 
 func TestDelete(t *testing.T) {
@@ -18,7 +17,7 @@ func TestDelete(t *testing.T) {
 
 		tw := newTestWrapper(t)
 
-		data, err := tw.repo.Create(context.TODO(), daos.{{.DomainNamePascal}}{})
+		data, err := tw.repo.Create(context.TODO(), domain.{{.DomainNamePascal}}{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -45,6 +44,6 @@ func TestDelete(t *testing.T) {
 		}
 
 		assert.Error(t, err)
-		assert.ErrorIs(t, err, rposome.ErrRecordNotFound)
+		assert.ErrorIs(t, err, domain.ErrRecordNotFound)
 	})
 }

@@ -1,0 +1,97 @@
+package worker
+
+import (
+	"context"
+	"encoding/json"
+
+	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+)
+
+{{- if .UseIdempotency }}
+func Worker(r *Resources) func(ctx context.Context, input json.RawMessage) (result any, err error) {
+	return func(ctx context.Context, input json.RawMessage) (result any, err error) {
+		newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.{{ .CustomTypePath }}.{{ .LambdaName }}.handler.worker.Worker")
+		defer segment.Close(nil)
+
+		// Defer cleanup: remove idempotency key on retryable errors to allow retry
+		defer func() {
+			if err != nil && isRetryableError(err) {
+				_ = r.deleteIdempotency(newCtx, input)
+			}
+		}()
+
+		// Set idempotency key to prevent duplicate processing
+		if err = r.SetIdempotency(newCtx, input); err != nil {
+			_ = segment.AddError(err)
+			return nil, err
+		}
+
+		// TODO: implement worker logic here
+		// You can unmarshal the input into your custom type:
+		// var myInput MyInputType
+		// if err := json.Unmarshal(input, &myInput); err != nil {
+		//     return nil, err
+		// }
+
+		return nil, nil
+	}
+}
+{{- else }}
+func Worker(r *Resources) func(ctx context.Context, input json.RawMessage) (any, error) {
+	return func(ctx context.Context, input json.RawMessage) (any, error) {
+		newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.{{ .CustomTypePath }}.{{ .LambdaName }}.handler.worker.Worker")
+		defer segment.Close(nil)
+
+		// TODO: implement worker logic here
+		// You can unmarshal the input into your custom type:
+		// var myInput MyInputType
+		// if err := json.Unmarshal(input, &myInput); err != nil {
+		//     return nil, err
+		// }
+
+		return nil, nil
+	}
+}
+{{- end }}
+
+{{- if .UseIdempotency }}
+
+// isRetryableError determines if an error should trigger idempotency key cleanup to allow retry
+func isRetryableError(err error) bool {
+	// TODO: Implement proper error validation logic here
+	//
+	// Retryable errors (should return true):
+	// - Temporary network failures
+	// - Database connection timeouts
+	// - External service unavailability (HTTP 5xx errors)
+	// - Rate limiting errors (HTTP 429)
+	// - Context deadline exceeded (for retriable operations)
+	//
+	// Non-retryable errors (should return false):
+	// - Validation errors (invalid input data)
+	// - Business logic violations
+	// - Authentication/Authorization errors (HTTP 401, 403)
+	// - Not found errors (HTTP 404)
+	// - Duplicate key violations
+	// - Data format errors (JSON unmarshal errors)
+	//
+	// Example implementation:
+	// var netErr net.Error
+	// if errors.As(err, &netErr) && netErr.Temporary() {
+	//     return true
+	// }
+	//
+	// if errors.Is(err, context.DeadlineExceeded) {
+	//     return true
+	// }
+	//
+	// var validationErr *ValidationError
+	// if errors.As(err, &validationErr) {
+	//     return false
+	// }
+	//
+	// return false
+
+	return true // Placeholder: Currently treats all errors as retryable
+}
+{{- end }}

@@ -10,22 +10,34 @@ type NewDomain struct {
 	tmpl  templates.Domains
 }
 
-func GetAction(input dtos.DomainInput) (*NewDomain, error) {
-	tmpl, err := templates.NewDomains(input)
-	if err != nil {
-		return nil, err
-	}
-
+func New(input dtos.DomainInput) *NewDomain {
 	return &NewDomain{
 		input: input,
-		tmpl:  tmpl,
-	}, nil
+	}
 }
 
 func (nd *NewDomain) Exec() error {
+	tmpl, err := templates.NewDomains(nd.input)
+	if err != nil {
+		return err
+	}
+
+	nd.tmpl = tmpl
+
+	if err := nd.preCreate(); err != nil {
+		return err
+	}
+
 	if err := nd.exec(); err != nil {
 		return err
 	}
 
 	return nd.postCreate()
+}
+
+// preCreate performs validation and setup before domain creation
+func (nd *NewDomain) preCreate() error {
+	// Future validations can be added here
+	// Example: check if domain path already exists
+	return nil
 }

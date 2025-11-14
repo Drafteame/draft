@@ -1,7 +1,8 @@
 module config.app
 
 import "modules.pkl" as modules
+import ".../config/pkl/global.pkl" as global
 
 output {
-  value = modules.config
+  value = global.config.toMap() + modules.config.toMap()
 }

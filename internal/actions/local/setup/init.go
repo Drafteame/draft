@@ -7,6 +7,7 @@ import (
 
 	migrateup "github.com/Drafteame/draft/internal/actions/local/migrate/command"
 	"github.com/Drafteame/draft/internal/pkg/exec"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
 func (a *Action) init() error {
@@ -18,14 +19,13 @@ func (a *Action) init() error {
 			return fmt.Errorf("init failed: %w", err)
 		}
 
-		if err := a.postgresHealthCheck(); err != nil {
-			return err
+		if errHealth := a.postgresHealthCheck(); errHealth != nil {
+			return errHealth
 		}
 	}
 
 	input := migrateup.Input{
 		Command:            "up",
-		WorkingDir:         a.Input.WorkingDir,
 		LocalMigrateConfig: ".local-migrate-config.yml",
 		All:                true,
 	}
@@ -46,29 +46,29 @@ func (a *Action) init() error {
 }
 
 func (a *Action) postgresHealthCheck() error {
-	println("postgres health check")
+	log.Debug("postgres health check")
 
-	cmd := "docker exec -i nix-local-postgres pg_isready -U root"
+	cmd := "docker exec -i api-local-postgres pg_isready -U root"
 
 	maxTries := 5
 
-	var errtries error
+	var errTries error
 
 	for i := 0; i < maxTries; i++ {
 		_, err := exec.Command(cmd, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr))
 		if err == nil {
 			time.Sleep(2 * time.Second)
-			errtries = nil
+			errTries = nil
 			break
 		}
 
-		_, _ = fmt.Printf("retrying (%d/%d): %v\n", i+1, maxTries, err)
+		log.Debugf("retrying postgres health check (%d/%d): %v\n", i+1, maxTries, err)
 
 		sleep := time.Duration(2 * (i + 1))
 		time.Sleep(sleep * time.Second)
 
-		errtries = err
+		errTries = err
 	}
 
-	return errtries
+	return errTries
 }

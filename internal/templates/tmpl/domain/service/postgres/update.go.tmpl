@@ -1,0 +1,22 @@
+package service
+
+import (
+	"context"
+
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
+	"{{.PackageName}}/projects/framev2/pkg/tracer"
+)
+
+func (s *Service) Update(ctx context.Context, id string, fields options.UpdateFields) (domain.{{.DomainNamePascal}}, error) {
+	newCtx, seg := tracer.BeginSubSegment(ctx, "domains.{{.DomainNameLower}}.service.Update")
+	defer seg.Close(nil)
+
+	updated, err := s.repo.Update(newCtx, id, fields)
+	if err != nil {
+		_ = seg.AddError(err)
+		return domain.{{.DomainNamePascal}}{}, err
+	}
+
+	return updated, nil
+}

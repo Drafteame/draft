@@ -7,12 +7,13 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/Drafteame/draft/internal/pkg/constants"
 	"github.com/Drafteame/draft/internal/pkg/dirs"
 )
 
 func Read(path string) ([]byte, error) {
 	path = os.ExpandEnv(path)
-	file, err := os.OpenFile(path, os.O_RDONLY, 0755)
+	file, err := os.OpenFile(path, os.O_RDONLY, constants.DefaultFileMode)
 	if err != nil {
 		return nil, err
 	}
@@ -29,9 +30,17 @@ func ReadString(path string) (string, error) {
 	return string(content), nil
 }
 
+// Create creates a file at the specified path with the given content.
+// It expands environment variables in the path and ensures the parent directory exists.
 func Create(path string, newContent []byte) error {
 	path = os.ExpandEnv(path)
-	return os.WriteFile(path, newContent, 0755)
+
+	// Ensure parent directory exists
+	if err := dirs.Create(filepath.Dir(path)); err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, newContent, constants.DefaultFileMode)
 }
 
 func Exists(path string) bool {

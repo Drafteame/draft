@@ -5,15 +5,15 @@ import (
 )
 
 type Repository struct {
-	genID  GeneratorID
 	clock  Clock
 	driver gorm.Driver
+	genID  GeneratorID
 }
 
 func New(driver gorm.Driver, clock Clock, genID GeneratorID) *Repository {
 	return &Repository{
-		genID:  genID,
 		clock:  clock,
 		driver: driver,
+		genID:  genID,
 	}
 }

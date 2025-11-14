@@ -2,13 +2,19 @@ package config
 
 import (
 	"os"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 
+	"github.com/Drafteame/draft/internal/pkg/aws"
 	"github.com/Drafteame/draft/internal/pkg/files"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
-const configPath = "$HOME/.draftea/draft/config.toml"
+const (
+	configPath   = "$HOME/.draftea/draft/config.toml"
+	ssmParamName = "/service/sentry/dev/SENTRY_TOKEN"
+)
 
 type Config struct {
 	Sentry Sentry `toml:"sentry"`
@@ -20,15 +26,28 @@ type Sentry struct {
 	Team         string `toml:"team"`
 }
 
-func Get() Config {
-	cfg, err := load()
+var (
+	cfg  Config
+	once sync.Once
+)
+
+func Get() (Config, error) {
+	var err error
+
+	once.Do(func() {
+		cfg, err = load()
+		if err != nil {
+			return
+		}
+
+		loadEnvs(&cfg)
+	})
+
 	if err != nil {
-		panic(err)
+		return cfg, err
 	}
 
-	loadEnvs(&cfg)
-
-	return cfg
+	return cfg, nil
 }
 
 func load() (Config, error) {
@@ -41,12 +60,12 @@ func load() (Config, error) {
 		return Config{}, err
 	}
 
-	cfg := Config{}
-	if errUnm := toml.Unmarshal(content, &cfg); errUnm != nil {
+	c := Config{}
+	if errUnm := toml.Unmarshal(content, &c); errUnm != nil {
 		return Config{}, errUnm
 	}
 
-	return cfg, nil
+	return c, nil
 }
 
 func loadEnvs(cfg *Config) {
@@ -67,5 +86,14 @@ func loadSentryEnvs(cfg *Config) {
 	org := os.Getenv("DRAFT_SENTRY_ORGANIZATION")
 	if org != "" {
 		cfg.Sentry.Organization = org
+	}
+
+	if cfg.Sentry.Token == "" {
+		ssmToken, err := aws.GetParameter(ssmParamName)
+		if err != nil {
+			log.Warn("Failed to get Sentry token from SSM:", err)
+		} else if ssmToken != "" {
+			cfg.Sentry.Token = ssmToken
+		}
 	}
 }

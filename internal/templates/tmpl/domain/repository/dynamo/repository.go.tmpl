@@ -1,0 +1,20 @@
+package repository
+
+const {{.DomainNamePascal}}TableName = "{{.TableName}}"
+
+type Repository struct {
+	dynamo    Dynamo
+	tableName string
+}
+
+func New(dynamo Dynamo) *Repository {
+	return &Repository{
+		dynamo:    dynamo,
+		tableName: {{.DomainNamePascal}}TableName,
+	}
+}
+
+func (r *Repository) TableName() string {
+	return r.tableName
+}
+

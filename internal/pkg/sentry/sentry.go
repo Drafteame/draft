@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 
 	"github.com/Drafteame/draft/internal/config"
 	http2 "github.com/Drafteame/draft/internal/pkg/http"
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
 type Project struct {
@@ -22,11 +24,14 @@ type Project struct {
 const baseURL = "https://sentry.io"
 
 func CreateProject(name string) (string, error) {
-	cfg := config.Get().Sentry
+	cfg, errCfg := config.Get()
+	if errCfg != nil {
+		return "", errCfg
+	}
 
-	token := cfg.Token
-	org := cfg.Organization
-	team := cfg.Team
+	token := cfg.Sentry.Token
+	org := cfg.Sentry.Organization
+	team := cfg.Sentry.Team
 
 	headers := map[string]string{
 		"Authorization": "Bearer " + token,
@@ -56,12 +61,12 @@ func CreateProject(name string) (string, error) {
 	}
 
 	if res.StatusCode != 201 {
-		println("[sentry] error with status code", res.StatusCode)
-		println("[sentry] error body", string(resBody))
-		println("[sentry] request url", url)
-		println("[sentry] request body", string(jb))
-		println("[sentry] request auth token", token)
-		return "", errors.New("sentry: failed to create project")
+		log.Debug("[sentry] error with status code", res.StatusCode)
+		log.Debug("[sentry] error body", string(resBody))
+		log.Debug("[sentry] request url", url)
+		log.Debug("[sentry] request body", string(jb))
+		log.Debug("[sentry] request auth token", token)
+		return "", fmt.Errorf("sentry: failed to create project: code - %d | res - %s", res.StatusCode, string(resBody))
 	}
 
 	body := map[string]any{}
@@ -74,10 +79,13 @@ func CreateProject(name string) (string, error) {
 }
 
 func GetClientKeys(projectID string) (map[string]string, error) {
-	cfg := config.Get().Sentry
+	cfg, errCfg := config.Get()
+	if errCfg != nil {
+		return nil, errCfg
+	}
 
-	token := cfg.Token
-	org := cfg.Organization
+	token := cfg.Sentry.Token
+	org := cfg.Sentry.Organization
 
 	headers := map[string]string{
 		"Authorization": "Bearer " + token,
@@ -96,11 +104,11 @@ func GetClientKeys(projectID string) (map[string]string, error) {
 	}
 
 	if res.StatusCode != 200 {
-		println("[sentry] error with status code", res.StatusCode)
-		println("[sentry] error body", string(resBody))
-		println("[sentry] request url", url)
-		println("[sentry] request auth token", token)
-		return nil, errors.New("sentry: failed to get client keys")
+		log.Debug("[sentry] error with status code", res.StatusCode)
+		log.Debug("[sentry] error body", string(resBody))
+		log.Debug("[sentry] request url", url)
+		log.Debug("[sentry] request auth token", token)
+		return nil, fmt.Errorf("sentry: failed to get client keys for project %s: code - %d | res - %s", projectID, res.StatusCode, string(resBody))
 	}
 
 	var body []map[string]any
@@ -156,14 +164,13 @@ func CreateStages(serviceName, dsn string) error {
 }
 
 func DeleteProject(projectID string) error {
-	cfg := config.Get().Sentry
-
-	if cfg.Token == "" {
-		return errors.New("sentry: sentry token not found")
+	cfg, errCfg := config.Get()
+	if errCfg != nil {
+		return errCfg
 	}
 
-	token := cfg.Token
-	org := cfg.Organization
+	token := cfg.Sentry.Token
+	org := cfg.Sentry.Organization
 
 	headers := map[string]string{
 		"Authorization": "Bearer " + token,
@@ -177,9 +184,9 @@ func DeleteProject(projectID string) error {
 	}
 
 	if res.StatusCode != 204 {
-		println("[sentry] error with status code", res.StatusCode)
-		println("[sentry] request url", url)
-		println("[sentry] request auth token", token)
+		log.Debug("[sentry] error with status code", res.StatusCode)
+		log.Debug("[sentry] request url", url)
+		log.Debug("[sentry] request auth token", token)
 		return errors.New("sentry: failed to delete project")
 	}
 
@@ -187,15 +194,14 @@ func DeleteProject(projectID string) error {
 }
 
 func ListProjects() (map[string]string, error) {
-	cfg := config.Get().Sentry
-
-	if cfg.Token == "" {
-		return nil, errors.New("sentry: sentry token not found")
+	cfg, errCfg := config.Get()
+	if errCfg != nil {
+		return nil, errCfg
 	}
 
-	token := cfg.Token
-	org := cfg.Organization
-	team := cfg.Team
+	token := cfg.Sentry.Token
+	org := cfg.Sentry.Organization
+	team := cfg.Sentry.Team
 
 	headers := map[string]string{
 		"Authorization": "Bearer " + token,
@@ -214,10 +220,10 @@ func ListProjects() (map[string]string, error) {
 	}
 
 	if res.StatusCode != 200 {
-		println("[sentry] error with status code", res.StatusCode)
-		println("[sentry] error body", string(resBody))
-		println("[sentry] request url", url)
-		println("[sentry] request auth token", token)
+		log.Debug("[sentry] error with status code", res.StatusCode)
+		log.Debug("[sentry] error body", string(resBody))
+		log.Debug("[sentry] request url", url)
+		log.Debug("[sentry] request auth token", token)
 		return nil, errors.New("sentry: failed to list projects")
 	}
 

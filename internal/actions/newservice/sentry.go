@@ -3,6 +3,7 @@ package newservice
 import (
 	"github.com/Drafteame/draft/internal/config"
 	"github.com/Drafteame/draft/internal/data"
+	"github.com/Drafteame/draft/internal/pkg/log"
 	"github.com/Drafteame/draft/internal/pkg/sentry"
 )
 
@@ -19,19 +20,22 @@ func (ns *NewService) sentry() error {
 }
 
 func (ns *NewService) createSentryProject() error {
-	cfg := config.Get()
+	cfg, errCfg := config.Get()
+	if errCfg != nil {
+		return errCfg
+	}
 
 	if cfg.Sentry.Token == "" {
-		println("Sentry token not found, skipping project creation")
+		log.Warn("Sentry token not found, skipping project creation")
 		return nil
 	}
 
-	projectID, err := sentry.CreateProject(ns.input.ServiceName)
+	projectID, err := sentry.CreateProject(ns.input.NormalizedServiceName)
 	if err != nil {
 		return err
 	}
 
-	println("Sentry project created with ID", projectID)
+	log.Info("Sentry project created with ID", projectID)
 
 	keys, err := sentry.GetClientKeys(projectID)
 	if err != nil {
@@ -41,7 +45,7 @@ func (ns *NewService) createSentryProject() error {
 	ns.input.HasSentry = true
 	ns.input.SentryDSN = keys["dsn"]
 
-	println("Sentry DSN:", ns.input.SentryDSN)
+	log.Info("Sentry DSN:", ns.input.SentryDSN)
 
 	return nil
 }
@@ -52,7 +56,7 @@ func (ns *NewService) setupSentryStages() error {
 	}
 
 	dsn := ns.input.SentryDSN
-	serviceName := ns.input.ServiceName
+	serviceName := ns.input.NormalizedServiceName
 
 	return sentry.CreateStages(serviceName, dsn)
 }
