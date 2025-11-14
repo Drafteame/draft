@@ -1,4 +1,4 @@
-name: Relese
+name: Release
 
 on:
   push:
@@ -17,8 +17,10 @@ jobs:
     if: "!startsWith(github.event.head_commit.message, 'bump:') && !startsWith(github.event.head_commit.message, 'ci:')"
     runs-on: ubuntu-22.04
     name: "Bump version"
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
     steps:
-      - name: Check out
+      - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
@@ -85,12 +87,12 @@ jobs:
         run: echo "Bumped to version ${{ steps.bump.outputs.version }}"
 
   release:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     name: "Release service"
     needs:
       - bump_version
     steps:
-      - name: Check out
+      - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
@@ -98,7 +100,7 @@ jobs:
           ref: "main"
 
       - name: Setup Golang
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: 1.24
 
@@ -109,3 +111,31 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_RELEASE_WEBHOOK }}
+
+  upload_artifacts:
+    name: Upload artifacts
+    runs-on: ubuntu-24.04
+    needs:
+      - bump_version
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.ACCESS_TOKEN }}
+          ref: main
+
+      - name: Set Version File
+        run: |
+          echo '{"draftCliVersion": "${{ needs.bump_version.outputs.version }}"}' > version.json
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: '${{ secrets.AWS_ACCESS_KEY_ID_PROD }}'
+          aws-secret-access-key: '${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}'
+          aws-region: '${{ secrets.AWS_DEFAULT_REGION_PROD }}'
+
+      - name: Upload artifacts to S3
+        run: |
+          aws s3 cp ./version.json s3://draftea-cdn-prod/xb/draft-cli/version.json

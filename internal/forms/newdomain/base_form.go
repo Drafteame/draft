@@ -2,12 +2,14 @@ package newdomain
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 
 	"github.com/samber/lo"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
+	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/pkg/inputs"
 )
@@ -45,9 +47,19 @@ func baseForm(input *dtos.DomainInput) error {
 		inputs.WithDescription[string]("Select the type of database you want to use"),
 		inputs.WithValue(&input.DBType),
 		inputs.WithOptions(map[string]string{
-			"Postgres": "postgres",
+			"Postgres": data.DBTypePostgres,
+			"DynamoDB": data.DBTypeDynamo,
 		}),
 	)
 
 	return err
+}
+
+func normalizeDomainName(name string) string {
+	name = strings.ToLower(name)
+
+	re := regexp.MustCompile(`[^a-z0-9]`)
+	name = re.ReplaceAllString(name, "")
+
+	return name
 }

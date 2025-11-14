@@ -1,0 +1,161 @@
+package worker
+
+import (
+	"encoding/json"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+// TestWorker_Success tests the worker with valid input
+func TestWorker_Success(t *testing.T) {
+	t.Parallel()
+
+	tw := newTestWrapper(t)
+
+	// TODO: Create your test input
+	// Example:
+	// type MyInput struct {
+	//     Field1 string `json:"field1"`
+	//     Field2 int    `json:"field2"`
+	// }
+	//
+	// input := MyInput{
+	//     Field1: "test",
+	//     Field2: 123,
+	// }
+
+	// Marshal test input to JSON
+	// inputJSON, err := json.Marshal(input)
+	// require.NoError(t, err)
+
+	// TODO: Set up mock expectations if you have infrastructure mocks
+	// Example:
+	// tw.sqsMock.On("SendMessage", mock.Anything, mock.Anything).
+	//     Return(&sqs.SendMessageOutput{}, nil)
+
+	// Execute worker
+	inputJSON := json.RawMessage(`{}`)
+	result, err := tw.worker(t.Context(), inputJSON)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, result)
+
+	// TODO: Add more specific assertions based on your expected result
+	// Example:
+	// response, ok := result.(MyResponse)
+	// require.True(t, ok)
+	// assert.Equal(t, "expected_value", response.Field)
+}
+
+// TestWorker_InvalidInput tests the worker with invalid input
+func TestWorker_InvalidInput(t *testing.T) {
+	t.Parallel()
+
+	tw := newTestWrapper(t)
+
+	// Invalid JSON input
+	inputJSON := json.RawMessage(`{invalid json}`)
+
+	// Execute worker
+	result, err := tw.worker(t.Context(), inputJSON)
+
+	// Assert - adjust based on your expected error handling
+	// If your worker returns an error for invalid JSON:
+	// require.Error(t, err)
+	// assert.Nil(t, result)
+
+	// If your worker handles errors differently, adjust assertions:
+	_ = result
+	_ = err
+}
+
+{{- if .UseIdempotency }}
+
+// TestWorker_IdempotencyKeySet tests that idempotency key is set
+func TestWorker_IdempotencyKeySet(t *testing.T) {
+	t.Parallel()
+
+	tw := newTestWrapper(t)
+
+	// TODO: Create your test input
+	inputJSON := json.RawMessage(`{"test": "data"}`)
+
+	// Execute worker
+	_, err := tw.worker(t.Context(), inputJSON)
+
+	// Assert
+	require.NoError(t, err)
+
+	// TODO: Verify idempotency key was set
+	// This depends on your idempotency implementation
+	// Example:
+	// expectedKey := "expected_idempotency_key"
+	// exists, err := tw.resources.IdemService.Exists(t.Context(), expectedKey)
+	// require.NoError(t, err)
+	// assert.True(t, exists, "idempotency key should be set")
+}
+
+// TestWorker_IdempotencyKeyRemovedOnError tests that idempotency key is removed on retryable error
+func TestWorker_IdempotencyKeyRemovedOnError(t *testing.T) {
+	t.Parallel()
+
+	// TODO: Override a dependency to force an error
+	// Example:
+	// mockUseCase := &mockUseCase{}
+	// mockUseCase.On("Execute", mock.Anything, mock.Anything).
+	//     Return(nil, errors.New("retryable error"))
+	//
+	// tw := newTestWrapper(t, withOverrides(map[string]any{
+	//     "usecase.myusecase": mockUseCase,
+	// }))
+
+	tw := newTestWrapper(t)
+
+	inputJSON := json.RawMessage(`{"test": "data"}`)
+
+	// Execute worker - this should trigger an error
+	_, err := tw.worker(t.Context(), inputJSON)
+
+	// Assert error occurred
+	_ = err
+
+	// TODO: Verify idempotency key was removed
+	// Example:
+	// expectedKey := "expected_idempotency_key"
+	// exists, err := tw.resources.IdemService.Exists(t.Context(), expectedKey)
+	// require.NoError(t, err)
+	// assert.False(t, exists, "idempotency key should be removed on error")
+}
+{{- end }}
+
+// TestWorker_WithCustomOverrides demonstrates using custom dependencies
+func TestWorker_WithCustomOverrides(t *testing.T) {
+	t.Parallel()
+
+	// TODO: Create mock dependencies to override
+	// Example:
+	// mockService := &mockService{}
+	// mockService.On("DoSomething", mock.Anything, mock.Anything).
+	//     Return("custom_result", nil)
+	//
+	// tw := newTestWrapper(t, withOverrides(map[string]any{
+	//     "service.myservice": mockService,
+	// }))
+
+	tw := newTestWrapper(t)
+
+	inputJSON := json.RawMessage(`{"test": "data"}`)
+
+	// Execute worker with custom dependencies
+	result, err := tw.worker(t.Context(), inputJSON)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, result)
+
+	// TODO: Verify custom behavior
+	// mockService.AssertExpectations(t)
+}

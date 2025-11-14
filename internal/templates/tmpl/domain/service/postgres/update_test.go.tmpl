@@ -1,0 +1,55 @@
+package service
+
+import (
+	"context"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
+	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
+)
+
+func (ts *testSuite) TestSuccessUpdate() {
+	t := ts.T()
+	t.Parallel()
+
+	tw := newTestWrapper(t)
+
+	data := domain.{{.DomainNamePascal}}{
+		ID:        "some-id",
+		CreatedAt: tw.clock.Now().Add(-time.Hour),
+		UpdatedAt: tw.clock.Now(),
+	}
+
+	// TODO: [generated] Add fields and remove mock.Anything
+	tw.repo.On("Update", tmock.AnyContext(), "some-id", mock.Anything).
+		Return(data, nil)
+
+	got, err := tw.service.Update(context.TODO(), "some-id", options.UpdateFields{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, data.ID, got.ID)
+	assert.IsType(t, domain.{{.DomainNamePascal}}{}, got)
+}
+
+func (ts *testSuite) TestErrorUpdatingInexistentRecord() {
+	t := ts.T()
+	t.Parallel()
+
+	tw := newTestWrapper(t)
+
+	tw.repo.On("Update", tmock.AnyContext(), "some-id", mock.Anything).
+		Return(domain.{{.DomainNamePascal}}{}, domain.ErrRecordNotFound)
+
+	got, err := tw.service.Update(context.TODO(), "some-id", options.UpdateFields{})
+
+	assert.ErrorIs(t, err, domain.ErrRecordNotFound)
+	assert.Empty(t, got)
+}
+
+// TODO: [generated] Add more tests

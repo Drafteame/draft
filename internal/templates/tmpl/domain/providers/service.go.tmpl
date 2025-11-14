@@ -32,24 +32,24 @@ var serviceInstance Service
 // If the STAGE environment variable is not set, it provides a test service.
 func ProvideService(opts ...providers.Option) (Service, error) {
   if os.Getenv("STAGE") == "" {
-    return provideTestService(opts...)
+	return provideTestService(opts...)
   }
 
   var initErr error
 
   sync.OnceFunc(func() {
-    srv, err := createServiceInstance(opts...)
-    if err != nil {
-      initErr = err
-      logger.Get().Err(err).Fields(map[string]any{"name": PrvService}).
-        Error("error creating service instance")
-    }
+	srv, err := createServiceInstance(opts...)
+	if err != nil {
+	  initErr = err
+	  logger.Get().Err(err).Fields(map[string]any{"name": PrvService}).
+		Error("error creating service instance")
+	}
 
-    serviceInstance = srv
+	serviceInstance = srv
   })
 
   if initErr != nil {
-    return nil, initErr
+	return nil, initErr
   }
 
   return serviceInstance, nil
@@ -59,20 +59,20 @@ func ProvideService(opts ...providers.Option) (Service, error) {
 func provideTestService(opts ...providers.Option) (Service, error) {
   options, err := providers.BuildOptions(opts...)
   if err != nil {
-    return nil, err
+	return nil, err
   }
 
   if options.Container.Exists(PrvService) {
-    svc, ok := options.Container.Get(PrvService).(Service)
-    if !ok {
-      return nil, fmt.Errorf("saved object in '%s' doesn't implement provider Service interface", PrvService)
-    }
-    return svc, nil
+	svc, ok := options.Container.Get(PrvService).(Service)
+	if !ok {
+	  return nil, fmt.Errorf("saved object in '%s' doesn't implement provider Service interface", PrvService)
+	}
+	return svc, nil
   }
 
   srv, err := createServiceInstance(opts...)
   if err != nil {
-    return nil, err
+	return nil, err
   }
 
   options.Container.Set(PrvService, srv)
@@ -84,7 +84,7 @@ func provideTestService(opts ...providers.Option) (Service, error) {
 func createServiceInstance(opts ...providers.Option) (Service, error) {
   repo, err := ProvideRepository(opts...)
   if err != nil {
-    return nil, err
+	return nil, err
   }
 
   return service.New(repo), nil

@@ -48,7 +48,7 @@ func (a *Action) init() error {
 func (a *Action) postgresHealthCheck() error {
 	log.Debug("postgres health check")
 
-	cmd := "docker exec -i nix-local-postgres pg_isready -U root"
+	cmd := "docker exec -i api-local-postgres pg_isready -U root"
 
 	maxTries := 5
 

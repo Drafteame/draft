@@ -1,0 +1,74 @@
+package service
+
+import (
+	"context"
+
+	"github.com/stretchr/testify/assert"
+
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
+)
+
+func (ts *testSuite) TestSuccessCreate() {
+	t := ts.T()
+	t.Parallel()
+
+	tw := newTestWrapper(t)
+
+	newID := "test_id"
+
+	tw.repo.On("Create", tmock.AnyContext(), domain.{{.DomainNamePascal}}{}).
+		Return(domain.{{.DomainNamePascal}}{
+			ID:        newID,
+			CreatedAt: tw.clock.Now(),
+			UpdatedAt: tw.clock.Now(),
+		}, nil)
+
+	got, err := tw.service.Create(context.TODO(), domain.{{.DomainNamePascal}}{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, newID, got.ID)
+	assert.IsType(t, domain.{{.DomainNamePascal}}{}, got)
+
+	// TODO: [generated] Add more assertions
+}
+
+func (ts *testSuite) TestDuplicatedRecordError() {
+	t := ts.T()
+	t.Parallel()
+
+	tw := newTestWrapper(t)
+
+	tw.repo.On("Create", tmock.AnyContext(), domain.{{.DomainNamePascal}}{}).
+		Return(domain.{{.DomainNamePascal}}{}, domain.ErrDuplicatedRecord)
+
+	got, err := tw.service.Create(context.TODO(), domain.{{.DomainNamePascal}}{})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	assert.ErrorIs(t, err, domain.ErrDuplicatedRecord)
+	assert.Empty(t, got)
+}
+
+func (ts *testSuite) TestErrorOnCreate() {
+	t := ts.T()
+	t.Parallel()
+
+	tw := newTestWrapper(t)
+
+	tw.repo.On("Create", tmock.AnyContext(), domain.{{.DomainNamePascal}}{}).
+		Return(domain.{{.DomainNamePascal}}{}, domain.ErrUnexpected)
+
+	got, err := tw.service.Create(context.TODO(), domain.{{.DomainNamePascal}}{})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	assert.ErrorIs(t, err, domain.ErrUnexpected)
+	assert.Empty(t, got)
+}
+
+// TODO: [generated] Add more tests

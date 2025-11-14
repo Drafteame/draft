@@ -1,0 +1,22 @@
+package service
+
+import (
+	"context"
+
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
+	"{{.PackageName}}/projects/framev2/pkg/tracer"
+)
+
+func (s *Service) SearchOne(ctx context.Context, filters options.SearchFilters) (domain.{{.DomainNamePascal}}, error) {
+	newCtx, seg := tracer.BeginSubSegment(ctx, "domains.{{.DomainNameLower}}.service.SearchOne")
+	defer seg.Close(nil)
+
+	result, err := s.repo.SearchOne(newCtx, filters)
+	if err != nil {
+		_ = seg.AddError(err)
+		return domain.{{.DomainNamePascal}}{}, err
+	}
+
+	return result, nil
+}

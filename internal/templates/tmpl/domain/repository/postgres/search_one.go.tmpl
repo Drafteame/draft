@@ -3,26 +3,31 @@ package repository
 import (
 	"context"
 
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
-	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
+	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
 // SearchOne finds the first record for the search options.
-func (r *Repository) SearchOne(ctx context.Context, filters options.SearchFilters) (daos.{{.DomainNamePascal}}, error) {
+func (r *Repository) SearchOne(ctx context.Context, filters options.SearchFilters) (domain.{{.DomainNamePascal}}, error) {
+	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.SearchOne")
+	defer span.Close(nil)
+
 	opts := options.NewSearchOptions().
 		SetFilters(filters).
 		Limit(1)
 
-	bdpList, _, err := r.Search(ctx, opts)
+	list, _, err := r.Search(newCtx, opts)
 	if err != nil {
-		return daos.{{.DomainNamePascal}}{}, err
+		_ = span.AddError(err)
+		return domain.{{.DomainNamePascal}}{}, err
 	}
 
-	if len(bdpList) == 0 {
-		return daos.{{.DomainNamePascal}}{}, err
+	if len(list) == 0 {
+		err := domain.ErrRecordNotFound
+		_ = span.AddError(err)
+		return domain.{{.DomainNamePascal}}{}, err
 	}
 
-	bdp := bdpList[0]
-
-	return bdp, nil
+	return list[0], nil
 }

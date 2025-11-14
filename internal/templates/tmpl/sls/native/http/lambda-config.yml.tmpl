@@ -1,0 +1,8 @@
+function:
+  {{ .LambdaName }}:
+    handler: {{if not .IsLegacy}}cmd/{{ end }}http/{{ .LambdaName }}/main.go
+    reservedConcurrency: ${self:custom.reservedConcurrency.{{ .ReservedConcurrency }}}
+    events:
+      - httpApi:
+          path: '{{ .HTTPPathAPIGateway }}'
+          method: '{{ .HTTPMethod }}'

@@ -1,0 +1,69 @@
+package service
+
+import (
+	"context"
+
+	"github.com/stretchr/testify/assert"
+
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	tmock "{{.PackageName}}/projects/framev2/pkg/test/mock"
+)
+
+func (ts *testSuite) TestSuccessGet() {
+	t := ts.T()
+	t.Parallel()
+
+	tw := newTestWrapper(t)
+
+	data := domain.{{.DomainNamePascal}}{
+		ID: "some-id",
+
+		// TODO: [generated] Add fields
+
+		CreatedAt: tw.clock.Now(),
+		UpdatedAt: tw.clock.Now(),
+	}
+
+	tw.repo.On("Get", tmock.AnyContext(), "some-id").
+		Return(data, nil)
+
+	got, err := tw.service.Get(context.TODO(), "some-id")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, data.ID, got.ID)
+	assert.IsType(t, domain.{{.DomainNamePascal}}{}, got)
+
+	// TODO: [generated] add assertions
+}
+
+func (ts *testSuite) TestNotFoundRecord() {
+	t := ts.T()
+	t.Parallel()
+
+	tw := newTestWrapper(t)
+
+	tw.repo.On("Get", tmock.AnyContext(), "some-id").
+		Return(domain.{{.DomainNamePascal}}{}, domain.ErrRecordNotFound)
+
+	got, err := tw.service.Get(context.TODO(), "some-id")
+
+	assert.ErrorIs(t, err, domain.ErrRecordNotFound)
+	assert.Empty(t, got)
+}
+
+func (ts *testSuite) TestUnexpectedError() {
+	t := ts.T()
+	t.Parallel()
+
+	tw := newTestWrapper(t)
+
+	tw.repo.On("Get", tmock.AnyContext(), "some-id").
+		Return(domain.{{.DomainNamePascal}}{}, domain.ErrUnexpected)
+
+	got, err := tw.service.Get(context.TODO(), "some-id")
+
+	assert.ErrorIs(t, err, domain.ErrUnexpected)
+	assert.Empty(t, got)
+}

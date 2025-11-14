@@ -1,4 +1,4 @@
-package repository_test
+package repository
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
-	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
 func TestSearch(t *testing.T) {
@@ -16,7 +16,7 @@ func TestSearch(t *testing.T) {
 	type testCase struct {
 		name          string
 		searchOptions options.SearchOptions
-		data          []daos.{{.DomainNamePascal}}
+		data          []domain.{{.DomainNamePascal}}
 		expected      int
 		err           error
 	}

@@ -6,6 +6,7 @@ type LambdaTemplates struct {
 	Plain  LambdaPlain
 	SnsSqs LambdaSnsSqs
 	Sqs    LambdaSqs
+	Custom LambdaCustom
 }
 
 func (l *LambdaTemplates) SetSqs(sqs LambdaSqs) {
@@ -28,6 +29,10 @@ func (l *LambdaTemplates) SetCron(cron LambdaCron) {
 	l.Cron = cron
 }
 
+func (l *LambdaTemplates) SetCustom(custom LambdaCustom) {
+	l.Custom = custom
+}
+
 func NewLambdaTemplates(data any) (*LambdaTemplates, error) {
 	l := new(LambdaTemplates)
 
@@ -48,6 +53,10 @@ func NewLambdaTemplates(data any) (*LambdaTemplates, error) {
 	}
 
 	if err := loadLambdaSqs(l, data); err != nil {
+		return nil, err
+	}
+
+	if err := loadLambdaCustom(l, data); err != nil {
 		return nil, err
 	}
 

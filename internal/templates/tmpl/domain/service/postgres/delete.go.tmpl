@@ -1,0 +1,21 @@
+package service
+
+import (
+	"context"
+
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/projects/framev2/pkg/tracer"
+)
+
+func (s *Service) Delete(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error) {
+	newCtx, seg := tracer.BeginSubSegment(ctx, "domains.{{.DomainNameLower}}.service.Delete")
+	defer seg.Close(nil)
+
+	deleted, err := s.repo.Delete(newCtx, id)
+	if err != nil {
+		_ = seg.AddError(err)
+		return domain.{{.DomainNamePascal}}{}, err
+	}
+
+	return deleted, nil
+}

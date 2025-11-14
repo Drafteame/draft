@@ -7,10 +7,15 @@ type LambdaSnsSqs struct {
 }
 
 type LambdaSnsSqsHandler struct {
-	BootstrapGo []byte
-	HandlerGo   []byte
-	WorkerGo    []byte
-	ProviderGo  []byte
+	BootstrapGo   []byte
+	HandlerGo     []byte
+	WorkerGo      []byte
+	ProviderGo    []byte
+	EmbedYML      []byte
+	ResourcesGo   []byte
+	DtosGo        []byte
+	IdempotencyGo []byte
+	InterfacesGo  []byte
 }
 
 func loadLambdaSnsSqs(v SnsSqsSetter, data any) error {
@@ -34,8 +39,8 @@ func loadLambdaSnsSqs(v SnsSqsSetter, data any) error {
 }
 
 func loadLambdaSnsSqsMainGo(v *LambdaSnsSqs, data any) error {
-	name := "framev2/snssqs/main.go"
-	path := "tmpl/sls/framev2/snssqs/main.go.tmpl"
+	name := "native/snssqs/main.go"
+	path := "tmpl/sls/native/snssqs/main.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
@@ -48,8 +53,8 @@ func loadLambdaSnsSqsMainGo(v *LambdaSnsSqs, data any) error {
 }
 
 func loadLambdaSnsSqsLambdaConfigYAML(v *LambdaSnsSqs, data any) error {
-	name := "framev2/snssqs/lambda-config.yml"
-	path := "tmpl/sls/framev2/snssqs/lambda-config.yml.tmpl"
+	name := "native/snssqs/lambda-config.yml"
+	path := "tmpl/sls/native/snssqs/lambda-config.yml.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
@@ -63,10 +68,13 @@ func loadLambdaSnsSqsLambdaConfigYAML(v *LambdaSnsSqs, data any) error {
 
 func loadLambdaSnsSqsHandler(v *LambdaSnsSqs, data any) error {
 	loaders := []func(*LambdaSnsSqs, any) error{
-		loadLambdaSnsSqsHandlerBootstrapGo,
-		loadLambdaSnsSqsHandlerHandlerGo,
-		loadLambdaSnsSqsHandlerWorkerGo,
-		loadLambdaSnsSqsHandlerProviderGo,
+		loadLambdaSnsSqsHandlerBoostrapGo,
+		loadLambdaSnsSqsHandlerWorkerWorkerGo,
+		loadLambdaSnsSqsHandlerWorkerResourcesGo,
+		loadLambdaSnsSqsHandlerEmbedYaml,
+		loadLambdaSnsSqsHandlerDtosGo,
+		loadLambdaSnsSqsHandlerIdempotencyGo,
+		loadLambdaSnsSqsHandlerInterfacesGo,
 	}
 
 	for _, loader := range loaders {
@@ -78,9 +86,9 @@ func loadLambdaSnsSqsHandler(v *LambdaSnsSqs, data any) error {
 	return nil
 }
 
-func loadLambdaSnsSqsHandlerBootstrapGo(v *LambdaSnsSqs, data any) error {
-	name := "framev2/snssqs/handler/bootstrap.go"
-	path := "tmpl/sls/framev2/snssqs/handler/bootstrap.go.tmpl"
+func loadLambdaSnsSqsHandlerBoostrapGo(v *LambdaSnsSqs, data any) error {
+	name := "native/snssqs/handler/bootstrap.go"
+	path := "tmpl/sls/native/snssqs/handler/bootstrap.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
@@ -92,23 +100,9 @@ func loadLambdaSnsSqsHandlerBootstrapGo(v *LambdaSnsSqs, data any) error {
 	return nil
 }
 
-func loadLambdaSnsSqsHandlerHandlerGo(v *LambdaSnsSqs, data any) error {
-	name := "framev2/snssqs/handler/handler.go"
-	path := "tmpl/sls/framev2/snssqs/handler/handler.go.tmpl"
-
-	content, err := loadTemplate(name, path, data, sls)
-	if err != nil {
-		return err
-	}
-
-	v.Handler.HandlerGo = content
-
-	return nil
-}
-
-func loadLambdaSnsSqsHandlerWorkerGo(v *LambdaSnsSqs, data any) error {
-	name := "framev2/snssqs/handler/worker.go"
-	path := "tmpl/sls/framev2/snssqs/handler/worker.go.tmpl"
+func loadLambdaSnsSqsHandlerWorkerWorkerGo(v *LambdaSnsSqs, data any) error {
+	name := "native/snssqs/handler/worker/worker.go"
+	path := "tmpl/sls/native/snssqs/handler/worker/worker.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
@@ -120,16 +114,72 @@ func loadLambdaSnsSqsHandlerWorkerGo(v *LambdaSnsSqs, data any) error {
 	return nil
 }
 
-func loadLambdaSnsSqsHandlerProviderGo(v *LambdaSnsSqs, data any) error {
-	name := "framev2/snssqs/handler/provider.go"
-	path := "tmpl/sls/framev2/snssqs/handler/provider.go.tmpl"
+func loadLambdaSnsSqsHandlerWorkerResourcesGo(v *LambdaSnsSqs, data any) error {
+	name := "native/snssqs/handler/worker/resources.go"
+	path := "tmpl/sls/native/snssqs/handler/worker/resources.go.tmpl"
 
 	content, err := loadTemplate(name, path, data, sls)
 	if err != nil {
 		return err
 	}
 
-	v.Handler.ProviderGo = content
+	v.Handler.ResourcesGo = content
+
+	return nil
+}
+
+func loadLambdaSnsSqsHandlerEmbedYaml(v *LambdaSnsSqs, data any) error {
+	name := "native/snssqs/handler/embed/embed.yaml"
+	path := "tmpl/sls/native/snssqs/handler/embed/embed.yaml.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.EmbedYML = content
+
+	return nil
+}
+
+func loadLambdaSnsSqsHandlerDtosGo(v *LambdaSnsSqs, data any) error {
+	name := "native/snssqs/handler/dtos/dto.go"
+	path := "tmpl/sls/native/snssqs/handler/dtos/dto.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.DtosGo = content
+
+	return nil
+}
+
+func loadLambdaSnsSqsHandlerIdempotencyGo(v *LambdaSnsSqs, data any) error {
+	name := "native/snssqs/handler/worker/idempotency.go"
+	path := "tmpl/sls/native/snssqs/handler/worker/idempotency.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.IdempotencyGo = content
+
+	return nil
+}
+
+func loadLambdaSnsSqsHandlerInterfacesGo(v *LambdaSnsSqs, data any) error {
+	name := "native/snssqs/handler/worker/interfaces.go"
+	path := "tmpl/sls/native/snssqs/handler/worker/interfaces.go.tmpl"
+
+	content, err := loadTemplate(name, path, data, sls)
+	if err != nil {
+		return err
+	}
+
+	v.Handler.InterfacesGo = content
 
 	return nil
 }

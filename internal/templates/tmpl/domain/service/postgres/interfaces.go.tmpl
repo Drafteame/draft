@@ -1,0 +1,17 @@
+package service
+
+import (
+	"context"
+
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
+)
+
+type Repository interface {
+	Get(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error)
+	Create(ctx context.Context, m domain.{{.DomainNamePascal}}) (domain.{{.DomainNamePascal}}, error)
+	Update(ctx context.Context, id string, fields options.UpdateFields) (domain.{{.DomainNamePascal}}, error)
+	Delete(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error)
+	Search(ctx context.Context, opts options.SearchOptions) ([]domain.{{.DomainNamePascal}}, int64, error)
+	SearchOne(ctx context.Context, filters options.SearchFilters) (domain.{{.DomainNamePascal}}, error)
+}

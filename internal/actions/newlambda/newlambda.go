@@ -15,9 +15,14 @@ type NewLambda struct {
 }
 
 func New(input dtos.LambdaInput) *NewLambda {
-	lambdaPath := input.ServicePath + "/cmd/" + input.LambdaType + "/" + input.LambdaName
+	typePath := input.LambdaType
+	if input.LambdaType == "custom" {
+		typePath = input.CustomTypePath
+	}
+
+	lambdaPath := input.ServicePath + "/cmd/" + typePath + "/" + input.LambdaName
 	if input.IsLegacy {
-		lambdaPath = input.ServicePath + "/" + input.LambdaType + "/" + input.LambdaName
+		lambdaPath = input.ServicePath + "/" + typePath + "/" + input.LambdaName
 	}
 
 	return &NewLambda{
@@ -34,15 +39,24 @@ func (nl *NewLambda) Exec() error {
 
 	nl.tmpl = tmpl
 
+	if err := nl.preCreate(); err != nil {
+		return err
+	}
+
+	if err := nl.exec(); err != nil {
+		return err
+	}
+
+	return nl.postCreate()
+}
+
+// preCreate performs validation before lambda creation
+func (nl *NewLambda) preCreate() error {
 	if !files.Exists(nl.input.ServicePath) {
 		return fmt.Errorf("service %s not found", nl.input.ServicePath)
 	}
 
-	if errExec := nl.exec(); errExec != nil {
-		return errExec
-	}
-
-	return nl.postCreate()
+	return nil
 }
 
 func (nl *NewLambda) createFiles(entries ...dtos.FileEntry) error {

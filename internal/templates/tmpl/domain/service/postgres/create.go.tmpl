@@ -1,0 +1,21 @@
+package service
+
+import (
+	"context"
+
+	"{{.PackageName}}/{{ .DomainPath }}/domain"
+	"{{.PackageName}}/projects/framev2/pkg/tracer"
+)
+
+func (s *Service) Create(ctx context.Context, m domain.{{.DomainNamePascal}}) (domain.{{.DomainNamePascal}}, error) {
+	newCtx, seg := tracer.BeginSubSegment(ctx, "domains.{{.DomainNameLower}}.service.Create")
+	defer seg.Close(nil)
+
+	created, err := s.repo.Create(newCtx, m)
+	if err != nil {
+		_ = seg.AddError(err)
+		return domain.{{.DomainNamePascal}}{}, err
+	}
+
+	return created, nil
+}
