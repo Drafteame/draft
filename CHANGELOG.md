@@ -1,3 +1,76 @@
+## v1.17.1 (2025-11-11)
+
+
+- chore(ci): update vendor hash for version 1.17.1
+- chore: complete code refactor (#163)
+
+## v1.17.0 (2025-11-11)
+
+
+- chore(ci): update vendor hash for version 1.17.0
+- feat: add support for DynamoDB in new domain creation (scaffolding only) (#157)
+
+## v1.16.1 (2025-11-11)
+
+
+- chore(ci): update vendor hash for version 1.16.1
+- chore: save (#162)
+- ci: add job to upload artifact (#161)
+
+## v1.16.0 (2025-11-10)
+
+
+- chore(ci): update vendor hash for version 1.16.0
+- feat: custom lambda (#158)
+
+## v1.15.4 (2025-11-10)
+
+
+- chore(ci): update vendor hash for version 1.15.4
+- fix: postgres domain (#159)
+
+## v1.15.3 (2025-11-07)
+
+
+- chore(ci): update vendor hash for version 1.15.3
+- chore: [pla-206] command improvements (#154)
+
+## v1.15.2 (2025-11-07)
+
+
+- chore(ci): update vendor hash for version 1.15.2
+- chore: [PLA-205] get sentry token to create sentry project (#153)
+
+## v1.15.1 (2025-11-06)
+
+
+- chore(ci): update vendor hash for version 1.15.1
+- chore: adjust app.pkl template to load global config (#156)
+
+## v1.15.0 (2025-11-06)
+
+
+- chore(ci): update vendor hash for version 1.15.0
+- feat: add sentry project create command (#155)
+
+## v1.14.3 (2025-11-05)
+
+
+- chore(ci): update vendor hash for version 1.14.3
+- chore: flag port is added (#152)
+
+## v1.14.2 (2025-09-18)
+
+
+- chore(ci): update vendor hash for version 1.14.2
+- chore: [DEV-108] add new lambda structure (#140)
+
+## v1.14.1 (2025-09-15)
+
+
+- chore(ci): update vendor hash for version 1.14.1
+- fix: update postgres container name in health check (#145)
+
 ## v1.14.0 (2025-08-20)
 
 

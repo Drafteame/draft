@@ -6,6 +6,7 @@ type ServiceInput struct {
 	ServiceName           string
 	NormalizedServiceName string
 	ServicePath           string
+	ServicePackage        string
 	LambdaName            string
 	LambdaType            string
 	CustomDomain          bool
@@ -22,4 +23,5 @@ type ServiceInput struct {
 	NextLambdaImportTag   string
 	IsLegacy              bool
 	UseDig                bool
+	ReservedConcurrency   string
 }

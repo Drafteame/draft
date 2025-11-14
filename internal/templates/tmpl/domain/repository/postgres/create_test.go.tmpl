@@ -1,4 +1,4 @@
-package repository_test
+package repository
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
-	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
 )
 
 func TestCreate(t *testing.T) {
@@ -18,7 +17,7 @@ func TestCreate(t *testing.T) {
 
 		tw := newTestWrapper(t)
 
-		data := daos.{{.DomainNamePascal}}{
+		data := domain.{{.DomainNamePascal}}{
 			// TODO: set fields
 		}
 
@@ -39,7 +38,7 @@ func TestCreate(t *testing.T) {
 
 		tw := newTestWrapper(t)
 
-		data := daos.{{.DomainNamePascal}}{
+		data := domain.{{.DomainNamePascal}}{
 			ID: "some-id",
 		}
 
@@ -60,7 +59,7 @@ func TestCreate(t *testing.T) {
 
 		tw := newTestWrapper(t)
 
-		data := daos.{{.DomainNamePascal}}{
+		data := domain.{{.DomainNamePascal}}{
 			ID: "some-id",
 		}
 

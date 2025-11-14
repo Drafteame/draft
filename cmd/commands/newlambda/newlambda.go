@@ -13,9 +13,14 @@ import (
 
 var newLambdaCmd = &cobra.Command{
 	Use:   "new:lambda",
-	Short: "Create a new service",
-	Long:  "Create a new service",
+	Short: "Create a new lambda function",
+	Long:  "Create a new lambda function with the specified configuration and trigger type",
 	Run:   run,
+}
+
+func init() {
+	newLambdaCmd.Flags().Bool("use-dig", false, "Use uber dig for dependency injection")
+	newLambdaCmd.Flags().StringP("legacy-path", "l", "", "Path to legacy service")
 }
 
 func run(cmd *cobra.Command, _ []string) {
@@ -23,18 +28,12 @@ func run(cmd *cobra.Command, _ []string) {
 
 	data.LoadMeta()
 
-	useDig, err := cmd.Parent().Flags().GetBool("use-dig")
-	if err != nil {
-		log.Exitf(1, "failed to obtain use-dig flag: %s", err.Error())
-	}
+	useDig := common.GetBoolFlag(cmd, "use-dig")
 	input := dtos.LambdaInput{
 		UseDig: useDig,
 	}
 
-	legacyPath, err := cmd.Parent().Flags().GetString("legacy-path")
-	if err != nil {
-		log.Exitf(1, "failed to obtain legacy-path flag: %s", err.Error())
-	}
+	legacyPath := common.GetStringFlag(cmd, "legacy-path")
 
 	if legacyPath != "" {
 		input.IsLegacy = true

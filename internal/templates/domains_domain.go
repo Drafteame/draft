@@ -1,5 +1,10 @@
 package templates
 
+import (
+	appdata "github.com/Drafteame/draft/internal/data"
+	"github.com/Drafteame/draft/internal/dtos"
+)
+
 type Domain struct {
 	DomainGo []byte
 	ErrorsGo []byte
@@ -7,10 +12,16 @@ type Domain struct {
 }
 
 func loadDomainsDomain(v *Domain, data any) error {
-	loaders := []func(*Domain, any) error{
-		loadDomainDomainGo,
-		loadDomainErrorsGo,
-		loadDomainOptions,
+	var loaders []func(*Domain, any) error
+
+	// Only load domain for postgres
+	input, ok := data.(dtos.DomainInput)
+	if ok && input.DBType == appdata.DBTypePostgres {
+		loaders = []func(*Domain, any) error{
+			loadDomainDomainGo,
+			loadDomainErrorsGo,
+			loadDomainOptions,
+		}
 	}
 
 	for _, loader := range loaders {

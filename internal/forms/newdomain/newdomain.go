@@ -2,8 +2,6 @@ package newdomain
 
 import (
 	"fmt"
-	"regexp"
-	"strings"
 
 	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/dtos"
@@ -17,8 +15,12 @@ func GetForm(input *dtos.DomainInput) error {
 	}
 
 	switch input.DBType {
-	case "postgres":
+	case data.DBTypePostgres:
 		if err := postgresForm(input); err != nil {
+			return err
+		}
+	case data.DBTypeDynamo:
+		if err := dynamoForm(input); err != nil {
 			return err
 		}
 	default:
@@ -26,13 +28,4 @@ func GetForm(input *dtos.DomainInput) error {
 	}
 
 	return nil
-}
-
-func normalizeDomainName(name string) string {
-	name = strings.ToLower(name)
-
-	re := regexp.MustCompile(`[^a-z0-9]`)
-	name = re.ReplaceAllString(name, "")
-
-	return name
 }

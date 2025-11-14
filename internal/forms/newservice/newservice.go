@@ -7,10 +7,9 @@ import (
 
 func GetForm(input *dtos.ServiceInput) error {
 	input.ServiceFramework = "sls"
-	input.FrameVersion = "v2"
 	input.LambdaName = "helloworld"
 	input.LambdaType = "plain"
-	input.IsLegacy = false
+	input.ReservedConcurrency = "medium.http"
 	input.PackageName = data.Meta.PackageName
 	input.NextImportTag = data.NextImportTag
 	input.NextLambdaImportTag = data.NextLambdaImportTag

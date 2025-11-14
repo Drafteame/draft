@@ -34,6 +34,10 @@ type SqsSetter interface {
 	SetSqs(LambdaSqs)
 }
 
+type CustomSetter interface {
+	SetCustom(LambdaCustom)
+}
+
 type ConfigAppSetter interface {
 	SetConfigApp(ConfigApp)
 }

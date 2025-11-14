@@ -1,0 +1,7 @@
+package repository
+
+import dynamov2 "github.com/Drafteame/api/pkg/dynamo/v2"
+
+type Dynamo interface {
+	Table(name string) *dynamov2.Table
+}

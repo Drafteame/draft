@@ -4,8 +4,10 @@ type LambdaInput struct {
 	PackageName         string
 	ServiceFramework    string
 	ServicePath         string
+	ServiceName         string
 	LambdaName          string
 	LambdaType          string
+	CustomTypePath      string
 	FrameVersion        string
 	QueueARN            string
 	HTTPPath            string
@@ -17,4 +19,6 @@ type LambdaInput struct {
 	NextLambdaImportTag string
 	IsLegacy            bool
 	UseDig              bool
+	ReservedConcurrency string
+	UseIdempotency      bool
 }
