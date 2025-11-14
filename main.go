@@ -8,6 +8,7 @@ import (
 	migrateforce "github.com/Drafteame/draft/cmd/commands/local/migrate/force"
 	migrateup "github.com/Drafteame/draft/cmd/commands/local/migrate/up"
 	testsetup "github.com/Drafteame/draft/cmd/commands/local/setup"
+	"github.com/Drafteame/draft/cmd/commands/mock/generate"
 	"github.com/Drafteame/draft/cmd/commands/newdomain"
 	"github.com/Drafteame/draft/cmd/commands/newlambda"
 	"github.com/Drafteame/draft/cmd/commands/newservice"
@@ -30,6 +31,7 @@ func main() {
 	cmd.AddCommand(migrateforce.GetCmd())
 	cmd.AddCommand(migratedown.GetCmd())
 	cmd.AddCommand(testsetup.GetCmd())
+	cmd.AddCommand(generate.GetCmd())
 
 	if err := cmd.Execute(); err != nil {
 		log.Exit(1, err.Error())
