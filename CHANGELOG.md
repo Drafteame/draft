@@ -1,3 +1,21 @@
+## v1.17.2 (2025-11-14)
+
+
+- chore(ci): update vendor hash for version 1.17.2
+- fix: sqs lambda templates (#172)
+- ci: bump actions/setup-python from 5 to 6 (#137)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Co-authored-by: Eduardo Aguilar Yépez <dante.aguilar41@gmail.com>
+- ci: bump actions/setup-go from 5 to 6 (#136)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Co-authored-by: Eduardo Aguilar Yépez <dante.aguilar41@gmail.com>
+- ci: bump actions/checkout from 4 to 5 (#128)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Co-authored-by: Eduardo Aguilar Yépez <dante.aguilar41@gmail.com>
+
 ## v1.17.1 (2025-11-11)
 
 
