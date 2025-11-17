@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -116,7 +117,7 @@ func (m *Mockery) Exec() error {
 	// Execute mockery concurrently with the progress spinner
 	results := m.executeConcurrentWithProgress(configFiles)
 
-	// Check if context was cancelled
+	// Check if context was canceled
 	if m.ctx.Err() != nil {
 		stats := m.calculateStats(results, startTime)
 		m.displayCancellationSummary(stats, results)
@@ -600,7 +601,7 @@ func (m *Mockery) executeConcurrentWithProgress(configFiles []string) []mockeryJ
 	// Wait for action to complete
 	<-doneChan
 
-	if execErr != nil && execErr != context.Canceled {
+	if execErr != nil && !errors.Is(execErr, context.Canceled) {
 		log.Errorf("Execution encountered errors: %v", execErr)
 	}
 
@@ -723,7 +724,7 @@ func (m *Mockery) calculateStats(results []mockeryJob, startTime time.Time) exec
 
 	for _, result := range results {
 		// Don't count context cancellation as failure
-		if result.err == context.Canceled || result.err == context.DeadlineExceeded {
+		if errors.Is(result.err, context.Canceled) || errors.Is(result.err, context.DeadlineExceeded) {
 			continue
 		}
 
@@ -742,12 +743,14 @@ func (m *Mockery) displaySummary(stats executionStats, results []mockeryJob) {
 	if stats.failed > 0 {
 		log.Errorf("✗ Failed: %d/%d packages (%.2fs)", stats.failed, stats.total, stats.duration.Seconds())
 		log.Errorf("Failed packages:")
+
 		for _, result := range results {
 			if result.err != nil {
 				log.Errorf("  • %s", result.configFile)
 				log.Errorf("    %v", result.err)
 			}
 		}
+
 		log.Info("Tip: Check the error messages above for details on how to fix the configurations")
 	} else {
 		if m.dry {
@@ -771,8 +774,9 @@ func (m *Mockery) displayCancellationSummary(stats executionStats, results []moc
 
 	if stats.failed > 0 {
 		log.Warnf("Failed packages before cancellation:")
+
 		for _, result := range results {
-			if result.err != nil && result.err != context.Canceled && result.err != context.DeadlineExceeded {
+			if result.err != nil && !errors.Is(result.err, context.Canceled) && !errors.Is(result.err, context.DeadlineExceeded) {
 				log.Errorf("  • %s", result.configFile)
 				log.Errorf("    %v", result.err)
 			}
