@@ -29,6 +29,7 @@ type (
 	Mockery struct {
 		configFiles []string
 		jobsNum     int
+		dry         bool
 		tmpFiles    []string // Track for cleanup
 		mu          sync.Mutex
 	}
@@ -57,10 +58,11 @@ type (
 	}
 )
 
-func New(configFiles []string, jobsNum int) *Mockery {
+func New(configFiles []string, jobsNum int, dry bool) *Mockery {
 	return &Mockery{
 		configFiles: configFiles,
 		jobsNum:     jobsNum,
+		dry:         dry,
 		tmpFiles:    make([]string, 0),
 	}
 }
@@ -69,6 +71,10 @@ func (m *Mockery) Exec() error {
 	// Validate inputs
 	if err := m.validate(); err != nil {
 		return err
+	}
+
+	if m.dry {
+		log.Info("Running in dry-run mode - mockery commands will not be executed")
 	}
 
 	startTime := time.Now()
@@ -100,7 +106,7 @@ func (m *Mockery) Exec() error {
 	// Ensure cleanup on exit
 	defer m.cleanup()
 
-	// Execute mockery concurrently with progress spinner
+	// Execute mockery concurrently with the progress spinner
 	results := m.executeConcurrentWithProgress(configFiles)
 
 	// Calculate and display stats
@@ -159,7 +165,7 @@ func (m *Mockery) validateProvidedConfigs(paths []string) ([]string, error) {
 	var validated []string
 
 	for _, path := range paths {
-		// Check if file exists
+		// Check if a file exists
 		if !files.Exists(path) {
 			return nil, fmt.Errorf("config file not found: %s", path)
 		}
@@ -355,7 +361,7 @@ func (m *Mockery) generateTempFileName(configFile string, index int) (string, er
 		pkgName = "root"
 	}
 
-	// Create descriptive temp file name: .mockery.tmp.[pkg-name].[idx].[rand].yml
+	// Create a descriptive temp file name: .mockery.tmp.[pkg-name].[idx].[rand].yml
 	tmpFile := fmt.Sprintf("%s%s.%d.%s%s", tmpConfigPrefix, pkgName, index, randID, tmpConfigSuffix)
 
 	return tmpFile, nil
@@ -375,18 +381,40 @@ func (m *Mockery) executeConcurrentWithProgress(configFiles []string) []mockeryJ
 
 	total := len(configFiles)
 
-	spin := spinner.New().Title(fmt.Sprintf("[ 0 / %d ] Preparing...", total))
+	spin := spinner.New().Title(fmt.Sprintf("[0 / %d] Preparing...", total))
 
 	action := func() {
+		var progressWg sync.WaitGroup
+		progressWg.Add(1)
+
+		// Start a progress reader goroutine before spawning work goroutines
+		go func() {
+			defer progressWg.Done()
+			// Process progress updates as they arrive
+			for update := range progressChan {
+				completed++
+				status := "✓"
+				if !update.success {
+					status = "✗"
+				}
+
+				// Extract a shorter name from the config file path
+				shortName := m.shortenConfigPath(update.configFile)
+
+				spin.Title(fmt.Sprintf("[%s] [%2d / %d] %s (%.2fs)",
+					status, completed, total, shortName, update.duration.Seconds()))
+			}
+		}()
+
 		// Start goroutines to process configs
 		for i := range m.tmpFiles {
+			// Acquire semaphore before spawning goroutine
+			semaphore <- struct{}{}
+
 			wg.Add(1)
 			go func(idx int) {
 				defer wg.Done()
-
-				// Acquire semaphore
-				semaphore <- struct{}{}
-				defer func() { <-semaphore }()
+				defer func() { <-semaphore }() // Release semaphore after work
 
 				configFile := configFiles[idx]
 				tmpFile := m.tmpFiles[idx]
@@ -418,26 +446,12 @@ func (m *Mockery) executeConcurrentWithProgress(configFiles []string) []mockeryJ
 			}(i)
 		}
 
-		// Wait for all goroutines and close progress channel
-		go func() {
-			wg.Wait()
-			close(progressChan)
-		}()
+		// Wait for all work goroutines to complete
+		wg.Wait()
+		close(progressChan)
 
-		// Process progress updates
-		for update := range progressChan {
-			completed++
-			status := "✓"
-			if !update.success {
-				status = "✗"
-			}
-
-			// Extract a shorter name from the config file path
-			shortName := m.shortenConfigPath(update.configFile)
-
-			spin.Title(fmt.Sprintf("[%s] [%2d / %d] %s (%.2fs)",
-				status, completed, total, shortName, update.duration.Seconds()))
-		}
+		// Wait for the progress reader to finish processing all updates
+		progressWg.Wait()
 	}
 
 	if err := spin.Action(action).Run(); err != nil {
@@ -467,6 +481,12 @@ func (m *Mockery) shortenConfigPath(configPath string) string {
 
 // runMockery executes mockery with the given config file
 func (m *Mockery) runMockery(configPath, originalPath string) error {
+	if m.dry {
+		// Dry run - skip execution and just validate config file exists
+		log.Debugf("Dry run: would execute mockery --config %s", configPath)
+		return nil
+	}
+
 	command := fmt.Sprintf("mockery --config %s", configPath)
 	output, err := exec.Command(command)
 	if err != nil {
@@ -525,7 +545,12 @@ func (m *Mockery) displaySummary(stats executionStats, results []mockeryJob) {
 		}
 		log.Info("Tip: Check the error messages above for details on how to fix the configurations")
 	} else {
-		log.Successf("✓ All %d package(s) completed successfully (%.2fs)", stats.total, stats.duration.Seconds())
+		if m.dry {
+			log.Successf("✓ All %d package(s) validated successfully (%.2fs)", stats.total, stats.duration.Seconds())
+			log.Info("Dry run completed - no mockery commands were executed")
+		} else {
+			log.Successf("✓ All %d package(s) completed successfully (%.2fs)", stats.total, stats.duration.Seconds())
+		}
 	}
 }
 
