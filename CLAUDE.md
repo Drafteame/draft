@@ -54,6 +54,11 @@ draft local:migrate:force
 # Sentry project management
 draft sentry:project:create
 draft sentry:project:delete
+
+# Mockery mock generation
+draft mockery                                           # Run mockery for all .mockery.pkg.yml files
+draft mockery path/to/.mockery.pkg.yml                 # Run mockery for specific package configs
+draft mockery --jobs-num 5                             # Run with custom concurrent job limit
 ```
 
 ### Global Flags
@@ -72,9 +77,11 @@ Commands are registered in `main.go` using Cobra. Each command lives in `cmd/com
 - `newservice` - Service scaffolding
 - `newlambda` - Lambda scaffolding
 - `newdomain` - Domain layer scaffolding
+- `mockery` - Mockery mock generation with merged base and package configs
 - `local/invoke` - Local Lambda invocation
 - `local/migrate/*` - Database migration commands
-- `sentry/deleteproject` - Sentry project management
+- `sentry/project/create` - Sentry project creation
+- `sentry/project/delete` - Sentry project deletion
 - `config` - Configuration management
 
 ### Action Layer
@@ -143,6 +150,25 @@ Determined by the `-l` flag or interactive prompts.
 - Support for TTY and non-TTY modes (CI/CD compatibility)
 - Generic options pattern: `inputs.Text()`, `inputs.Select()`, `inputs.Confirm()` with `WithDescription`, `WithValue`, `WithValidation`, etc.
 
+### Mockery Command
+The `draft mockery` command provides concurrent mock generation with configuration merging:
+- **Base Config**: Loads shared settings from `.mockery.base.yml` at project root
+- **Package Configs**: Searches for or accepts specific `.mockery.pkg.yml` files in service directories
+- **Config Merging**: Deep merges base and package configs (package settings take precedence)
+- **Concurrent Execution**: Runs mockery jobs in parallel with configurable concurrency (`--jobs-num` flag, default: 5)
+- **Temporary Files**: Creates temporary merged config files (`.mockery.tmp.*.yml`) that are automatically cleaned up
+- **Progress Reporting**: Shows real-time progress with spinner and execution statistics
+- **Error Handling**: Continues execution on failures, reports all errors at the end, exits with code 1 if any failed
+
+Implementation in `internal/actions/mockery/`:
+1. Validates inputs and finds/validates config files
+2. Loads base configuration from `.mockery.base.yml`
+3. Creates temporary merged configs for each package
+4. Executes mockery concurrently with semaphore-based concurrency control
+5. Cleans up temporary files and displays execution summary
+
+The `new:domain` action uses a simpler mockery integration: it adds packages to `.mockery.yml` and runs `mockery` directly without the config merging system.
+
 ## Configuration Files
 
 ### Pkl Configuration
@@ -155,6 +181,11 @@ Services use Pkl (configuration language) for app config:
 - `lambda-config.yml` - Per-Lambda configuration files
 - `config/sls/environment.yml` - Environment variables
 - `config/sls/iam.yml` - IAM permissions
+
+### Mockery Configuration
+- `.mockery.yml` - Project-level mockery configuration (used by `new:domain` action)
+- `.mockery.base.yml` - Base configuration for `draft mockery` command (shared settings)
+- `.mockery.pkg.yml` - Package-specific mockery configurations (merged with base config by `draft mockery`)
 
 ## Code Standards
 
