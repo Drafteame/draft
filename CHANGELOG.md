@@ -1,3 +1,10 @@
+## v1.18.0 (2025-11-17)
+
+
+- chore(ci): update vendor hash for version 1.18.0
+- feat: mockery command (#171)
+- Co-authored-by: Eduardo Aguilar <dante.aguilar41@gmail.com>
+
 ## v1.17.2 (2025-11-14)
 
 
