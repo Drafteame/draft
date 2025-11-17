@@ -247,6 +247,15 @@ draft mockery services/user/.mockery.pkg.yml services/auth/.mockery.pkg.yml
 
 # Run with custom concurrency (default: 5)
 draft mockery --jobs-num 10
+
+# Dry run - validate configs without executing mockery
+draft mockery --dry
+
+# Run only for packages with modified files (git diff with main)
+draft mockery --git-mod
+
+# Combine flags for targeted validation in CI/CD
+draft mockery --git-mod --dry --jobs-num 10
 ```
 
 #### Configuration Files
