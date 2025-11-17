@@ -11,6 +11,7 @@ import (
 var (
 	jobsNum int
 	dry     bool
+	gitMod  bool
 )
 
 var mockeryCmd = &cobra.Command{
@@ -37,19 +38,23 @@ Examples:
   draft mockery --jobs-num 5
 
   # Dry run - validate configs without executing mockery
-  draft mockery --dry`,
+  draft mockery --dry
+
+  # Run mockery only for packages with modified files (compare HEAD with main)
+  draft mockery --git-mod`,
 	Run: run,
 }
 
 func init() {
 	mockeryCmd.Flags().IntVarP(&jobsNum, "jobs-num", "j", 5, "Number of concurrent mockery jobs to run")
 	mockeryCmd.Flags().BoolVar(&dry, "dry", false, "Dry run - validate and prepare configs without executing mockery")
+	mockeryCmd.Flags().BoolVar(&gitMod, "git-mod", false, "Only run mockery for packages with modified files (compares HEAD with main branch)")
 }
 
 func run(cmd *cobra.Command, args []string) {
 	common.ChDir(cmd)
 
-	if err := mockery.New(args, jobsNum, dry).Exec(); err != nil {
+	if err := mockery.New(args, jobsNum, dry, gitMod).Exec(); err != nil {
 		log.Exitf(1, "Failed to run mockery: %v", err)
 	}
 

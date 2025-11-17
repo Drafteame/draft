@@ -13,6 +13,7 @@ import (
 	"github.com/charmbracelet/huh/spinner"
 	"gopkg.in/yaml.v3"
 
+	"github.com/Drafteame/draft/internal/pkg/dirs"
 	"github.com/Drafteame/draft/internal/pkg/exec"
 	"github.com/Drafteame/draft/internal/pkg/files"
 	"github.com/Drafteame/draft/internal/pkg/log"
@@ -30,6 +31,7 @@ type (
 		configFiles []string
 		jobsNum     int
 		dry         bool
+		gitMod      bool
 		tmpFiles    []string // Track for cleanup
 		mu          sync.Mutex
 	}
@@ -58,11 +60,12 @@ type (
 	}
 )
 
-func New(configFiles []string, jobsNum int, dry bool) *Mockery {
+func New(configFiles []string, jobsNum int, dry bool, gitMod bool) *Mockery {
 	return &Mockery{
 		configFiles: configFiles,
 		jobsNum:     jobsNum,
 		dry:         dry,
+		gitMod:      gitMod,
 		tmpFiles:    make([]string, 0),
 	}
 }
@@ -131,6 +134,10 @@ func (m *Mockery) validate() error {
 		log.Warnf("Very high concurrency (%d) may cause performance issues", m.jobsNum)
 	}
 
+	if m.gitMod && len(m.configFiles) > 0 {
+		return fmt.Errorf("cannot use --git-mod with explicit config file paths")
+	}
+
 	return nil
 }
 
@@ -138,8 +145,15 @@ func (m *Mockery) validate() error {
 func (m *Mockery) resolveConfigFiles() ([]string, error) {
 	var configFiles []string
 
-	// If files provided, validate them
-	if len(m.configFiles) > 0 {
+	// If git-mod is enabled, find configs from modified files
+	if m.gitMod {
+		found, err := m.findConfigsFromGitDiff()
+		if err != nil {
+			return nil, err
+		}
+		configFiles = found
+	} else if len(m.configFiles) > 0 {
+		// If files provided, validate them
 		validated, err := m.validateProvidedConfigs(m.configFiles)
 		if err != nil {
 			return nil, err
@@ -197,7 +211,7 @@ func (m *Mockery) deduplicateFiles(files []string) []string {
 	var result []string
 
 	for _, file := range files {
-		// Normalize path
+		// Normalize a path
 		normalized, err := filepath.Abs(file)
 		if err != nil {
 			normalized = file
@@ -219,45 +233,178 @@ func (m *Mockery) deduplicateFiles(files []string) []string {
 // findPackageConfigs searches for all .mockery.pkg.yml files in the project
 func (m *Mockery) findPackageConfigs() ([]string, error) {
 	var configs []string
-	var searchErr error
 
-	spin := spinner.New().Title("Searching for package config files...")
-	action := func() {
-		searchErr = filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
+	log.Info("Searching for package-specific configs...")
 
-			// Skip hidden directories and vendor (but not the root "." directory)
-			if info.IsDir() {
-				// Don't skip the root directory
-				if path == "." {
-					return nil
-				}
+	searchErr := dirs.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 
-				if strings.HasPrefix(info.Name(), ".") || info.Name() == "vendor" || info.Name() == "node_modules" {
-					return filepath.SkipDir
-				}
+		// Skip hidden directories (but not the root "." directory)
+		if info.IsDir() {
+			// Don't skip the root directory
+			if path == "." {
 				return nil
 			}
 
-			if strings.HasSuffix(path, pkgConfigSuffix) {
-				configs = append(configs, path)
+			if strings.HasPrefix(info.Name(), ".") {
+				return filepath.SkipDir
 			}
-
 			return nil
-		})
-	}
+		}
 
-	if err := spin.Action(action).Run(); err != nil {
-		return nil, fmt.Errorf("failed to search for configs: %w", err)
-	}
+		if strings.HasSuffix(path, pkgConfigSuffix) {
+			configs = append(configs, path)
+		}
+
+		return nil
+	})
 
 	if searchErr != nil {
 		return nil, fmt.Errorf("failed to walk directory: %w", searchErr)
 	}
 
 	return configs, nil
+}
+
+// findConfigsFromGitDiff finds .mockery.pkg.yml files in directories with modified files
+func (m *Mockery) findConfigsFromGitDiff() ([]string, error) {
+	var (
+		configs   []string
+		searchErr error
+	)
+
+	spin := spinner.New().Title("Detecting modified files from git diff...")
+	action := func() {
+		// Get modified files comparing HEAD with main branch
+		modifiedFiles, err := m.getModifiedFiles()
+		if err != nil {
+			searchErr = err
+			return
+		}
+
+		if len(modifiedFiles) == 0 {
+			log.Info("No modified files found in git diff")
+			return
+		}
+
+		log.Debugf("Found %d modified file(s)", len(modifiedFiles))
+
+		// Extract and deduplicate base directories
+		directories := m.extractDirectories(modifiedFiles)
+		log.Debugf("Extracted %d unique directories", len(directories))
+
+		// Search for .mockery.pkg.yml in each directory and its parents
+		configs = m.findConfigsInDirectories(directories)
+	}
+
+	if err := spin.Action(action).Run(); err != nil {
+		return nil, fmt.Errorf("failed to detect modified files: %w", err)
+	}
+
+	if searchErr != nil {
+		return nil, searchErr
+	}
+
+	if len(configs) == 0 {
+		log.Warn("No .mockery.pkg.yml files found in modified directories")
+	}
+
+	return configs, nil
+}
+
+// getModifiedFiles returns list of modified files using git diff
+func (m *Mockery) getModifiedFiles() ([]string, error) {
+	// Try to get the main branch name
+	mainBranch := "main"
+
+	// Check if origin/main exists
+	checkCmd := "git rev-parse --verify origin/main"
+	if _, err := exec.Command(checkCmd); err != nil {
+		// Try master as fallback
+		checkCmd = "git rev-parse --verify origin/master"
+		if _, err := exec.Command(checkCmd); err == nil {
+			mainBranch = "master"
+		}
+	}
+
+	// Get modified and new files
+	cmd := fmt.Sprintf("git diff --name-only --diff-filter=AM origin/%s...HEAD", mainBranch)
+	output, err := exec.Command(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to run git diff: %w\nOutput: %s\nTip: Ensure you're in a git repository and origin/%s exists", err, output, mainBranch)
+	}
+
+	// Parse output into file list
+	files := strings.Split(strings.TrimSpace(output), "\n")
+	var result []string
+	for _, file := range files {
+		file = strings.TrimSpace(file)
+		if file != "" {
+			result = append(result, file)
+		}
+	}
+
+	return result, nil
+}
+
+// extractDirectories extracts unique directories from file paths
+func (m *Mockery) extractDirectories(files []string) []string {
+	dirMap := make(map[string]bool)
+
+	for _, file := range files {
+		// Get directory of the file
+		dir := filepath.Dir(file)
+		if dir != "" && dir != "." {
+			dirMap[dir] = true
+		}
+	}
+
+	// Convert map to slice
+	var directories []string
+	for dir := range dirMap {
+		directories = append(directories, dir)
+	}
+
+	return directories
+}
+
+// findConfigsInDirectories searches for .mockery.pkg.yml files in directories and their parents
+func (m *Mockery) findConfigsInDirectories(directories []string) []string {
+	configMap := make(map[string]bool)
+
+	for _, dir := range directories {
+		// Check current directory and walk up to find .mockery.pkg.yml
+		currentDir := dir
+		for {
+			configPath := filepath.Join(currentDir, pkgConfigSuffix)
+			if files.Exists(configPath) {
+				// Normalize path
+				normalized, err := filepath.Abs(configPath)
+				if err != nil {
+					normalized = configPath
+				}
+				configMap[normalized] = true
+				log.Debugf("Found config: %s", configPath)
+			}
+
+			// Move to parent directory
+			parent := filepath.Dir(currentDir)
+			if parent == currentDir || parent == "." || parent == "/" {
+				break
+			}
+			currentDir = parent
+		}
+	}
+
+	// Convert map to slice
+	var configs []string
+	for config := range configMap {
+		configs = append(configs, config)
+	}
+
+	return configs
 }
 
 // loadBaseConfig loads the base configuration file
