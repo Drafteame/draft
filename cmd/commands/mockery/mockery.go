@@ -54,7 +54,7 @@ func init() {
 func run(cmd *cobra.Command, args []string) {
 	common.ChDir(cmd)
 
-	if err := mockery.New(args, jobsNum, dry, gitMod).Exec(); err != nil {
+	if err := mockery.New(cmd.Context(), args, jobsNum, dry, gitMod).Exec(); err != nil {
 		log.Exitf(1, "Failed to run mockery: %v", err)
 	}
 

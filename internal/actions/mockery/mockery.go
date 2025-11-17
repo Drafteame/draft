@@ -1,6 +1,7 @@
 package mockery
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -28,6 +29,7 @@ const (
 
 type (
 	Mockery struct {
+		ctx         context.Context
 		configFiles []string
 		jobsNum     int
 		dry         bool
@@ -60,8 +62,9 @@ type (
 	}
 )
 
-func New(configFiles []string, jobsNum int, dry bool, gitMod bool) *Mockery {
+func New(ctx context.Context, configFiles []string, jobsNum int, dry bool, gitMod bool) *Mockery {
 	return &Mockery{
+		ctx:         ctx,
 		configFiles: configFiles,
 		jobsNum:     jobsNum,
 		dry:         dry,
@@ -71,6 +74,7 @@ func New(configFiles []string, jobsNum int, dry bool, gitMod bool) *Mockery {
 }
 
 func (m *Mockery) Exec() error {
+	log.Info("Running mockery...")
 	// Validate inputs
 	if err := m.validate(); err != nil {
 		return err
@@ -101,9 +105,9 @@ func (m *Mockery) Exec() error {
 	}
 
 	// Create temporary config files
-	if err := m.createTempConfigs(configFiles, baseConfig); err != nil {
+	if errTmp := m.createTempConfigs(configFiles, baseConfig); errTmp != nil {
 		m.cleanup() // Clean up any temp files created before the error
-		return err
+		return errTmp
 	}
 
 	// Ensure cleanup on exit
@@ -111,6 +115,13 @@ func (m *Mockery) Exec() error {
 
 	// Execute mockery concurrently with the progress spinner
 	results := m.executeConcurrentWithProgress(configFiles)
+
+	// Check if context was cancelled
+	if m.ctx.Err() != nil {
+		stats := m.calculateStats(results, startTime)
+		m.displayCancellationSummary(stats, results)
+		return fmt.Errorf("operation cancelled: %w", m.ctx.Err())
+	}
 
 	// Calculate and display stats
 	stats := m.calculateStats(results, startTime)
@@ -143,6 +154,7 @@ func (m *Mockery) validate() error {
 
 // resolveConfigFiles resolves, validates, and deduplicates config files
 func (m *Mockery) resolveConfigFiles() ([]string, error) {
+	log.Info("Resolving config files...")
 	var configFiles []string
 
 	// If git-mod is enabled, find configs from modified files
@@ -234,8 +246,6 @@ func (m *Mockery) deduplicateFiles(files []string) []string {
 func (m *Mockery) findPackageConfigs() ([]string, error) {
 	var configs []string
 
-	log.Info("Searching for package-specific configs...")
-
 	searchErr := dirs.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -270,42 +280,22 @@ func (m *Mockery) findPackageConfigs() ([]string, error) {
 
 // findConfigsFromGitDiff finds .mockery.pkg.yml files in directories with modified files
 func (m *Mockery) findConfigsFromGitDiff() ([]string, error) {
-	var (
-		configs   []string
-		searchErr error
-	)
-
-	spin := spinner.New().Title("Detecting modified files from git diff...")
-	action := func() {
-		// Get modified files comparing HEAD with main branch
-		modifiedFiles, err := m.getModifiedFiles()
-		if err != nil {
-			searchErr = err
-			return
-		}
-
-		if len(modifiedFiles) == 0 {
-			log.Info("No modified files found in git diff")
-			return
-		}
-
-		log.Debugf("Found %d modified file(s)", len(modifiedFiles))
-
-		// Extract and deduplicate base directories
-		directories := m.extractDirectories(modifiedFiles)
-		log.Debugf("Extracted %d unique directories", len(directories))
-
-		// Search for .mockery.pkg.yml in each directory and its parents
-		configs = m.findConfigsInDirectories(directories)
+	// Get modified files comparing HEAD with the main branch
+	modifiedFiles, err := m.getModifiedFiles()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get modified files: %w", err)
 	}
 
-	if err := spin.Action(action).Run(); err != nil {
-		return nil, fmt.Errorf("failed to detect modified files: %w", err)
+	if len(modifiedFiles) == 0 {
+		log.Info("No modified files found in git diff")
+		return nil, nil
 	}
 
-	if searchErr != nil {
-		return nil, searchErr
-	}
+	// Extract and deduplicate base directories
+	directories := m.extractDirectories(modifiedFiles)
+
+	// Search for .mockery.pkg.yml in each directory and its parents
+	configs := m.findConfigsInDirectories(directories)
 
 	if len(configs) == 0 {
 		log.Warn("No .mockery.pkg.yml files found in modified directories")
@@ -314,7 +304,7 @@ func (m *Mockery) findConfigsFromGitDiff() ([]string, error) {
 	return configs, nil
 }
 
-// getModifiedFiles returns list of modified files using git diff
+// getModifiedFiles returns a list of modified files using git diff
 func (m *Mockery) getModifiedFiles() ([]string, error) {
 	// Try to get the main branch name
 	mainBranch := "main"
@@ -336,10 +326,10 @@ func (m *Mockery) getModifiedFiles() ([]string, error) {
 		return nil, fmt.Errorf("failed to run git diff: %w\nOutput: %s\nTip: Ensure you're in a git repository and origin/%s exists", err, output, mainBranch)
 	}
 
-	// Parse output into file list
-	files := strings.Split(strings.TrimSpace(output), "\n")
+	// Parse output into a file list
+	fileList := strings.Split(strings.TrimSpace(output), "\n")
 	var result []string
-	for _, file := range files {
+	for _, file := range fileList {
 		file = strings.TrimSpace(file)
 		if file != "" {
 			result = append(result, file)
@@ -351,13 +341,13 @@ func (m *Mockery) getModifiedFiles() ([]string, error) {
 
 // extractDirectories extracts unique directories from file paths
 func (m *Mockery) extractDirectories(files []string) []string {
-	dirMap := make(map[string]bool)
+	dirMap := make(map[string]struct{})
 
 	for _, file := range files {
-		// Get directory of the file
+		// Get the directory of the file
 		dir := filepath.Dir(file)
 		if dir != "" && dir != "." {
-			dirMap[dir] = true
+			dirMap[dir] = struct{}{}
 		}
 	}
 
@@ -372,24 +362,23 @@ func (m *Mockery) extractDirectories(files []string) []string {
 
 // findConfigsInDirectories searches for .mockery.pkg.yml files in directories and their parents
 func (m *Mockery) findConfigsInDirectories(directories []string) []string {
-	configMap := make(map[string]bool)
+	configMap := make(map[string]struct{})
 
 	for _, dir := range directories {
-		// Check current directory and walk up to find .mockery.pkg.yml
+		// Check the current directory and walk up to find .mockery.pkg.yml
 		currentDir := dir
 		for {
 			configPath := filepath.Join(currentDir, pkgConfigSuffix)
 			if files.Exists(configPath) {
-				// Normalize path
+				// Normalize a path
 				normalized, err := filepath.Abs(configPath)
 				if err != nil {
 					normalized = configPath
 				}
-				configMap[normalized] = true
-				log.Debugf("Found config: %s", configPath)
+				configMap[normalized] = struct{}{}
 			}
 
-			// Move to parent directory
+			// Move to the parent directory
 			parent := filepath.Dir(currentDir)
 			if parent == currentDir || parent == "." || parent == "/" {
 				break
@@ -409,11 +398,12 @@ func (m *Mockery) findConfigsInDirectories(directories []string) []string {
 
 // loadBaseConfig loads the base configuration file
 func (m *Mockery) loadBaseConfig() (map[string]any, error) {
+	log.Info("Loading base configuration file...")
 	if !files.Exists(baseConfigFile) {
 		return make(map[string]any), nil
 	}
 
-	data, err := os.ReadFile(baseConfigFile)
+	data, err := files.Read(baseConfigFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read base config %s: %w", baseConfigFile, err)
 	}
@@ -453,16 +443,12 @@ func (m *Mockery) deepMerge(a, b map[string]any) map[string]any {
 
 // createTempConfigs creates temporary config files for each package
 func (m *Mockery) createTempConfigs(configFiles []string, baseConfig map[string]any) error {
+	log.Info("Creating temporary config files...")
 	for i, configFile := range configFiles {
-		// Load package config
-		data, err := os.ReadFile(configFile)
-		if err != nil {
-			return fmt.Errorf("failed to read %s: %w", configFile, err)
-		}
-
 		var pkgConfig map[string]any
-		if err := yaml.Unmarshal(data, &pkgConfig); err != nil {
-			return fmt.Errorf("failed to parse %s: %w (check YAML syntax)", configFile, err)
+
+		if errLoad := files.LoadYAML(configFile, &pkgConfig); errLoad != nil {
+			return fmt.Errorf("failed to load %s: %w", configFile, errLoad)
 		}
 
 		// Deep merge configs (package takes precedence)
@@ -480,9 +466,9 @@ func (m *Mockery) createTempConfigs(configFiles []string, baseConfig map[string]
 			return fmt.Errorf("failed to marshal merged config for %s: %w", configFile, err)
 		}
 
-		// Write temp file
-		if err := os.WriteFile(tmpFile, mergedData, 0644); err != nil {
-			return fmt.Errorf("failed to write temp config %s: %w", tmpFile, err)
+		// Write the temp file
+		if errCreate := files.Create(tmpFile, mergedData); errCreate != nil {
+			return fmt.Errorf("failed to write temp config %s: %w", tmpFile, errCreate)
 		}
 
 		// Track for cleanup
@@ -516,14 +502,16 @@ func (m *Mockery) generateTempFileName(configFile string, index int) (string, er
 
 // executeConcurrentWithProgress executes mockery commands concurrently with progress spinner
 func (m *Mockery) executeConcurrentWithProgress(configFiles []string) []mockeryJob {
+	log.Info("Executing mockery commands...")
 	var (
 		wg           sync.WaitGroup
-		mu           sync.Mutex
-		results      []mockeryJob
+		results      = make([]mockeryJob, 0, len(configFiles))
+		resultsChan  = make(chan mockeryJob, len(configFiles))
 		semaphore    = make(chan struct{}, m.jobsNum)
 		progressChan = make(chan progressUpdate, len(configFiles))
 		completed    = 0
 		execErr      error
+		doneChan     = make(chan struct{})
 	)
 
 	total := len(configFiles)
@@ -531,7 +519,10 @@ func (m *Mockery) executeConcurrentWithProgress(configFiles []string) []mockeryJ
 	spin := spinner.New().Title(fmt.Sprintf("[0 / %d] Preparing...", total))
 
 	action := func() {
+		defer close(doneChan)
+
 		var progressWg sync.WaitGroup
+		var cancelled bool
 		progressWg.Add(1)
 
 		// Start a progress reader goroutine before spawning work goroutines
@@ -554,48 +545,49 @@ func (m *Mockery) executeConcurrentWithProgress(configFiles []string) []mockeryJ
 		}()
 
 		// Start goroutines to process configs
-		for i := range m.tmpFiles {
-			// Acquire semaphore before spawning goroutine
-			semaphore <- struct{}{}
+		for idx := range m.tmpFiles {
+			// Check if context is cancelled before starting new goroutine
+			if m.ctx.Err() != nil {
+				if !cancelled {
+					log.Warn("Operation cancelled by user, waiting for ongoing tasks to complete...")
+					cancelled = true
+					execErr = m.ctx.Err()
+				}
+				goto waitForCompletion
+			}
+
+			// Acquire semaphore before spawning a goroutine
+			select {
+			case semaphore <- struct{}{}:
+				// Successfully acquired semaphore
+			case <-m.ctx.Done():
+				// Context cancelled while waiting for semaphore
+				if !cancelled {
+					log.Warn("Operation cancelled by user, waiting for ongoing tasks to complete...")
+					cancelled = true
+					execErr = m.ctx.Err()
+				}
+				goto waitForCompletion
+			}
 
 			wg.Add(1)
-			go func(idx int) {
-				defer wg.Done()
-				defer func() { <-semaphore }() // Release semaphore after work
-
-				configFile := configFiles[idx]
-				tmpFile := m.tmpFiles[idx]
-
-				startTime := time.Now()
-				err := m.runMockery(tmpFile, configFile)
-				duration := time.Since(startTime)
-
-				result := mockeryJob{
-					configFile: configFile,
-					tmpFile:    tmpFile,
-					err:        err,
-					duration:   duration,
-				}
-
-				mu.Lock()
-				results = append(results, result)
-				mu.Unlock()
-
-				// Send progress update
-				progressChan <- progressUpdate{
-					current:    idx + 1,
-					total:      total,
-					configFile: configFile,
-					success:    err == nil,
-					err:        err,
-					duration:   duration,
-				}
-			}(i)
+			go m.execute(
+				idx,
+				resultsChan,
+				progressChan,
+				&wg,
+				semaphore,
+				configFiles[idx],
+				m.tmpFiles[idx],
+				total,
+			)
 		}
 
+	waitForCompletion:
 		// Wait for all work goroutines to complete
 		wg.Wait()
 		close(progressChan)
+		close(resultsChan)
 
 		// Wait for the progress reader to finish processing all updates
 		progressWg.Wait()
@@ -605,19 +597,80 @@ func (m *Mockery) executeConcurrentWithProgress(configFiles []string) []mockeryJ
 		execErr = fmt.Errorf("execution error: %w", err)
 	}
 
-	if execErr != nil {
+	// Wait for action to complete
+	<-doneChan
+
+	if execErr != nil && execErr != context.Canceled {
 		log.Errorf("Execution encountered errors: %v", execErr)
+	}
+
+	for result := range resultsChan {
+		results = append(results, result)
 	}
 
 	return results
 }
 
-// shortenConfigPath extracts a meaningful short name from config file path
+// execute runs a mockery command for a specific configuration file and communicates results and progress updates.
+func (m *Mockery) execute(
+	idx int,
+	resultChan chan mockeryJob,
+	progressChan chan progressUpdate,
+	wg *sync.WaitGroup,
+	sem chan struct{},
+	configFile string,
+	tmpFile string,
+	total int,
+) {
+	defer wg.Done()
+	defer func() { <-sem }() // Release semaphore after work
+
+	// Check if context is cancelled before starting work
+	select {
+	case <-m.ctx.Done():
+		// Context cancelled, skip execution
+		result := mockeryJob{
+			configFile: configFile,
+			tmpFile:    tmpFile,
+			err:        m.ctx.Err(),
+			duration:   0,
+		}
+		resultChan <- result
+		return
+	default:
+		// Continue with execution
+	}
+
+	startTime := time.Now()
+	err := m.runMockery(tmpFile, configFile)
+	duration := time.Since(startTime)
+
+	result := mockeryJob{
+		configFile: configFile,
+		tmpFile:    tmpFile,
+		err:        err,
+		duration:   duration,
+	}
+
+	resultChan <- result
+
+	// Send progress update
+	progressChan <- progressUpdate{
+		current:    idx + 1,
+		total:      total,
+		configFile: configFile,
+		success:    err == nil,
+		err:        err,
+		duration:   duration,
+	}
+}
+
+// shortenConfigPath extracts a meaningful short name from a config file path
 func (m *Mockery) shortenConfigPath(configPath string) string {
 	// Remove .mockery.pkg.yml suffix
 	path := strings.TrimSuffix(configPath, "/.mockery.pkg.yml")
 
-	// If path is too long, show only last 2-3 segments
+	// If a path is too long, show only the last 2-3 segments
 	parts := strings.Split(path, "/")
 	if len(parts) > 3 {
 		return ".../" + strings.Join(parts[len(parts)-3:], "/")
@@ -629,7 +682,7 @@ func (m *Mockery) shortenConfigPath(configPath string) string {
 // runMockery executes mockery with the given config file
 func (m *Mockery) runMockery(configPath, originalPath string) error {
 	if m.dry {
-		// Dry run - skip execution and just validate config file exists
+		// Dry run - skip execution and just validate the config file exists
 		log.Debugf("Dry run: would execute mockery --config %s", configPath)
 		return nil
 	}
@@ -664,11 +717,16 @@ func (m *Mockery) cleanup() {
 // calculateStats calculates execution statistics
 func (m *Mockery) calculateStats(results []mockeryJob, startTime time.Time) executionStats {
 	stats := executionStats{
-		total:    len(results),
+		total:    len(m.tmpFiles), // Use total tmpFiles, not just results length
 		duration: time.Since(startTime),
 	}
 
 	for _, result := range results {
+		// Don't count context cancellation as failure
+		if result.err == context.Canceled || result.err == context.DeadlineExceeded {
+			continue
+		}
+
 		if result.err != nil {
 			stats.failed++
 		} else {
@@ -699,6 +757,29 @@ func (m *Mockery) displaySummary(stats executionStats, results []mockeryJob) {
 			log.Successf("✓ All %d package(s) completed successfully (%.2fs)", stats.total, stats.duration.Seconds())
 		}
 	}
+}
+
+// displayCancellationSummary displays summary when operation is cancelled
+func (m *Mockery) displayCancellationSummary(stats executionStats, results []mockeryJob) {
+	completed := stats.succeeded + stats.failed
+	cancelled := stats.total - completed
+
+	log.Warnf("⚠ Operation cancelled by user")
+	log.Infof("Completed: %d/%d packages", completed, stats.total)
+	log.Infof("Cancelled: %d packages", cancelled)
+	log.Infof("Duration: %.2fs", stats.duration.Seconds())
+
+	if stats.failed > 0 {
+		log.Warnf("Failed packages before cancellation:")
+		for _, result := range results {
+			if result.err != nil && result.err != context.Canceled && result.err != context.DeadlineExceeded {
+				log.Errorf("  • %s", result.configFile)
+				log.Errorf("    %v", result.err)
+			}
+		}
+	}
+
+	log.Info("Temporary files have been cleaned up")
 }
 
 // generateRandomID generates a random hex string for temp file naming
