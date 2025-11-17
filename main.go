@@ -1,6 +1,11 @@
 package main
 
 import (
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/Drafteame/draft/cmd/commands"
 	"github.com/Drafteame/draft/cmd/commands/config"
 	"github.com/Drafteame/draft/cmd/commands/local/invoke"
@@ -8,6 +13,7 @@ import (
 	migrateforce "github.com/Drafteame/draft/cmd/commands/local/migrate/force"
 	migrateup "github.com/Drafteame/draft/cmd/commands/local/migrate/up"
 	testsetup "github.com/Drafteame/draft/cmd/commands/local/setup"
+	"github.com/Drafteame/draft/cmd/commands/mockery"
 	"github.com/Drafteame/draft/cmd/commands/newdomain"
 	"github.com/Drafteame/draft/cmd/commands/newlambda"
 	"github.com/Drafteame/draft/cmd/commands/newservice"
@@ -17,6 +23,10 @@ import (
 )
 
 func main() {
+	// Set up context with signal handling
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	cmd := commands.GetCmd()
 
 	cmd.AddCommand(config.GetCmd())
@@ -30,8 +40,9 @@ func main() {
 	cmd.AddCommand(migrateforce.GetCmd())
 	cmd.AddCommand(migratedown.GetCmd())
 	cmd.AddCommand(testsetup.GetCmd())
+	cmd.AddCommand(mockery.GetCmd())
 
-	if err := cmd.Execute(); err != nil {
+	if err := cmd.ExecuteContext(ctx); err != nil {
 		log.Exit(1, err.Error())
 	}
 }

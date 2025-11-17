@@ -14,6 +14,7 @@ A CLI tool to scaffold services, Lambda functions, and domain layers for Draftea
   - [Creating a Service](#creating-a-service)
   - [Creating a Lambda Function](#creating-a-lambda-function)
   - [Creating a Domain Layer](#creating-a-domain-layer)
+  - [Mock Generation](#mock-generation)
   - [Invoking Lambdas Locally](#invoking-lambdas-locally)
   - [Local Development](#local-development)
   - [Sentry Management](#sentry-management)
@@ -223,6 +224,102 @@ domains/<domain-name>/
 
 ---
 
+### Mock Generation
+
+Generate mock implementations for interfaces across your codebase using [Mockery](https://github.com/vektra/mockery) with configuration merging support.
+
+#### Overview
+
+The `mockery` command enables concurrent mock generation by merging a base configuration (`.mockery.base.yml`) with package-specific configurations (`.mockery.pkg.yml`). This pattern allows you to:
+- Define common settings once in a base config
+- Override or extend settings per package
+- Generate mocks for multiple packages concurrently
+- Track progress and errors for each package
+
+#### Basic Usage
+
+```bash
+# Generate mocks for all .mockery.pkg.yml files in the project
+draft mockery
+
+# Generate mocks for specific package configs
+draft mockery services/user/.mockery.pkg.yml services/auth/.mockery.pkg.yml
+
+# Run with custom concurrency (default: 5)
+draft mockery --jobs-num 10
+
+# Dry run - validate configs without executing mockery
+draft mockery --dry
+
+# Run only for packages with modified files (git diff with main)
+draft mockery --git-mod
+
+# Combine flags for targeted validation in CI/CD
+draft mockery --git-mod --dry --jobs-num 10
+```
+
+#### Configuration Files
+
+**Base Configuration** (`.mockery.base.yml`)
+```yaml
+# Shared settings applied to all packages
+with-expecter: true
+dir: "{{.InterfaceDirRelative}}/mocks"
+mockname: "Mock{{.InterfaceName}}"
+filename: "mock_{{.InterfaceName}}.go"
+outpkg: mocks
+```
+
+**Package Configuration** (`services/user/.mockery.pkg.yml`)
+```yaml
+# Package-specific settings
+packages:
+  github.com/myorg/myrepo/services/user/domain:
+    config:
+      all: true
+      dir: services/user/domain/mocks
+      filename: "mock_{{.InterfaceName}}.go"
+      inpackage: false
+```
+
+The command will:
+1. Load base config from `.mockery.base.yml`
+2. Merge it with each `.mockery.pkg.yml` file (package config takes precedence)
+3. Create temporary merged configs (`.mockery.tmp.*.yml`)
+4. Execute mockery concurrently for each package
+5. Clean up temporary files
+6. Report success/failure statistics
+
+#### Flags
+
+| Flag | Short | Description | Default |
+|------|-------|-------------|---------|
+| `--jobs-num` | `-j` | Number of concurrent mockery jobs | `5` |
+
+#### Example Output
+
+```
+✓ [✓] [ 3 / 5] services/auth (2.34s)
+✗ [✗] [ 4 / 5] services/payment (1.12s)
+✓ [✓] [ 5 / 5] services/user (3.45s)
+
+✗ Failed: 1/5 packages (8.91s)
+Failed packages:
+  • services/payment/.mockery.pkg.yml
+    mockery failed: interface NotFound not found
+```
+
+#### Integration with `new:domain`
+
+When creating domains with `draft new:domain`, mocks are automatically generated:
+- Domain service and repository packages are added to `.mockery.yml`
+- Mockery runs to generate mock implementations
+- Mocks are placed in `domain/service/mocks` and `domain/repository/mocks`
+
+**Note**: The `new:domain` action uses a simpler approach by directly updating `.mockery.yml` rather than the base/package config merging system.
+
+---
+
 ### Invoking Lambdas Locally
 
 Test Lambda functions locally without deploying to AWS.
@@ -334,6 +431,7 @@ draft/
 │       ├── newservice/            # Service creation command
 │       ├── newlambda/             # Lambda creation command
 │       ├── newdomain/             # Domain creation command
+│       ├── mockery/               # Mock generation command
 │       ├── local/                 # Local development commands
 │       ├── sentry/                # Sentry management commands
 │       └── internal/common/       # Shared command utilities
@@ -342,6 +440,7 @@ draft/
 │   │   ├── newservice/            # Service creation logic
 │   │   ├── newlambda/             # Lambda creation logic
 │   │   ├── newdomain/             # Domain creation logic
+│   │   ├── mockery/               # Mock generation logic
 │   │   ├── local/                 # Local development logic
 │   │   └── sentry/                # Sentry management logic
 │   ├── forms/                     # Interactive CLI forms
@@ -818,7 +917,9 @@ draft --version
 
 ## License
 
-[Add your license information here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2025 Draftea
 
 ---
 
