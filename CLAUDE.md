@@ -60,8 +60,10 @@ draft mockery                                           # Run mockery for all .m
 draft mockery path/to/.mockery.pkg.yml                 # Run mockery for specific package configs
 draft mockery --jobs-num 5                             # Run with custom concurrent job limit (default: 5)
 draft mockery --dry                                    # Dry run - validate configs without executing mockery
-draft mockery --git-mod                                # Run only for packages with modified files (git diff)
-draft mockery --git-mod --dry --jobs-num 10           # Combine flags for targeted validation
+draft mockery --staged                                 # Run only for packages with staged files (pre-commit)
+draft mockery --committed                              # Run only for packages with committed files (git diff HEAD vs main)
+draft mockery --modified                               # Run for packages with staged OR committed files
+draft mockery --staged --dry --jobs-num 10            # Combine flags for targeted validation
 ```
 
 ### Global Flags
@@ -159,37 +161,28 @@ The `draft mockery` command provides concurrent mock generation with configurati
 - **Package Configs**: Searches for or accepts specific `.mockery.pkg.yml` files in service directories
 - **Config Merging**: Deep merges base and package configs (package settings take precedence)
 - **Concurrent Execution**: Runs mockery jobs in parallel with configurable concurrency (`--jobs-num` flag, default: 5)
-  - Semaphore acquired BEFORE spawning goroutines for proper concurrency control
-  - Real-time progress updates with spinner showing completed/total packages
 - **Temporary Files**: Creates temporary merged config files (`.mockery.tmp.*.yml`) that are automatically cleaned up
-- **Progress Reporting**: Shows real-time progress with spinner and execution statistics
-- **Error Handling**: Continues execution on failures, reports all errors at the end, exits with code 1 if any failed
-- **Dry Run Mode** (`--dry`): Validates and prepares all configs without executing mockery commands
-  - Useful for CI/CD pipelines to verify configuration correctness
-  - Completes significantly faster than actual execution
-- **Git Diff Mode** (`--git-mod`): Only processes packages with modified files
-  - Compares `HEAD` with `origin/main` (or `origin/master` as fallback)
-  - Extracts directories from modified files and searches for `.mockery.pkg.yml` in those directories and parents
-  - Automatically deduplicates found configs
-  - Cannot be combined with explicit config file paths
-- **Graceful Cancellation**: Handles Ctrl+C (SIGINT) and SIGTERM signals
-  - Stops spawning new goroutines immediately
-  - Waits for running tasks to complete gracefully
-  - Cleans up all temporary files via defer
-  - Displays cancellation summary with completed/cancelled counts
-  - Context propagated from `main.go` through Cobra commands
+- **Dry Run Mode** (`--dry`): Validates configs without executing mockery commands
+- **Git Filter Modes**:
+  - `--staged`: Only processes packages with staged files (pre-commit hooks)
+  - `--committed`: Only processes packages with committed modifications (compares HEAD with origin/main)
+  - `--modified`: Processes packages with staged OR committed files
+  - Cannot combine git filter flags or use with explicit config file paths
+- **Graceful Cancellation**: Handles Ctrl+C, waits for running tasks, cleans up temp files
 
-Implementation in `internal/actions/mockery/`:
-1. Validates inputs and finds/validates config files (via explicit paths, git diff, or directory walk)
-2. Loads base configuration from `.mockery.base.yml`
-3. Creates temporary merged configs for each package
-4. Executes mockery concurrently with semaphore-based concurrency control
-   - Monitors context for cancellation signals
-   - Checks context before spawning each goroutine
-   - Uses `select` on semaphore acquisition to respect cancellation
-5. Cleans up temporary files and displays execution summary (or cancellation summary if interrupted)
+Implementation organized in `internal/actions/mockery/`:
+- `mockery.go`: Main orchestration (Exec, validate, resolveConfigFiles)
+- `config.go`: Configuration management (load, merge, temp files, cleanup)
+- `git.go`: Git integration (staged/committed/modified file detection)
+- `execution.go`: Concurrent execution, progress tracking, result display
 
-The `new:domain` action uses a simpler mockery integration: it adds packages to `.mockery.yml` and runs `mockery` directly without the config merging system.
+Execution flow:
+1. Validate inputs and resolve config files (explicit paths, git diff, or directory walk)
+2. Load base config from `.mockery.base.yml` and merge with package configs
+3. Create temporary merged configs and execute mockery concurrently
+4. Display results and clean up temp files
+
+The `new:domain` action uses a simpler approach: adds packages to `.mockery.yml` and runs `mockery` directly without config merging.
 
 ## Configuration Files
 

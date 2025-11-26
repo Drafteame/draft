@@ -9,9 +9,11 @@ import (
 )
 
 var (
-	jobsNum int
-	dry     bool
-	gitMod  bool
+	jobsNum   int
+	dry       bool
+	staged    bool
+	committed bool
+	modified  bool
 )
 
 var mockeryCmd = &cobra.Command{
@@ -40,21 +42,29 @@ Examples:
   # Dry run - validate configs without executing mockery
   draft mockery --dry
 
-  # Run mockery only for packages with modified files (compare HEAD with main)
-  draft mockery --git-mod`,
+  # Run mockery only for packages with staged files (pre-commit)
+  draft mockery --staged
+
+  # Run mockery only for packages with committed files (compare HEAD with main)
+  draft mockery --committed
+
+  # Run mockery for packages with staged OR committed files
+  draft mockery --modified`,
 	Run: run,
 }
 
 func init() {
 	mockeryCmd.Flags().IntVarP(&jobsNum, "jobs-num", "j", 5, "Number of concurrent mockery jobs to run")
 	mockeryCmd.Flags().BoolVar(&dry, "dry", false, "Dry run - validate and prepare configs without executing mockery")
-	mockeryCmd.Flags().BoolVar(&gitMod, "git-mod", false, "Only run mockery for packages with modified files (compares HEAD with main branch)")
+	mockeryCmd.Flags().BoolVar(&staged, "staged", false, "Only run mockery for packages with staged files (pre-commit)")
+	mockeryCmd.Flags().BoolVar(&committed, "committed", false, "Only run mockery for packages with committed files (compares HEAD with main branch)")
+	mockeryCmd.Flags().BoolVar(&modified, "modified", false, "Only run mockery for packages with staged OR committed files")
 }
 
 func run(cmd *cobra.Command, args []string) {
 	common.ChDir(cmd)
 
-	if err := mockery.New(cmd.Context(), args, jobsNum, dry, gitMod).Exec(); err != nil {
+	if err := mockery.New(cmd.Context(), args, jobsNum, dry, staged, committed, modified).Exec(); err != nil {
 		log.Exitf(1, "Failed to run mockery: %v", err)
 	}
 
