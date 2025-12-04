@@ -14,7 +14,7 @@ require (
 	github.com/getsentry/sentry-go v0.38.0
 	github.com/mattn/go-isatty v0.0.20
 	github.com/samber/lo v1.52.0
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	golang.org/x/crypto v0.44.0
 	golang.org/x/sync v0.18.0
 	golang.org/x/text v0.31.0
