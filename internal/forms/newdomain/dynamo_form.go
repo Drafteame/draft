@@ -8,20 +8,28 @@ import (
 )
 
 func dynamoForm(input *dtos.DomainInput) error {
-	err := inputs.Text("Table Name:",
-		inputs.WithDescription[string]("Enter the name of the DynamoDB table to use on this domain."),
-		inputs.WithValue(&input.TableName),
-		inputs.WithValidation(func(s string) error {
-			if s == "" {
-				return errors.New("table name cannot be empty")
-			}
+	// Prompt for table name only if not provided via flag
+	if input.TableName == "" {
+		err := inputs.Text("Table Name:",
+			inputs.WithDescription[string]("Enter the name of the DynamoDB table to use on this domain."),
+			inputs.WithValue(&input.TableName),
+			inputs.WithValidation(func(s string) error {
+				if s == "" {
+					return errors.New("table name cannot be empty")
+				}
 
-			return nil
-		}),
-	)
+				return nil
+			}),
+		)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+	}
+
+	// Validate table name if provided via flag
+	if input.TableName == "" {
+		return errors.New("table name cannot be empty")
 	}
 
 	return nil

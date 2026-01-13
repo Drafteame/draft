@@ -8,6 +8,7 @@ import (
 	prvdatetime "{{.PackageName}}/pkg/providers/datetime"
 	prvgenerator "{{.PackageName}}/pkg/providers/generators/nanoid/tableid"
 	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
+	"{{.PackageName}}/projects/framev2/pkg/drivers/gorm"
 	"{{.PackageName}}/projects/framev2/pkg/stage"
 	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
@@ -71,16 +72,12 @@ func createInstance(ctx context.Context, opts ...providers.Option) (any, error) 
 	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.createInstance")
 	defer span.Close(nil)
 
-	postgres{{.DomainNamePascal}}, err := prvpostgres.Provide{{.DBProviderFuncName}}(opts...)
-	if err != nil {
-		_ = span.AddError(err)
-		return nil, err
-	}
+	driver := providers.MustAs[gorm.Driver](newCtx, prvpostgres.Provide{{.DBProviderFuncName}}, opts...)
 
 	clock := providers.MustAs[Clock](newCtx, prvdatetime.ProvideClock, opts...)
 
 	generatorID := providers.MustAs[GeneratorID](newCtx, prvgenerator.Provide{{.DomainNamePascal}}, opts...)
 
-	return New(postgres{{.DomainNamePascal}}, clock, generatorID), nil
+	return New(driver, clock, generatorID), nil
 }
 

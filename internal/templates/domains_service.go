@@ -43,26 +43,28 @@ func loadServiceDynamo(v *Service, data any) error {
 }
 
 type ServicePostgres struct {
-	CreateGo        []byte
-	CreateTestGo    []byte
-	DeleteGo        []byte
-	DeleteTestGo    []byte
-	GetGo           []byte
-	GetTestGo       []byte
-	InterfacesGo    []byte
-	SearchGo        []byte
-	SearchTestGo    []byte
-	SearchOneGo     []byte
-	SearchOneTestGo []byte
-	ServiceGo       []byte
-	ServiceTestGo   []byte
-	UpdateGo        []byte
-	UpdateTestGo    []byte
-	ProvideGo       []byte
+	DotMockeryPkgYml []byte
+	CreateGo         []byte
+	CreateTestGo     []byte
+	DeleteGo         []byte
+	DeleteTestGo     []byte
+	GetGo            []byte
+	GetTestGo        []byte
+	InterfacesGo     []byte
+	SearchGo         []byte
+	SearchTestGo     []byte
+	SearchOneGo      []byte
+	SearchOneTestGo  []byte
+	ServiceGo        []byte
+	ServiceTestGo    []byte
+	UpdateGo         []byte
+	UpdateTestGo     []byte
+	ProvideGo        []byte
 }
 
 func loadDomainsServicePostgres(v *ServicePostgres, data any) error {
 	loaders := []func(*ServicePostgres, any) error{
+		loadServicePostgresDotMockeryPkgYml,
 		loadServicePostgresCreateGo,
 		loadServicePostgresCreateTestGo,
 		loadServicePostgresDeleteGo,
@@ -86,6 +88,20 @@ func loadDomainsServicePostgres(v *ServicePostgres, data any) error {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func loadServicePostgresDotMockeryPkgYml(v *ServicePostgres, data any) error {
+	name := "domains/service/postgres/.mockery.pkg.yml"
+	path := "tmpl/domain/service/postgres/.mockery.pkg.yml.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.DotMockeryPkgYml = content
 
 	return nil
 }
@@ -315,13 +331,15 @@ func loadServicePostgresProvideGo(v *ServicePostgres, data any) error {
 }
 
 type ServiceDynamo struct {
-	InterfacesGo []byte
-	ServiceGo    []byte
-	ProviderGo   []byte
+	DotMockeryPkgYml []byte
+	InterfacesGo     []byte
+	ServiceGo        []byte
+	ProviderGo       []byte
 }
 
 func loadDomainsServiceDynamo(v *ServiceDynamo, data any) error {
 	loaders := []func(*ServiceDynamo, any) error{
+		loadServiceDynamoDotMockeryPkgYml,
 		loadServiceDynamoInterfacesGo,
 		loadServiceDynamoServiceGo,
 		loadServiceDynamoProviderGo,
@@ -332,6 +350,20 @@ func loadDomainsServiceDynamo(v *ServiceDynamo, data any) error {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func loadServiceDynamoDotMockeryPkgYml(v *ServiceDynamo, data any) error {
+	name := "domains/service/dynamo/.mockery.pkg.yml"
+	path := "tmpl/domain/service/dynamo/.mockery.pkg.yml.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.DotMockeryPkgYml = content
 
 	return nil
 }
