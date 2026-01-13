@@ -150,12 +150,36 @@ For an HTTP Lambda:
 
 ### Creating a Domain Layer
 
-Generate a complete domain layer following Domain-Driven Design principles.
+Generate a complete domain layer following Domain-Driven Design principles with support for both interactive and non-interactive modes.
 
 #### Basic Usage
 
+**Interactive Mode** (prompts for all values):
 ```bash
 draft new:domain
+```
+
+**Non-Interactive Mode** (CI/CD friendly):
+```bash
+# Postgres domain
+draft new:domain \
+  --domain-path users \
+  --db-type postgres \
+  --table-name public.users \
+  --db-prefix usr \
+  --db-name general
+
+# DynamoDB domain
+draft new:domain \
+  --domain-path products \
+  --db-type dynamo \
+  --table-name ProductsTable
+```
+
+**Mixed Mode** (some flags, some prompts):
+```bash
+draft new:domain --domain-path orders --db-type postgres
+# Prompts only for table-name, db-prefix, and db-name
 ```
 
 #### Database Support
@@ -167,12 +191,45 @@ Draft supports multiple database backends:
 | **Postgres** | Full CRUD, search with filters/pagination, repository builders, DAOs, domain models |
 | **DynamoDB** | Simplified repository pattern, optimized for NoSQL |
 
+#### Database Configuration
+
+For Postgres domains, available databases are **dynamically loaded** from `.local-migrate-config.yml`:
+
+1. Reads `migrations.databases` from project root configuration
+2. Filters out test databases (`group: 'test'`)
+3. Presents remaining databases as options
+4. Converts database names to PascalCase for provider functions
+
+**Example**: If `.local-migrate-config.yml` contains:
+```yaml
+migrations:
+  databases:
+    general:
+      folder: 'postgres'
+    general_test:
+      group: 'test'  # This will be filtered out
+    user_preferences:
+      folder: 'user-preferences'
+    games_core:
+      folder: 'games-core'
+```
+
+The command will:
+- Show options: `General`, `User Preferences`, `Games Core`
+- Generate provider calls: `ProvideGeneral`, `ProvideUserPreferences`, `ProvideGamesCore`
+
 #### Flags
 
-```bash
-# Specify working directory
-draft new:domain -w path/to/project
-```
+| Flag | Short | Description | Example |
+|------|-------|-------------|---------|
+| `--domain-path` | `-p` | Path to domain folder | `users`, `auth/sessions` |
+| `--db-type` | | Database type | `postgres`, `dynamo` |
+| `--table-name` | | Database table name | `public.users`, `ProductsTable` |
+| `--db-prefix` | | ID prefix for Postgres (3 chars) | `usr`, `ord`, `prd` |
+| `--db-name` | | Database name (from config) | `general`, `user_preferences` |
+| `--working-dir` | `-w` | Working directory | `path/to/project` |
+
+**Note**: The `--db-name` flag accepts snake_case database names as they appear in `.local-migrate-config.yml`. The tool automatically converts them to PascalCase for provider function names.
 
 #### What Gets Created (Postgres)
 
@@ -312,11 +369,14 @@ Failed packages:
 #### Integration with `new:domain`
 
 When creating domains with `draft new:domain`, mocks are automatically generated:
-- Domain service and repository packages are added to `.mockery.yml`
-- Mockery runs to generate mock implementations
+- Creates `.mockery.pkg.yml` files for service and repository packages
+- Calls the mockery action directly (reuses `internal/actions/mockery`)
+- Runs concurrently with `jobsNum=2` for service and repository
+- Provides progress reporting and error handling
+- Supports cancellation with Ctrl+C
 - Mocks are placed in `domain/service/mocks` and `domain/repository/mocks`
 
-**Note**: The `new:domain` action uses a simpler approach by directly updating `.mockery.yml` rather than the base/package config merging system.
+The domain command benefits from the same mockery infrastructure used by the standalone `draft mockery` command, including concurrent execution, progress tracking, and proper error handling.
 
 ---
 
@@ -474,6 +534,7 @@ draft/
 │       ├── log/                   # Logging utilities
 │       ├── format/                # Code formatting
 │       ├── constants/             # Shared constants
+│       ├── migrateconfig/         # Database config utilities
 │       └── ...                    # Other utilities
 ├── Taskfile.yml                   # Task runner configuration
 ├── go.mod                         # Go module definition
