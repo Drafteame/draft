@@ -64,15 +64,6 @@ Examples:
   # With custom working directory
   draft new:domain -w /path/to/project --domain-path inventory --db-type postgres
 
-Flags:
-  -p, --domain-path   Path to the domain folder (e.g., 'users' or 'auth/sessions')
-                      Note: 'domains/' prefix is added automatically if not present
-  --db-type           Database type: 'postgres' or 'dynamo'
-  --table-name        Database table name (supports schema.table notation for Postgres)
-  --db-prefix         ID prefix for Postgres (exactly 3 characters, e.g., 'usr', 'ord')
-  --db-name           Database name for Postgres (loaded from .local-migrate-config.yml)
-                      Use the snake_case database name (e.g., 'general', 'user_preferences')
-
 Database Configuration:
   For Postgres domains, the list of available databases is dynamically loaded from
   the .local-migrate-config.yml file in the project root. The command will:
@@ -94,7 +85,7 @@ func init() {
 	newDomainCmd.Flags().StringVar(&dbType, "db-type", "", "Database type (postgres or dynamo)")
 	newDomainCmd.Flags().StringVar(&tableName, "table-name", "", "Name of the database table")
 	newDomainCmd.Flags().StringVar(&dbPrefix, "db-prefix", "", "ID prefix for Postgres (3 characters)")
-	newDomainCmd.Flags().StringVar(&dbName, "db-name", "", "Database name for Postgres connection")
+	newDomainCmd.Flags().StringVar(&dbName, "db-name", "", "Database name for Postgres (loaded from .local-migrate-config.yml). Use the snake_case database name (e.g., 'general', 'user_preferences')")
 }
 
 func run(cmd *cobra.Command, _ []string) {
