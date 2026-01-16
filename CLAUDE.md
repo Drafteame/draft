@@ -116,10 +116,28 @@ The tool generates different Lambda structures based on trigger type:
 - **Custom**: User-defined custom event sources with configurable type path and optional idempotency
 
 ### Domain Generation
-When creating domains with `draft new:domain`, the tool prompts for:
+When creating domains with `draft new:domain`, the tool supports both interactive and non-interactive modes:
+
+**Interactive Mode** (default):
 - Domain path (automatically prefixed with `domains/` if not present)
 - Database type selection (Postgres or DynamoDB)
 - Database-specific configuration (table names, prefixes, etc.)
+- For Postgres: Database selection from `.local-migrate-config.yml`
+
+**Non-Interactive Mode** (CLI flags):
+- `--domain-path, -p`: Domain folder path
+- `--db-type`: Database type (postgres or dynamo)
+- `--table-name`: Database table name
+- `--db-prefix`: ID prefix for Postgres (3 characters)
+- `--db-name`: Database name for Postgres (loaded from config)
+
+**Database Configuration**:
+For Postgres domains, available databases are dynamically loaded from `.local-migrate-config.yml`:
+- Reads `migrations.databases` configuration
+- Filters out test databases (`group: 'test'`)
+- Converts snake_case names to PascalCase for provider functions
+  - Example: `user_preferences` → `ProvideUserPreferences`
+  - Example: `games_core` → `ProvideGamesCore`
 
 Domain structure varies by database type:
 - **Postgres**: Full CRUD with service layer, repository layer, builders, DAOs, providers, and domain models with search/filter capabilities
@@ -189,7 +207,12 @@ Implementation in `internal/actions/mockery/`:
    - Uses `select` on semaphore acquisition to respect cancellation
 5. Cleans up temporary files and displays execution summary (or cancellation summary if interrupted)
 
-The `new:domain` action uses a simpler mockery integration: it adds packages to `.mockery.yml` and runs `mockery` directly without the config merging system.
+The `new:domain` action integrates with the mockery action layer:
+- Creates `.mockery.pkg.yml` files for service and repository packages
+- Calls the mockery action directly (reuses `internal/actions/mockery`)
+- Passes context for cancellation support
+- Runs with jobsNum=2 for concurrent service and repository mock generation
+- Benefits from progress reporting and error handling of the main mockery action
 
 ## Configuration Files
 
@@ -230,6 +253,12 @@ Services use Pkl (configuration language) for app config:
     - Supports rooted patterns (`/dist`), directory-only patterns (`node_modules/`), negation patterns (`!important.txt`), and glob patterns (`**/*.yml`)
     - Optional `skipGitignore` parameter to disable `.gitignore` filtering
     - Used by mockery command to automatically skip vendor, node_modules, and other ignored directories
+  - `internal/pkg/migrateconfig/` provides database configuration utilities:
+    - Reads and parses `.local-migrate-config.yml` from project root
+    - Extracts `migrations.databases` configuration
+    - Filters databases by group (excludes `group: 'test'`)
+    - Provides `ToPascalCase()` for converting snake_case to PascalCase
+    - Formats database names for display in forms
 - `internal/dtos/` for data transfer objects passed between commands, forms, and actions
 - `internal/data/` for global state (flags, metadata, placeholder tags)
 - `cmd/commands/internal/common/` for command-level shared code
@@ -272,7 +301,10 @@ New lambdas are added to existing files via string replacement:
 
 New domains have a different post-create flow:
 1. `postgresModels()` (Postgres only) - Adds domain DAOs to provider test migrations using `NextDbModelTag`
-2. `mockery()` - Adds domain service/repository packages to `.mockery.yml` and runs mockery to generate mocks
+2. `mockery()` - Creates `.mockery.pkg.yml` files and runs mockery action to generate mocks
+   - Reuses `internal/actions/mockery` for concurrent execution
+   - Passes context for cancellation support
+   - Runs with jobsNum=2 for service and repository
 3. `format()` - Runs goimports/gofmt on generated files
 
 ### Global State Usage

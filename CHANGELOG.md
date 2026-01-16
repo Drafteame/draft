@@ -1,3 +1,10 @@
+## v1.19.0 (2026-01-16)
+
+
+- chore(ci): update vendor hash for version 1.19.0
+- feat: enhance new:domain with dynamic database config and CLI flags (#187)
+- Co-authored-by: Claude Sonnet 4.5 <noreply@anthropic.com>
+
 ## v1.18.0 (2025-11-17)
 
 
