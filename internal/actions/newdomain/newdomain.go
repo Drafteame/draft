@@ -1,17 +1,21 @@
 package newdomain
 
 import (
+	"context"
+
 	"github.com/Drafteame/draft/internal/dtos"
 	"github.com/Drafteame/draft/internal/templates"
 )
 
 type NewDomain struct {
+	ctx   context.Context
 	input dtos.DomainInput
 	tmpl  templates.Domains
 }
 
-func New(input dtos.DomainInput) *NewDomain {
+func New(ctx context.Context, input dtos.DomainInput) *NewDomain {
 	return &NewDomain{
+		ctx:   ctx,
 		input: input,
 	}
 }
