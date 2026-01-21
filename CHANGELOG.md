@@ -1,3 +1,9 @@
+## v1.19.2 (2026-01-21)
+
+
+- chore(ci): update vendor hash for version 1.19.2
+- chore: run init.sql on migrate up command (#189)
+
 ## v1.19.1 (2026-01-21)
 
 
