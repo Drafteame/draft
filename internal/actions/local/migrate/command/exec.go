@@ -2,12 +2,20 @@ package command
 
 import (
 	"fmt"
+
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
 func (a *Action) Exec() error {
 	config, err := a.loadConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load local migrations config: %w", err)
+	}
+
+	if a.Input.Command == "up" {
+		if err := runInitSQL(); err != nil {
+			log.Warnf("failed to run init sql: %v", err)
+		}
 	}
 
 	if a.Input.All {
