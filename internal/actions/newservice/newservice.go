@@ -19,16 +19,16 @@ func New(input dtos.ServiceInput) *NewService {
 }
 
 func (ns *NewService) Exec() error {
+	if errPre := ns.preCreate(); errPre != nil {
+		return errPre
+	}
+
 	tmpl, err := templates.NewServiceTemplates(ns.input)
 	if err != nil {
 		return err
 	}
 
 	ns.tmpl = tmpl
-
-	if errPre := ns.preCreate(); errPre != nil {
-		return errPre
-	}
 
 	if errExec := ns.exec(); errExec != nil {
 		return errExec

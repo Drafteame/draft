@@ -35,7 +35,7 @@ func (ns *NewService) createSentryProject() error {
 		return err
 	}
 
-	log.Info("Sentry project created with ID", projectID)
+	log.Info("Sentry project created with ID: ", projectID)
 
 	keys, err := sentry.GetClientKeys(projectID)
 	if err != nil {
