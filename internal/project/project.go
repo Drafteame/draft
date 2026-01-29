@@ -50,3 +50,14 @@ func NormalizeServicePackage(serviceName string) string {
 
 	return strings.ToLower(serviceName)
 }
+
+func CapitalizeServiceName(serviceName string) string {
+	parts := strings.Split(serviceName, "-")
+	for i, part := range parts {
+		if len(part) > 0 {
+			parts[i] = strings.ToUpper(part[:1]) + part[1:]
+		}
+	}
+
+	return strings.Join(parts, "")
+}
