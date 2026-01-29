@@ -36,7 +36,10 @@ provider:
   stage: ${opt:stage, "dev"}
   region: ${opt:region, "us-east-2"}
   environment: ${file(./config/sls/environment.yml):${self:custom.stage}.environment}
-  iam: ${file(./config/sls/iam.yml):${self:custom.stage}.roles}
+  iam:
+    deploymentRole: ${ssm:/service/roles/${self:provider.stage}/deployment-role}
+    role:
+      Fn::GetAtt: [{{ .RoleName }}LambdaRole, Arn]
   vpc: ${file(../../config/sls/vpc.yml):${self:custom.stage}.vpc}
 
   httpApi:
@@ -45,6 +48,8 @@ provider:
   tracing:
     apiGateway: true
     lambda: true
+
+resources: ${file(./config/sls/resources.yml)}
 
 functions:
   - ${file(cmd/plain/{{ .LambdaName }}/lambda-config.yml):function}

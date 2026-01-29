@@ -104,7 +104,7 @@ func (ns *NewService) getFileList() []dtos.FileEntry {
 		{Path: "/config/app/app.pkl", Data: ns.tmpl.Config.App.AppPkl},
 		{Path: "/config/app/modules.pkl", Data: ns.tmpl.Config.App.ModulesPkl},
 		{Path: "/config/sls/environment.yml", Data: ns.tmpl.Config.Sls.EnvironmentYAML},
-		{Path: "/config/sls/iam.yml", Data: ns.tmpl.Config.Sls.IamYAML},
+		{Path: "/config/sls/resources.yml", Data: ns.tmpl.Config.Sls.ResourcesYAML},
 	}
 
 	entries = append(entries, ns.getEntries()...)

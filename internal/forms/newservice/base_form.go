@@ -15,6 +15,10 @@ func baseForm(input *dtos.ServiceInput) error {
 			return err
 		}
 
+		if err := promptRoleName(input); err != nil {
+			return err
+		}
+
 		if err := promptServicePath(input); err != nil {
 			return err
 		}
@@ -38,6 +42,19 @@ func promptServiceName(input *dtos.ServiceInput) error {
 		inputs.WithValidation(func(s string) error {
 			if s == "" {
 				return errors.New("service name cannot be empty")
+			}
+			return nil
+		}),
+	)
+}
+
+func promptRoleName(input *dtos.ServiceInput) error {
+	return inputs.Text("Role Name:",
+		inputs.WithDescription[string]("Set the name of the role to be used by the service (must be in PascalCase, e.g., GameStats, UserTracking, GameEngine)"),
+		inputs.WithValue(&input.RoleName),
+		inputs.WithValidation(func(s string) error {
+			if s == "" {
+				return errors.New("role name cannot be empty")
 			}
 			return nil
 		}),

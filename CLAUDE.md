@@ -225,7 +225,7 @@ Services use Pkl (configuration language) for app config:
 - `serverless.yml` - Service definition and Lambda configuration
 - `lambda-config.yml` - Per-Lambda configuration files
 - `config/sls/environment.yml` - Environment variables
-- `config/sls/iam.yml` - IAM permissions
+- `config/sls/resources.yml` - Lambda roles and permissions
 
 ### Mockery Configuration
 - `.mockery.yml` - Project-level mockery configuration (used by `new:domain` action)
