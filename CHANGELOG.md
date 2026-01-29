@@ -1,3 +1,13 @@
+## v1.20.0 (2026-01-29)
+
+
+- chore(ci): update vendor hash for version 1.20.0
+- feat: enhance formatting functions to support dynamic paths for code generation [DEV-409] (#190)
+- ci: bump actions/checkout from 5 to 6 (#177)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Co-authored-by: Eduardo Aguilar Yépez <dante.aguilar41@gmail.com>
+
 ## v1.19.2 (2026-01-21)
 
 
