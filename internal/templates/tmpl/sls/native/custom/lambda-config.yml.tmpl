@@ -1,6 +1,7 @@
 function:
   {{ .LambdaName }}:
     handler: {{if not .IsLegacy}}cmd/{{ end }}{{ .CustomTypePath }}/{{ .LambdaName }}/main.go
+    disableLogs: true
     reservedConcurrency: ${self:custom.reservedConcurrency.{{ .ReservedConcurrency }}}
     # Example: Configure EventBridge bus event
     # events:

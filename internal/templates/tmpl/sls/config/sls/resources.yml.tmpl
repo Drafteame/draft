@@ -1,0 +1,19 @@
+Resources:
+   {{ .RoleName }}LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: {{ .RoleName }}LambdaRole-${self:custom.stage}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Policies:
+        - PolicyName: {{ .RoleName }}LambdaPolicy-${self:custom.stage}
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement: ${file(../../config/sls/lambda-role.yml):role.statements}

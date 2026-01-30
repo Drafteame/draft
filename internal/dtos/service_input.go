@@ -24,4 +24,5 @@ type ServiceInput struct {
 	IsLegacy              bool
 	UseDig                bool
 	ReservedConcurrency   string
+	RoleName              string
 }
