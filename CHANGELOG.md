@@ -1,3 +1,10 @@
+## v1.20.1 (2026-01-30)
+
+
+- chore(ci): update vendor hash for version 1.20.1
+- chore: [DEV-411] update service templates (#191)
+- Co-authored-by: Ariel Santos <ariel.santos@draftea.com>
+
 ## v1.20.0 (2026-01-29)
 
 
