@@ -38,8 +38,7 @@ provider:
   environment: ${file(./config/sls/environment.yml):${self:custom.stage}.environment}
   iam:
     deploymentRole: ${ssm:/service/roles/${self:provider.stage}/deployment-role}
-    role:
-      Fn::GetAtt: [{{ .RoleName }}LambdaRole, Arn]
+    role: arn:aws:iam::${aws:accountId}:role/{{ .RoleName }}LambdaRole-${self:custom.stage}
   vpc: ${file(../../config/sls/vpc.yml):${self:custom.stage}.vpc}
 
   httpApi:
