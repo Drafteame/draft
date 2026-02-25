@@ -15,6 +15,7 @@ import (
 	"github.com/charmbracelet/huh/spinner"
 	"gopkg.in/yaml.v3"
 
+	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/pkg/dirs"
 	"github.com/Drafteame/draft/internal/pkg/exec"
 	"github.com/Drafteame/draft/internal/pkg/files"
@@ -501,6 +502,11 @@ func (m *Mockery) generateTempFileName(configFile string, index int) (string, er
 	return tmpFile, nil
 }
 
+// isTTY returns true when animated UI (spinners) should be used.
+func isTTY() bool {
+	return data.Flags.TTY
+}
+
 // executeConcurrentWithProgress executes mockery commands concurrently with progress spinner
 func (m *Mockery) executeConcurrentWithProgress(configFiles []string) []mockeryJob {
 	log.Info("Executing mockery commands...")
@@ -517,19 +523,15 @@ func (m *Mockery) executeConcurrentWithProgress(configFiles []string) []mockeryJ
 
 	total := len(configFiles)
 
-	spin := spinner.New().Title(fmt.Sprintf("[0 / %d] Preparing...", total))
-
-	action := func() {
+	runWork := func(onProgress func(string)) {
 		defer close(doneChan)
 
 		var progressWg sync.WaitGroup
 		var cancelled bool
 		progressWg.Add(1)
 
-		// Start a progress reader goroutine before spawning work goroutines
 		go func() {
 			defer progressWg.Done()
-			// Process progress updates as they arrive
 			for update := range progressChan {
 				completed++
 				status := "✓"
@@ -537,17 +539,13 @@ func (m *Mockery) executeConcurrentWithProgress(configFiles []string) []mockeryJ
 					status = "✗"
 				}
 
-				// Extract a shorter name from the config file path
 				shortName := m.shortenConfigPath(update.configFile)
-
-				spin.Title(fmt.Sprintf("[%s] [%2d / %d] %s (%.2fs)",
+				onProgress(fmt.Sprintf("[%s] [%2d / %d] %s (%.2fs)",
 					status, completed, total, shortName, update.duration.Seconds()))
 			}
 		}()
 
-		// Start goroutines to process configs
 		for idx := range m.tmpFiles {
-			// Check if context is cancelled before starting new goroutine
 			if m.ctx.Err() != nil {
 				if !cancelled {
 					log.Warn("Operation cancelled by user, waiting for ongoing tasks to complete...")
@@ -557,12 +555,9 @@ func (m *Mockery) executeConcurrentWithProgress(configFiles []string) []mockeryJ
 				goto waitForCompletion
 			}
 
-			// Acquire semaphore before spawning a goroutine
 			select {
 			case semaphore <- struct{}{}:
-				// Successfully acquired semaphore
 			case <-m.ctx.Done():
-				// Context cancelled while waiting for semaphore
 				if !cancelled {
 					log.Warn("Operation cancelled by user, waiting for ongoing tasks to complete...")
 					cancelled = true
@@ -585,20 +580,25 @@ func (m *Mockery) executeConcurrentWithProgress(configFiles []string) []mockeryJ
 		}
 
 	waitForCompletion:
-		// Wait for all work goroutines to complete
 		wg.Wait()
 		close(progressChan)
 		close(resultsChan)
 
-		// Wait for the progress reader to finish processing all updates
 		progressWg.Wait()
 	}
 
-	if err := spin.Action(action).Run(); err != nil {
-		execErr = fmt.Errorf("execution error: %w", err)
+	if isTTY() {
+		spin := spinner.New().Title(fmt.Sprintf("[0 / %d] Preparing...", total))
+		if err := spin.Action(func() {
+			runWork(func(title string) { spin.Title(title) })
+		}).Run(); err != nil {
+			execErr = fmt.Errorf("execution error: %w", err)
+		}
+	} else {
+		log.Infof("[0 / %d] Starting...", total)
+		runWork(func(title string) { log.Info(title) })
 	}
 
-	// Wait for action to complete
 	<-doneChan
 
 	if execErr != nil && !errors.Is(execErr, context.Canceled) {
