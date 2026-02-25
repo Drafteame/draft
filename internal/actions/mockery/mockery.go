@@ -13,6 +13,7 @@ import (
 	"github.com/charmbracelet/huh/spinner"
 	"gopkg.in/yaml.v3"
 
+	"github.com/Drafteame/draft/internal/data"
 	"github.com/Drafteame/draft/internal/pkg/dirs"
 	"github.com/Drafteame/draft/internal/pkg/exec"
 	"github.com/Drafteame/draft/internal/pkg/files"
@@ -443,13 +444,15 @@ func (m *Mockery) createSingleTempConfig(config map[string]any, pkgCount int) (s
 }
 
 // runSingleInvocation runs mockery once with the merged config.
+// Respects TTY mode: shows an animated spinner in interactive terminals,
+// falls back to plain log output in CI / non-TTY environments.
 func (m *Mockery) runSingleInvocation(tmpFile string, pkgCount int) error {
 	var execErr error
 	doneChan := make(chan struct{})
 
-	spin := spinner.New().Title(fmt.Sprintf("Running mockery for %d package(s)...", pkgCount))
+	title := fmt.Sprintf("Running mockery for %d package(s)...", pkgCount)
 
-	action := func() {
+	runWork := func() {
 		defer close(doneChan)
 
 		select {
@@ -462,13 +465,24 @@ func (m *Mockery) runSingleInvocation(tmpFile string, pkgCount int) error {
 		execErr = m.runMockery(tmpFile, tmpFile)
 	}
 
-	if err := spin.Action(action).Run(); err != nil {
-		return fmt.Errorf("execution error: %w", err)
+	if isTTY() {
+		spin := spinner.New().Title(title)
+		if err := spin.Action(func() { runWork() }).Run(); err != nil {
+			return fmt.Errorf("execution error: %w", err)
+		}
+	} else {
+		log.Info(title)
+		runWork()
 	}
 
 	<-doneChan
 
 	return execErr
+}
+
+// isTTY returns true when animated UI (spinners) should be used.
+func isTTY() bool {
+	return data.Flags.TTY
 }
 
 // deepMerge performs a deep merge of two maps, with b taking precedence.
