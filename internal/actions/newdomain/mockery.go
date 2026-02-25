@@ -33,11 +33,7 @@ func (nd *NewDomain) runMockery() error {
 
 	configFiles := []string{serviceMockeryPath, repositoryMockeryPath}
 
-	// Run mockery action with config files
-	// Using jobsNum=2 (one for service, one for repository)
-	// dry=false (actually execute mockery)
-	// gitMod=false (not using git diff mode)
-	m := mockery.New(nd.ctx, configFiles, 2, false, false)
+	m := mockery.New(nd.ctx, configFiles, false, false)
 
 	return m.Exec()
 }
