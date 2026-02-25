@@ -1,3 +1,9 @@
+## v1.21.1 (2026-02-25)
+
+
+- chore(ci): update vendor hash for version 1.21.1
+- refactor: change build strategy to merge (#195)
+
 ## v1.21.0 (2026-02-25)
 
 
