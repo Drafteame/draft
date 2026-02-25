@@ -1,3 +1,9 @@
+## v1.21.0 (2026-02-25)
+
+
+- chore(ci): update vendor hash for version 1.21.0
+- feat: no TTY option for mockery (#194)
+
 ## v1.20.1 (2026-01-30)
 
 
