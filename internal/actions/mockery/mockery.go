@@ -30,17 +30,15 @@ const (
 type Mockery struct {
 	ctx         context.Context
 	configFiles []string
-	jobsNum     int
 	dry         bool
 	gitMod      bool
 	tmpFiles    []string
 }
 
-func New(ctx context.Context, configFiles []string, jobsNum int, dry bool, gitMod bool) *Mockery {
+func New(ctx context.Context, configFiles []string, dry bool, gitMod bool) *Mockery {
 	return &Mockery{
 		ctx:         ctx,
 		configFiles: configFiles,
-		jobsNum:     jobsNum,
 		dry:         dry,
 		gitMod:      gitMod,
 		tmpFiles:    make([]string, 0),
@@ -119,10 +117,6 @@ func (m *Mockery) Exec() error {
 
 // validate validates input parameters.
 func (m *Mockery) validate() error {
-	if m.jobsNum <= 0 {
-		return fmt.Errorf("invalid --jobs-num value: %d (must be greater than 0)", m.jobsNum)
-	}
-
 	if m.gitMod && len(m.configFiles) > 0 {
 		return fmt.Errorf("cannot use --git-mod with explicit config file paths")
 	}
