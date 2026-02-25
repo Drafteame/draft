@@ -82,12 +82,20 @@ func (m *Mockery) Exec() error {
 		return err
 	}
 
+	if _, hasPackages := mergedConfig["packages"]; !hasPackages {
+		log.Warn("No packages found in any config file - skipping mockery execution")
+		log.Info("Tip: Ensure your .mockery.pkg.yml files contain a 'packages:' section")
+		return nil
+	}
+
+	// Register cleanup before creating the temp file so it runs even if creation
+	// partially succeeds (file appended to m.tmpFiles) and then returns an error.
+	defer m.cleanup()
+
 	tmpFile, err := m.createSingleTempConfig(mergedConfig, len(configFiles))
 	if err != nil {
 		return err
 	}
-
-	defer m.cleanup()
 
 	execErr := m.runSingleInvocation(tmpFile, len(configFiles))
 
@@ -441,37 +449,29 @@ func (m *Mockery) createSingleTempConfig(config map[string]any, pkgCount int) (s
 // Respects TTY mode: shows an animated spinner in interactive terminals,
 // falls back to plain log output in CI / non-TTY environments.
 func (m *Mockery) runSingleInvocation(tmpFile string, pkgCount int) error {
-	var execErr error
-	doneChan := make(chan struct{})
-
 	title := fmt.Sprintf("Running mockery for %d package(s)...", pkgCount)
 
-	runWork := func() {
-		defer close(doneChan)
-
+	runWork := func() error {
 		select {
 		case <-m.ctx.Done():
-			execErr = m.ctx.Err()
-			return
+			return m.ctx.Err()
 		default:
 		}
 
-		execErr = m.runMockery(tmpFile, tmpFile)
+		return m.runMockery(tmpFile, tmpFile)
 	}
 
 	if isTTY() {
+		var execErr error
 		spin := spinner.New().Title(title)
-		if err := spin.Action(func() { runWork() }).Run(); err != nil {
+		if err := spin.Action(func() { execErr = runWork() }).Run(); err != nil {
 			return fmt.Errorf("execution error: %w", err)
 		}
-	} else {
-		log.Info(title)
-		runWork()
+		return execErr
 	}
 
-	<-doneChan
-
-	return execErr
+	log.Info(title)
+	return runWork()
 }
 
 // isTTY returns true when animated UI (spinners) should be used.
