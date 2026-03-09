@@ -55,6 +55,16 @@ draft local:migrate:force
 draft sentry:project:create
 draft sentry:project:delete
 
+# Database SSM tunnel management
+draft db:connect list                                 # List all configured connections
+draft db:connect status                              # Show active tunnels and their status
+draft db:connect start <type> <name>                 # Start a tunnel (type: postgres, redis, mongo)
+draft db:connect start postgres turbo-dev            # Connect to turbo postgres in dev
+draft db:connect start postgres turbo-prod --port 5540  # Connect with local port override
+draft db:connect stop postgres turbo-dev             # Stop a specific tunnel
+draft db:connect stop postgres                       # Stop all postgres tunnels
+draft db:connect stop --all                          # Stop all active tunnels
+
 # Mockery mock generation
 draft mockery                                           # Run mockery for all .mockery.pkg.yml files
 draft mockery path/to/.mockery.pkg.yml                 # Run mockery for specific package configs
@@ -86,6 +96,7 @@ Commands are registered in `main.go` using Cobra. Each command lives in `cmd/com
 - `sentry/project/create` - Sentry project creation
 - `sentry/project/delete` - Sentry project deletion
 - `config` - Configuration management
+- `db/connect` - SSM port-forwarding tunnel management (subcommands: `list`, `status`, `start`, `stop`)
 
 ### Action Layer
 The `internal/actions/` directory contains the business logic for each command. All creation actions follow a consistent 3-phase lifecycle:
@@ -214,6 +225,34 @@ The `new:domain` action integrates with the mockery action layer:
 - Runs with jobsNum=2 for concurrent service and repository mock generation
 - Benefits from progress reporting and error handling of the main mockery action
 
+### DB Connect Command
+`draft db:connect` manages SSM port-forwarding tunnels to remote databases. Unlike other commands it uses subcommands (not the flat `cmd:subcmd` pattern):
+
+```
+cmd/commands/db/connect/
+  connect.go        ← parent cobra command, registers subcommands
+  list/list.go      ← db:connect list
+  status/status.go  ← db:connect status
+  start/start.go    ← db:connect start <type> <name> [--port/-p]
+  stop/stop.go      ← db:connect stop [type] [name] [--all]
+
+internal/actions/db/connect/
+  connect.go    ← shared types (ConnConfig, ResolvedConnection, RuntimeEntry, etc.)
+  config.go     ← loadConfig(), ResolveConnection(), buildHost(), splitServiceEnv()
+  runtime.go    ← loadRuntimeState(), saveRuntimeState(), isProcessAlive()
+  exec.go       ← launchTunnel(), waitForTunnel(), checkPortFree()
+  list.go       ← List() — enumerates all type×instance×env combinations
+  status.go     ← Status() — reads state, verifies PIDs live, cleans dead entries
+  start.go      ← Start(StartInput) — resolves config, checks port, launches tunnel
+  stop.go       ← Stop(StopInput) — stopAll / stopByType / stopOne + killEntry()
+```
+
+Key behaviors:
+- **Subprocess isolation**: tunnel launched with `Setpgid=true` (own process group) so terminal doesn't hang and `stop` can kill the entire group including the Session Manager Plugin child
+- **Liveness verification**: `start` polls every 300ms (up to 10s) waiting for the local port to accept TCP connections before reporting success — avoids false positives
+- **Lazy state cleanup**: dead entries (idle timeout, manual kill) are cleaned from state on next `status` or `start` call — no background monitor needed
+- **Connection name convention**: `{service}-{env}` (e.g. `turbo-dev`, `turbo-prod`) — `splitServiceEnv()` parses it back into service + env at resolution time
+
 ## Configuration Files
 
 ### Pkl Configuration
@@ -231,6 +270,32 @@ Services use Pkl (configuration language) for app config:
 - `.mockery.yml` - Project-level mockery configuration (used by `new:domain` action)
 - `.mockery.base.yml` - Base configuration for `draft mockery` command (shared settings)
 - `.mockery.pkg.yml` - Package-specific mockery configurations (merged with base config by `draft mockery`)
+
+### DB Connect Configuration
+- `~/.draft/dbconnect.yml` - SSM tunnel definitions (global, not per-project)
+- `~/.draft/dbconnect.state.json` - Runtime state: active PIDs, ports, timestamps (auto-managed)
+
+The `dbconnect.yml` structure:
+```yaml
+defaults:          # remote port per engine type
+environments:      # dev/prod bastions and cluster host suffixes
+  dev:
+    bastion: { target, profile, region }
+    clusters: { rds, cache, docdb }    # host suffix fragments
+  prod: ...
+connections:       # instances per engine type
+  postgres:
+    instances:
+      - name: turbo
+        local_ports: { dev: 56000, prod: 56011 }
+  redis: ...
+  mongo: ...
+```
+
+Host is built at runtime per engine:
+- **Postgres**: `{name}-{env}.cluster-{clusters.rds}`
+- **Redis**: `{name}-{env}.{clusters.cache}`
+- **MongoDB**: `draftea-{env}-maincluster.cluster-{clusters.docdb}`
 
 ## Code Standards
 
