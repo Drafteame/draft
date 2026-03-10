@@ -13,10 +13,10 @@ var cmd = &cobra.Command{
 	Long: `Stop one or more active SSM tunnels.
 
 Examples:
-  draft dbconnect stop --all              Stop all active connections
-  draft dbconnect stop postgres           Stop all active postgres connections
-  draft dbconnect stop redis              Stop all active redis connections
-  draft dbconnect stop postgres users-dev Stop a specific connection`,
+  draft db:connect stop --all              Stop all active connections
+  draft db:connect stop postgres           Stop all active postgres connections
+  draft db:connect stop redis              Stop all active redis connections
+  draft db:connect stop postgres users-dev Stop a specific connection`,
 	Args: cobra.RangeArgs(0, 2),
 	Run:  run,
 }
@@ -34,9 +34,9 @@ func run(c *cobra.Command, args []string) {
 
 	if !all && len(args) == 0 {
 		log.Exit(1, "specify a type, a type and name, or use --all\n\n"+
-			"  draft dbconnect stop --all\n"+
-			"  draft dbconnect stop postgres\n"+
-			"  draft dbconnect stop postgres users-dev")
+			"  draft db:connect stop --all\n"+
+			"  draft db:connect stop postgres\n"+
+			"  draft db:connect stop postgres users-dev")
 	}
 
 	input := connect.StopInput{}

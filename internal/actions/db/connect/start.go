@@ -77,7 +77,7 @@ func Start(input StartInput) error {
 	log.Infof("  PID     : %d", pid)
 	log.Infof("  Local   : localhost:%d", localPort)
 	log.Infof("  Remote  : %s:%d", resolved.Host, resolved.RemotePort)
-	log.Infof("  Stop    : draft dbconnect stop %s %s", input.DBType, input.Name)
+	log.Infof("  Stop    : draft db:connect stop %s %s", input.DBType, input.Name)
 
 	return nil
 }

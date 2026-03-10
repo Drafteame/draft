@@ -76,7 +76,7 @@ func Status() error {
 			wName = len(r.name)
 		}
 
-		addr := fmt.Sprintf("%s:%d", r.host, r.localPort)
+		addr := fmt.Sprintf("localhost:%d", r.localPort)
 		if len(addr) > wAddress {
 			wAddress = len(addr)
 		}
@@ -96,7 +96,7 @@ func Status() error {
 			pidStr = "-"
 		}
 
-		addr := fmt.Sprintf("%s:%d", r.host, r.localPort)
+		addr := fmt.Sprintf("localhost:%d", r.localPort)
 		fmt.Printf("%-*s %-*s %-*s %-10s %s\n", wType, r.dbType, wName, r.name, wStatus, r.status, pidStr, addr)
 	}
 

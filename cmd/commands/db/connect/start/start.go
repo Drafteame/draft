@@ -25,6 +25,10 @@ func run(c *cobra.Command, args []string) {
 		log.Exitf(1, "invalid port flag: %s", err.Error())
 	}
 
+	if localPort < 0 || localPort > 65535 {
+		log.Exitf(1, "invalid port %d: must be between 0 and 65535", localPort)
+	}
+
 	input := connect.StartInput{
 		DBType:    args[0],
 		Name:      args[1],
