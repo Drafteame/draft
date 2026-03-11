@@ -18,6 +18,7 @@ A CLI tool to scaffold services, Lambda functions, and domain layers for Draftea
   - [Invoking Lambdas Locally](#invoking-lambdas-locally)
   - [Local Development](#local-development)
   - [Sentry Management](#sentry-management)
+  - [Database Tunnel Management](#database-tunnel-management)
   - [Global Flags](#global-flags)
 - [Development](#development)
   - [Project Structure](#project-structure)
@@ -36,6 +37,8 @@ A CLI tool to scaffold services, Lambda functions, and domain layers for Draftea
 - **Go**: 1.23.x or higher
 - **Task**: For running development commands (optional)
 - **Husky**: For git hooks (optional)
+- **AWS CLI**: Required for `db:connect` commands (`aws` in PATH)
+- **Session Manager Plugin**: Required for SSM port-forwarding tunnels ([installation guide](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html))
 
 ## Installation
 
@@ -457,6 +460,161 @@ draft sentry:project:create
 ```bash
 draft sentry:project:delete
 ```
+
+---
+
+### Database Tunnel Management
+
+Manage SSM port-forwarding tunnels to remote databases. Tunnels are opened via AWS Session Manager, connecting your local machine to RDS (Postgres), ElastiCache (Redis), or DocumentDB (MongoDB) instances in private subnets.
+
+#### Prerequisites
+
+- AWS CLI configured with the appropriate profiles
+- [Session Manager Plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) installed
+- Config file at `~/.draft/dbconnect.yml` (see [Config File Format](#config-file-format) below)
+
+#### Subcommands
+
+| Command | Description |
+|---------|-------------|
+| `draft db:connect list` | List all available connections from config |
+| `draft db:connect status` | Show status of active tunnels |
+| `draft db:connect start <type> <name>` | Open a tunnel to a database |
+| `draft db:connect stop [type] [name]` | Close one or more tunnels |
+
+#### List Available Connections
+
+```bash
+draft db:connect list
+```
+
+Displays a table of all connections that can be derived from the config file by combining every service with every environment:
+
+```
+ENV   TYPE      NAME                    HOST                                              REMOTE PORT   LOCAL PORT
+----------------------------------------------------------------------------------------------------------------------
+dev   mongo     main-dev                draftea-dev-maincluster.cluster-xxx.docdb.com     27017         56200
+dev   postgres  turbo-dev               turbo-dev.cluster-xxx.rds.amazonaws.com           5432          56024
+prod  postgres  turbo-prod              turbo-prod.cluster-xxx.rds.amazonaws.com          5432          56011
+...
+```
+
+#### Check Tunnel Status
+
+```bash
+draft db:connect status
+```
+
+Shows all tunnels that have been started, including whether the process is still alive:
+
+```
+TYPE      NAME        STATUS   PID     ADDRESS
+---------------------------------------------------------
+postgres  turbo-dev   up       60452   localhost:56024
+redis     turbo-dev   down     -       -
+```
+
+Dead tunnels (e.g. killed by idle timeout) are automatically cleaned up from state on the next `status` or `start` call.
+
+#### Start a Tunnel
+
+```bash
+# Start with the port defined in config
+draft db:connect start postgres turbo-dev
+
+# Start with a custom local port
+draft db:connect start postgres turbo-dev --port 15432
+```
+
+The connection name must end with `-dev` or `-prod`. The tunnel runs as a background process; the command returns once the port is confirmed to be listening (up to 10 seconds).
+
+#### Flags
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--port` | `-p` | Override the local port for this connection |
+
+#### Stop Tunnels
+
+```bash
+# Stop a specific tunnel
+draft db:connect stop postgres turbo-dev
+
+# Stop all tunnels of a given type
+draft db:connect stop postgres
+
+# Stop all active tunnels
+draft db:connect stop --all
+```
+
+#### Config File Format
+
+Create `~/.draft/dbconnect.yml`:
+
+```yaml
+defaults:
+  postgres:
+    remote_port: 5432
+  redis:
+    remote_port: 6379
+  mongo:
+    remote_port: 27017
+
+environments:
+  dev:
+    bastion:
+      target: i-0xxxxxxxxxxxxxxxxx   # EC2 instance ID of the bastion
+      profile: my-aws-dev-profile
+      region: us-east-2
+    clusters:
+      rds:   xxxxxxxxxx.us-east-2.rds.amazonaws.com      # RDS cluster suffix
+      cache: xxxxxxxxxx.use2.cache.amazonaws.com          # ElastiCache suffix
+      docdb: xxxxxxxxxx.us-east-2.docdb.amazonaws.com    # DocumentDB suffix
+
+  prod:
+    bastion:
+      target: i-0yyyyyyyyyyyyyyyyy
+      profile: my-aws-prod-profile
+      region: us-east-2
+    clusters:
+      rds:   yyyyyyyyyy.us-east-2.rds.amazonaws.com
+      cache: yyyyyyyyyy.use2.cache.amazonaws.com
+      docdb: yyyyyyyyyy.us-east-2.docdb.amazonaws.com
+
+connections:
+  postgres:
+    instances:
+      - name: my-service
+        local_ports:
+          dev: 56000
+          prod: 56001
+
+  redis:
+    instances:
+      - name: my-cache
+        local_ports:
+          dev: 56100
+          prod: 56101
+
+  mongo:
+    instances:
+      - name: main
+        local_ports:
+          dev: 56200
+          prod: 56201
+```
+
+**Host construction per engine:**
+
+| Type | Pattern |
+|------|---------|
+| `postgres` | `{service}-{env}.cluster-{clusters.rds}` |
+| `redis` | `{service}-{env}.{clusters.cache}` |
+| `mongo` | `draftea-{env}-maincluster.cluster-{clusters.docdb}` |
+
+#### Runtime State
+
+Active tunnels are persisted in `~/.draft/dbconnect.state.json`. This file is managed automatically — you do not need to edit it manually. When a tunnel dies (e.g. AWS idle timeout), the state file is **not** updated automatically; the stale entry is cleaned up the next time you run `status` or `start`.
 
 ---
 
