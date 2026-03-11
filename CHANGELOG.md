@@ -1,3 +1,10 @@
+## v1.21.2 (2026-03-11)
+
+
+- chore(ci): update vendor hash for version 1.21.2
+- chore: [PLA-224] add dbconnect command for SSM port-forwarding tunnels (#196)
+- Co-authored-by: Ariel Santos <ariel.santos@draftea.com>
+
 ## v1.21.1 (2026-02-25)
 
 
