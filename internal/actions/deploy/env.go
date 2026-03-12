@@ -25,6 +25,6 @@ var (
 		Stage:          "feature",
 		AWSAccount:     "636385746594",
 		AWSProfile:     "draftea-feature",
-		ExtraSLSParams: `--params="stage=feature"`,
+		ExtraSLSParams: `--param="stage=feature"`,
 	}
 )
