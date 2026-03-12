@@ -14,6 +14,7 @@ import (
 	deployfuncfeature "github.com/Drafteame/draft/cmd/commands/deploy/func/feature"
 	deployfuncprod "github.com/Drafteame/draft/cmd/commands/deploy/func/prod"
 	deployprod "github.com/Drafteame/draft/cmd/commands/deploy/prod"
+	dbconnect "github.com/Drafteame/draft/cmd/commands/db/connect"
 	"github.com/Drafteame/draft/cmd/commands/local/invoke"
 	migratedown "github.com/Drafteame/draft/cmd/commands/local/migrate/down"
 	migrateforce "github.com/Drafteame/draft/cmd/commands/local/migrate/force"
@@ -36,6 +37,7 @@ func main() {
 	cmd := commands.GetCmd()
 
 	cmd.AddCommand(config.GetCmd())
+	cmd.AddCommand(dbconnect.GetCmd())
 	cmd.AddCommand(newservice.GetCmd())
 	cmd.AddCommand(newlambda.GetCmd())
 	cmd.AddCommand(newdomain.GetCmd())
