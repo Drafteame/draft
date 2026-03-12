@@ -1,30 +1,29 @@
 package deploy
 
+import "strings"
+
 // EnvConfig holds the deployment configuration for a target environment.
 type EnvConfig struct {
-	Stage          string
-	AWSAccount     string
-	AWSProfile     string
-	ExtraSLSParams string // non-empty only for feature: --params="stage=feature"
+	Profile        string // e.g. "draftea-dev", "draftea-prod", "draftea-feature"
+	ExtraSLSParams string // non-empty only for feature: --param="stage=feature"
+}
+
+// Stage derives the stage name from the profile by stripping the "draftea-" prefix.
+func (e EnvConfig) Stage() string {
+	return strings.TrimPrefix(e.Profile, "draftea-")
 }
 
 var (
 	DevEnv = EnvConfig{
-		Stage:      "dev",
-		AWSAccount: "776658659836",
-		AWSProfile: "draftea-dev",
+		Profile: "draftea-dev",
 	}
 
 	ProdEnv = EnvConfig{
-		Stage:      "prod",
-		AWSAccount: "632258128187",
-		AWSProfile: "draftea-prod",
+		Profile: "draftea-prod",
 	}
 
 	FeatureEnv = EnvConfig{
-		Stage:          "feature",
-		AWSAccount:     "636385746594",
-		AWSProfile:     "draftea-feature",
+		Profile:        "draftea-feature",
 		ExtraSLSParams: `--param="stage=feature"`,
 	}
 )

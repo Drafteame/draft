@@ -33,7 +33,7 @@ func DeployFunction(env EnvConfig, serviceArg, functionName string) error {
 	}
 
 	log.Info("Fetching AWS Account ID...")
-	accountID, err := aws.GetAccountID(env.AWSProfile)
+	accountID, err := aws.GetAccountID(env.Profile)
 	if err != nil {
 		return fmt.Errorf("failed to get AWS account ID: %w", err)
 	}
@@ -49,7 +49,7 @@ func DeployFunction(env EnvConfig, serviceArg, functionName string) error {
 	log.Info("Packaging service...")
 	packageScript := fmt.Sprintf(
 		`cd %q && env STAGE=%s AWS_ACCOUNT=%s sls package --stage %s --verbose --aws-profile %s`,
-		absPath, env.Stage, accountID, env.Stage, env.AWSProfile,
+		absPath, env.Stage(), accountID, env.Stage(), env.Profile,
 	)
 	if _, err := exec.Command(packageScript, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr)); err != nil {
 		return fmt.Errorf("sls package failed: %w", err)
@@ -60,7 +60,7 @@ func DeployFunction(env EnvConfig, serviceArg, functionName string) error {
 		return err
 	}
 
-	fullLambdaName := fmt.Sprintf("%s-%s-%s", serviceName, env.Stage, functionName)
+	fullLambdaName := fmt.Sprintf("%s-%s-%s", serviceName, env.Stage(), functionName)
 	log.Infof("Lambda function: %s", fullLambdaName)
 
 	zipFile := filepath.Join(absPath, ".bin", functionName+".zip")
@@ -71,14 +71,14 @@ func DeployFunction(env EnvConfig, serviceArg, functionName string) error {
 	log.Info("Updating Lambda code...")
 	updateScript := fmt.Sprintf(
 		`aws lambda update-function-code --function-name %q --zip-file "fileb://%s" --profile %s --region %s --output json`,
-		fullLambdaName, zipFile, env.AWSProfile, deployRegion,
+		fullLambdaName, zipFile, env.Profile, deployRegion,
 	)
 	out, err := exec.Command(updateScript)
 	if err != nil {
 		return fmt.Errorf("lambda update failed: %w\n%s", err, out)
 	}
 
-	log.Success("✓ Lambda deployed:", fullLambdaName)
+	log.Success("✓ Lambda deployed: ", fullLambdaName)
 	return nil
 }
 

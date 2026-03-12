@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Drafteame/draft/internal/pkg/aws"
 	"github.com/Drafteame/draft/internal/pkg/exec"
 	"github.com/Drafteame/draft/internal/pkg/log"
 )
@@ -45,17 +46,23 @@ func deployServiceToDir(env EnvConfig, absPath string) error {
 		return fmt.Errorf("serverless.yml not found in %s", absPath)
 	}
 
-	slsParams := fmt.Sprintf("--aws-profile=%s", env.AWSProfile)
+	log.Info("Fetching AWS Account ID...")
+	accountID, err := aws.GetAccountID(env.Profile)
+	if err != nil {
+		return fmt.Errorf("failed to get AWS account ID: %w", err)
+	}
+
+	slsParams := fmt.Sprintf("--aws-profile=%s", env.Profile)
 	if env.ExtraSLSParams != "" {
 		slsParams = fmt.Sprintf("%s %s", slsParams, env.ExtraSLSParams)
 	}
 
 	script := fmt.Sprintf(
 		`cd %q && npm install && env STAGE=%s AWS_ACCOUNT=%s SLS_PARAMS=%q npm run deploy`,
-		absPath, env.Stage, env.AWSAccount, slsParams,
+		absPath, env.Stage(), accountID, slsParams,
 	)
 
-	_, err := exec.Command(script, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr))
+	_, err = exec.Command(script, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr))
 	if err != nil {
 		return fmt.Errorf("deploy failed: %w", err)
 	}
