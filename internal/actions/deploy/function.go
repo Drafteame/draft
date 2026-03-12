@@ -22,15 +22,16 @@ func DeployFunction(env EnvConfig, serviceArg, functionName string) error {
 		return err
 	}
 
-	if fileExists(filepath.Join(absPath, ".deployignore")) {
+	skip, err := validateServiceDir(absPath)
+	if err != nil {
+		return err
+	}
+	if skip {
 		log.Warnf("Skipping %s: .deployignore found", absPath)
 		return nil
 	}
 
-	slsFile := filepath.Join(absPath, "serverless.yml")
-	if !fileExists(slsFile) {
-		return fmt.Errorf("serverless.yml not found in %s", absPath)
-	}
+	stage := env.Stage()
 
 	log.Info("Fetching AWS Account ID...")
 	accountID, err := aws.GetAccountID(env.Profile)
@@ -38,7 +39,7 @@ func DeployFunction(env EnvConfig, serviceArg, functionName string) error {
 		return fmt.Errorf("failed to get AWS account ID: %w", err)
 	}
 
-	if fileExists(filepath.Join(absPath, "package.json")) {
+	if files.Exists(filepath.Join(absPath, "package.json")) {
 		log.Info("Installing dependencies...")
 		installScript := fmt.Sprintf("cd %q && npm install", absPath)
 		if _, err := exec.Command(installScript, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr)); err != nil {
@@ -49,22 +50,23 @@ func DeployFunction(env EnvConfig, serviceArg, functionName string) error {
 	log.Info("Packaging service...")
 	packageScript := fmt.Sprintf(
 		`cd %q && env STAGE=%s AWS_ACCOUNT=%s sls package --stage %s --verbose --aws-profile %s`,
-		absPath, env.Stage(), accountID, env.Stage(), env.Profile,
+		absPath, stage, accountID, stage, env.Profile,
 	)
 	if _, err := exec.Command(packageScript, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr)); err != nil {
 		return fmt.Errorf("sls package failed: %w", err)
 	}
 
+	slsFile := filepath.Join(absPath, "serverless.yml")
 	serviceName, err := parseServiceName(slsFile)
 	if err != nil {
 		return err
 	}
 
-	fullLambdaName := fmt.Sprintf("%s-%s-%s", serviceName, env.Stage(), functionName)
+	fullLambdaName := fmt.Sprintf("%s-%s-%s", serviceName, stage, functionName)
 	log.Infof("Lambda function: %s", fullLambdaName)
 
 	zipFile := filepath.Join(absPath, ".bin", functionName+".zip")
-	if !fileExists(zipFile) {
+	if !files.Exists(zipFile) {
 		return fmt.Errorf(".bin/%s.zip not found — check that the function name matches serverless.yml", functionName)
 	}
 

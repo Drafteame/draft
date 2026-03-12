@@ -7,6 +7,7 @@ import (
 
 	"github.com/Drafteame/draft/internal/pkg/aws"
 	"github.com/Drafteame/draft/internal/pkg/exec"
+	"github.com/Drafteame/draft/internal/pkg/files"
 	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
@@ -20,6 +21,16 @@ type DeployResult struct {
 func DeployService(env EnvConfig, args []string) []DeployResult {
 	results := make([]DeployResult, 0, len(args))
 
+	log.Info("Fetching AWS Account ID...")
+	accountID, err := aws.GetAccountID(env.Profile)
+	if err != nil {
+		err = fmt.Errorf("failed to get AWS account ID: %w", err)
+		for _, arg := range args {
+			results = append(results, DeployResult{Name: arg, Err: err})
+		}
+		return results
+	}
+
 	for _, arg := range args {
 		log.Infof("\n─── Deploying: %s ───", arg)
 
@@ -29,29 +40,24 @@ func DeployService(env EnvConfig, args []string) []DeployResult {
 			continue
 		}
 
-		err = deployServiceToDir(env, absPath)
+		err = deployServiceToDir(env, absPath, accountID)
 		results = append(results, DeployResult{Name: arg, Err: err})
 	}
 
 	return results
 }
 
-func deployServiceToDir(env EnvConfig, absPath string) error {
-	if fileExists(filepath.Join(absPath, ".deployignore")) {
+func deployServiceToDir(env EnvConfig, absPath, accountID string) error {
+	skip, err := validateServiceDir(absPath)
+	if err != nil {
+		return err
+	}
+	if skip {
 		log.Warnf("Skipping %s: .deployignore found", absPath)
 		return nil
 	}
 
-	if !fileExists(filepath.Join(absPath, "serverless.yml")) {
-		return fmt.Errorf("serverless.yml not found in %s", absPath)
-	}
-
-	log.Info("Fetching AWS Account ID...")
-	accountID, err := aws.GetAccountID(env.Profile)
-	if err != nil {
-		return fmt.Errorf("failed to get AWS account ID: %w", err)
-	}
-
+	stage := env.Stage()
 	slsParams := fmt.Sprintf("--aws-profile=%s", env.Profile)
 	if env.ExtraSLSParams != "" {
 		slsParams = fmt.Sprintf("%s %s", slsParams, env.ExtraSLSParams)
@@ -59,7 +65,7 @@ func deployServiceToDir(env EnvConfig, absPath string) error {
 
 	script := fmt.Sprintf(
 		`cd %q && npm install && env STAGE=%s AWS_ACCOUNT=%s SLS_PARAMS=%q npm run deploy`,
-		absPath, env.Stage(), accountID, slsParams,
+		absPath, stage, accountID, slsParams,
 	)
 
 	_, err = exec.Command(script, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr))
@@ -71,7 +77,15 @@ func deployServiceToDir(env EnvConfig, absPath string) error {
 	return nil
 }
 
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
+// validateServiceDir checks whether a directory is eligible for deployment.
+// Returns (true, nil) if the directory should be skipped (.deployignore present),
+// (false, err) if serverless.yml is missing, or (false, nil) if ready to deploy.
+func validateServiceDir(absPath string) (skip bool, err error) {
+	if files.Exists(filepath.Join(absPath, ".deployignore")) {
+		return true, nil
+	}
+	if !files.Exists(filepath.Join(absPath, "serverless.yml")) {
+		return false, fmt.Errorf("serverless.yml not found in %s", absPath)
+	}
+	return false, nil
 }

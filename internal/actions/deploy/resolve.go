@@ -5,8 +5,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/Drafteame/draft/internal/pkg/exec"
+)
+
+var (
+	gitRootOnce      sync.Once
+	cachedGitRoot    string
+	cachedGitRootErr error
 )
 
 // resolveService resolves a service name or path to an absolute directory path.
@@ -14,7 +21,7 @@ import (
 // Otherwise it searches the git root for a serverless.yml with service: <arg>.
 func resolveService(arg string) (string, error) {
 	// Try as path first
-	absPath, err := toAbsPath(arg)
+	absPath, err := filepath.Abs(arg)
 	if err == nil && isDir(absPath) {
 		return absPath, nil
 	}
@@ -41,12 +48,17 @@ func resolveService(arg string) (string, error) {
 }
 
 // getGitRoot returns the absolute path of the git repository root.
+// The result is cached after the first call.
 func getGitRoot() (string, error) {
-	out, err := exec.Command("git rev-parse --show-toplevel")
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(out), nil
+	gitRootOnce.Do(func() {
+		out, err := exec.Command("git rev-parse --show-toplevel")
+		if err != nil {
+			cachedGitRootErr = err
+			return
+		}
+		cachedGitRoot = strings.TrimSpace(out)
+	})
+	return cachedGitRoot, cachedGitRootErr
 }
 
 // findServiceByName walks root looking for serverless.yml files where service: == name.
@@ -85,18 +97,6 @@ func findServiceByName(root, name string) ([]string, error) {
 	})
 
 	return matches, err
-}
-
-// toAbsPath converts a relative or absolute path to absolute using CWD.
-func toAbsPath(p string) (string, error) {
-	if filepath.IsAbs(p) {
-		return p, nil
-	}
-	cwd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(cwd, p), nil
 }
 
 // isDir returns true if path exists and is a directory.

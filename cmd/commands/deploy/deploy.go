@@ -56,21 +56,21 @@ Examples:
 
 			results := deployaction.DeployService(env, args)
 
+			hasError := false
 			if len(results) > 1 {
 				log.Info("\n─── Deploy Summary ───")
-				for _, r := range results {
-					if r.Err != nil {
-						log.Errorf("✗ %s: %v", r.Name, r.Err)
-					} else {
-						log.Successf("✓ %s", r.Name)
-					}
+			}
+			for _, r := range results {
+				if r.Err != nil {
+					log.Errorf("✗ %s: %v", r.Name, r.Err)
+					hasError = true
+				} else {
+					log.Successf("✓ %s", r.Name)
 				}
 			}
 
-			for _, r := range results {
-				if r.Err != nil {
-					log.Exitf(1, "one or more deploys failed")
-				}
+			if hasError {
+				log.Exitf(1, "one or more deploys failed")
 			}
 		},
 	}

@@ -2,28 +2,30 @@ package deploy
 
 import "strings"
 
+const profilePrefix = "draftea-"
+
 // EnvConfig holds the deployment configuration for a target environment.
 type EnvConfig struct {
 	Profile        string // e.g. "draftea-dev", "draftea-prod", "draftea-feature"
 	ExtraSLSParams string // non-empty only for feature: --param="stage=feature"
 }
 
-// Stage derives the stage name from the profile by stripping the "draftea-" prefix.
+// Stage derives the stage name from the profile by stripping the profilePrefix.
 func (e EnvConfig) Stage() string {
-	return strings.TrimPrefix(e.Profile, "draftea-")
+	return strings.TrimPrefix(e.Profile, profilePrefix)
 }
 
 var (
 	DevEnv = EnvConfig{
-		Profile: "draftea-dev",
+		Profile: profilePrefix + "dev",
 	}
 
 	ProdEnv = EnvConfig{
-		Profile: "draftea-prod",
+		Profile: profilePrefix + "prod",
 	}
 
 	FeatureEnv = EnvConfig{
-		Profile:        "draftea-feature",
+		Profile:        profilePrefix + "feature",
 		ExtraSLSParams: `--param="stage=feature"`,
 	}
 )
