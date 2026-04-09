@@ -14,20 +14,22 @@ import (
 func NewFuncCmd(env deployaction.EnvConfig) *cobra.Command {
 	stage := env.Stage()
 	return &cobra.Command{
-		Use:   fmt.Sprintf("deploy:func:%s <service|path> <function-name>", stage),
-		Short: fmt.Sprintf("Deploy a single Lambda function to %s", stage),
-		Long: fmt.Sprintf(`Package and deploy a single Lambda function to %s.
+		Use:   fmt.Sprintf("deploy:func:%s <service|path> <function-name> [function-name...]", stage),
+		Short: fmt.Sprintf("Deploy one or more Lambda functions to %s", stage),
+		Long: fmt.Sprintf(`Package and deploy one or more Lambda functions to %s.
 
 The service argument can be a service name (from serverless.yml) or a path.
+All functions must belong to the same service; the service is packaged once.
 
 Examples:
   draft deploy:func:%s gamestats storegamestats
-  draft deploy:func:%s services/gamestats storegamestats`, stage, stage, stage),
-		Args: cobra.ExactArgs(2),
+  draft deploy:func:%s gamestats storegamestats otherlambda
+  draft deploy:func:%s services/gamestats storegamestats`, stage, stage, stage, stage),
+		Args: cobra.MinimumNArgs(2),
 		Run: func(c *cobra.Command, args []string) {
 			common.ChDir(c)
 
-			if err := deployaction.DeployFunction(env, args[0], args[1]); err != nil {
+			if err := deployaction.DeployFunction(env, args[0], args[1:]); err != nil {
 				log.Exitf(1, "deploy:func:%s failed: %v", stage, err)
 			}
 		},

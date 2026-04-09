@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/Drafteame/draft/internal/pkg/aws"
 	"github.com/Drafteame/draft/internal/pkg/exec"
@@ -14,9 +15,9 @@ import (
 
 const deployRegion = "us-east-2"
 
-// DeployFunction packages and deploys a single Lambda function using the given env config.
-// serviceArg can be a service name or a path.
-func DeployFunction(env EnvConfig, serviceArg, functionName string) error {
+// DeployFunction packages and deploys one or more Lambda functions using the given env config.
+// serviceArg can be a service name or a path. All functions must belong to the same service.
+func DeployFunction(env EnvConfig, serviceArg string, functionNames []string) error {
 	absPath, err := resolveService(serviceArg)
 	if err != nil {
 		return err
@@ -62,6 +63,47 @@ func DeployFunction(env EnvConfig, serviceArg, functionName string) error {
 		return err
 	}
 
+	type result struct {
+		name string
+		err  error
+	}
+
+	results := make([]result, len(functionNames))
+	var wg sync.WaitGroup
+
+	for i, functionName := range functionNames {
+		wg.Add(1)
+		go func(i int, functionName string) {
+			defer wg.Done()
+			results[i] = result{
+				name: functionName,
+				err:  deployOneFunction(env, absPath, serviceName, stage, functionName),
+			}
+		}(i, functionName)
+	}
+
+	wg.Wait()
+
+	hasError := false
+	if len(functionNames) > 1 {
+		log.Info("\n─── Deploy Summary ───")
+	}
+	for _, r := range results {
+		if r.err != nil {
+			log.Errorf("✗ %s: %v", r.name, r.err)
+			hasError = true
+		} else {
+			log.Successf("✓ %s", r.name)
+		}
+	}
+
+	if hasError {
+		return fmt.Errorf("one or more function deploys failed")
+	}
+	return nil
+}
+
+func deployOneFunction(env EnvConfig, absPath, serviceName, stage, functionName string) error {
 	fullLambdaName := fmt.Sprintf("%s-%s-%s", serviceName, stage, functionName)
 	log.Infof("Lambda function: %s", fullLambdaName)
 
@@ -80,7 +122,6 @@ func DeployFunction(env EnvConfig, serviceArg, functionName string) error {
 		return fmt.Errorf("lambda update failed: %w\n%s", err, out)
 	}
 
-	log.Success("✓ Lambda deployed: ", fullLambdaName)
 	return nil
 }
 
