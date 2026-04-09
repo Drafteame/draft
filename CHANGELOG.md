@@ -1,3 +1,10 @@
+## v1.23.0 (2026-04-09)
+
+
+- chore(ci): update vendor hash for version 1.23.0
+- feat: support multiple functions in deploy:func commands (#198)
+- Co-authored-by: Ariel Santos <ariel.santos@draftea.com>
+
 ## v1.22.0 (2026-04-09)
 
 
