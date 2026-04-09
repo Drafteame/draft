@@ -1,3 +1,10 @@
+## v1.22.0 (2026-04-09)
+
+
+- chore(ci): update vendor hash for version 1.22.0
+- feat: [DEV-477] deploy commands (#197)
+- Co-authored-by: Ariel Santos <ariel.santos@draftea.com>
+
 ## v1.21.2 (2026-03-11)
 
 
