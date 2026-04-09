@@ -14,9 +14,9 @@ import (
 
 const deployRegion = "us-east-2"
 
-// DeployFunction packages and deploys a single Lambda function using the given env config.
-// serviceArg can be a service name or a path.
-func DeployFunction(env EnvConfig, serviceArg, functionName string) error {
+// DeployFunction packages and deploys one or more Lambda functions using the given env config.
+// serviceArg can be a service name or a path. All functions must belong to the same service.
+func DeployFunction(env EnvConfig, serviceArg string, functionNames []string) error {
 	absPath, err := resolveService(serviceArg)
 	if err != nil {
 		return err
@@ -62,6 +62,26 @@ func DeployFunction(env EnvConfig, serviceArg, functionName string) error {
 		return err
 	}
 
+	hasError := false
+	if len(functionNames) > 1 {
+		log.Info("\n─── Deploy Summary ───")
+	}
+	for _, functionName := range functionNames {
+		if err := deployOneFunction(env, absPath, accountID, serviceName, stage, functionName); err != nil {
+			log.Errorf("✗ %s: %v", functionName, err)
+			hasError = true
+		} else {
+			log.Successf("✓ %s", functionName)
+		}
+	}
+
+	if hasError {
+		return fmt.Errorf("one or more function deploys failed")
+	}
+	return nil
+}
+
+func deployOneFunction(env EnvConfig, absPath, accountID, serviceName, stage, functionName string) error {
 	fullLambdaName := fmt.Sprintf("%s-%s-%s", serviceName, stage, functionName)
 	log.Infof("Lambda function: %s", fullLambdaName)
 
@@ -80,7 +100,6 @@ func DeployFunction(env EnvConfig, serviceArg, functionName string) error {
 		return fmt.Errorf("lambda update failed: %w\n%s", err, out)
 	}
 
-	log.Success("✓ Lambda deployed: ", fullLambdaName)
 	return nil
 }
 
