@@ -8,6 +8,12 @@ import (
 
 	"github.com/Drafteame/draft/cmd/commands"
 	"github.com/Drafteame/draft/cmd/commands/config"
+	deploydev "github.com/Drafteame/draft/cmd/commands/deploy/dev"
+	deployfeature "github.com/Drafteame/draft/cmd/commands/deploy/feature"
+	deployfuncdev "github.com/Drafteame/draft/cmd/commands/deploy/func/dev"
+	deployfuncfeature "github.com/Drafteame/draft/cmd/commands/deploy/func/feature"
+	deployfuncprod "github.com/Drafteame/draft/cmd/commands/deploy/func/prod"
+	deployprod "github.com/Drafteame/draft/cmd/commands/deploy/prod"
 	dbconnect "github.com/Drafteame/draft/cmd/commands/db/connect"
 	"github.com/Drafteame/draft/cmd/commands/local/invoke"
 	migratedown "github.com/Drafteame/draft/cmd/commands/local/migrate/down"
@@ -43,6 +49,12 @@ func main() {
 	cmd.AddCommand(migratedown.GetCmd())
 	cmd.AddCommand(testsetup.GetCmd())
 	cmd.AddCommand(mockery.GetCmd())
+	cmd.AddCommand(deploydev.GetCmd())
+	cmd.AddCommand(deployprod.GetCmd())
+	cmd.AddCommand(deployfeature.GetCmd())
+	cmd.AddCommand(deployfuncdev.GetCmd())
+	cmd.AddCommand(deployfuncprod.GetCmd())
+	cmd.AddCommand(deployfuncfeature.GetCmd())
 
 	if err := cmd.ExecuteContext(ctx); err != nil {
 		log.Exit(1, err.Error())
