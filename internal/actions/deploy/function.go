@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/Drafteame/draft/internal/pkg/aws"
 	"github.com/Drafteame/draft/internal/pkg/exec"
@@ -62,16 +63,37 @@ func DeployFunction(env EnvConfig, serviceArg string, functionNames []string) er
 		return err
 	}
 
+	type result struct {
+		name string
+		err  error
+	}
+
+	results := make([]result, len(functionNames))
+	var wg sync.WaitGroup
+
+	for i, functionName := range functionNames {
+		wg.Add(1)
+		go func(i int, functionName string) {
+			defer wg.Done()
+			results[i] = result{
+				name: functionName,
+				err:  deployOneFunction(env, absPath, serviceName, stage, functionName),
+			}
+		}(i, functionName)
+	}
+
+	wg.Wait()
+
 	hasError := false
 	if len(functionNames) > 1 {
 		log.Info("\n─── Deploy Summary ───")
 	}
-	for _, functionName := range functionNames {
-		if err := deployOneFunction(env, absPath, accountID, serviceName, stage, functionName); err != nil {
-			log.Errorf("✗ %s: %v", functionName, err)
+	for _, r := range results {
+		if r.err != nil {
+			log.Errorf("✗ %s: %v", r.name, r.err)
 			hasError = true
 		} else {
-			log.Successf("✓ %s", functionName)
+			log.Successf("✓ %s", r.name)
 		}
 	}
 
@@ -81,7 +103,7 @@ func DeployFunction(env EnvConfig, serviceArg string, functionNames []string) er
 	return nil
 }
 
-func deployOneFunction(env EnvConfig, absPath, accountID, serviceName, stage, functionName string) error {
+func deployOneFunction(env EnvConfig, absPath, serviceName, stage, functionName string) error {
 	fullLambdaName := fmt.Sprintf("%s-%s-%s", serviceName, stage, functionName)
 	log.Infof("Lambda function: %s", fullLambdaName)
 
