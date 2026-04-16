@@ -1,3 +1,9 @@
+## v1.23.1 (2026-04-16)
+
+
+- chore(ci): update vendor hash for version 1.23.1
+- chore: add SyncSecretsDry flag to skip secrets sync in prod deployments (#200)
+
 ## v1.23.0 (2026-04-09)
 
 
