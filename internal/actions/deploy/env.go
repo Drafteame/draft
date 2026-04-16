@@ -8,6 +8,7 @@ const profilePrefix = "draftea-"
 type EnvConfig struct {
 	Profile        string // e.g. "draftea-dev", "draftea-prod", "draftea-feature"
 	ExtraSLSParams string // non-empty only for feature: --param="stage=feature"
+	SyncSecretsDry bool   // if true, sets SLS_SYNC_SECRETS_DRY=true to skip secrets sync
 }
 
 // Stage derives the stage name from the profile by stripping the profilePrefix.
@@ -21,7 +22,8 @@ var (
 	}
 
 	ProdEnv = EnvConfig{
-		Profile: profilePrefix + "prod",
+		Profile:        profilePrefix + "prod",
+		SyncSecretsDry: true,
 	}
 
 	FeatureEnv = EnvConfig{
