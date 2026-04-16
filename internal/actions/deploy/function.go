@@ -48,10 +48,15 @@ func DeployFunction(env EnvConfig, serviceArg string, functionNames []string) er
 		}
 	}
 
+	syncSecretsDry := "false"
+	if env.SyncSecretsDry {
+		syncSecretsDry = "true"
+	}
+
 	log.Info("Packaging service...")
 	packageScript := fmt.Sprintf(
-		`cd %q && env STAGE=%s AWS_ACCOUNT=%s sls package --stage %s --verbose --aws-profile %s`,
-		absPath, stage, accountID, stage, env.Profile,
+		`cd %q && env STAGE=%s AWS_ACCOUNT=%s SLS_SYNC_SECRETS_DRY=%s sls package --stage %s --verbose --aws-profile %s`,
+		absPath, stage, accountID, syncSecretsDry, stage, env.Profile,
 	)
 	if _, err := exec.Command(packageScript, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr)); err != nil {
 		return fmt.Errorf("sls package failed: %w", err)

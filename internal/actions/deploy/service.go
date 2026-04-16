@@ -63,9 +63,14 @@ func deployServiceToDir(env EnvConfig, absPath, accountID string) error {
 		slsParams = fmt.Sprintf("%s %s", slsParams, env.ExtraSLSParams)
 	}
 
+	syncSecretsDry := "false"
+	if env.SyncSecretsDry {
+		syncSecretsDry = "true"
+	}
+
 	script := fmt.Sprintf(
-		`cd %q && npm install && env STAGE=%s AWS_ACCOUNT=%s SLS_PARAMS=%q npm run deploy`,
-		absPath, stage, accountID, slsParams,
+		`cd %q && npm install && env STAGE=%s AWS_ACCOUNT=%s SLS_PARAMS=%q SLS_SYNC_SECRETS_DRY=%s npm run deploy`,
+		absPath, stage, accountID, slsParams, syncSecretsDry,
 	)
 
 	_, err = exec.Command(script, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr))
