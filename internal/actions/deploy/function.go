@@ -17,22 +17,29 @@ const deployRegion = "us-east-2"
 
 // DeployFunction packages and deploys one or more Lambda functions using the given env config.
 // serviceArg can be a service name or a path. All functions must belong to the same service.
-func DeployFunction(env EnvConfig, serviceArg string, functionNames []string) error {
+// If force is true, .deployignore is ignored.
+func DeployFunction(env EnvConfig, serviceArg string, functionNames []string, force bool) error {
 	absPath, err := resolveService(serviceArg)
 	if err != nil {
 		return err
 	}
 
-	skip, err := validateServiceDir(absPath)
-	if err != nil {
+	if err := validateServiceDir(absPath); err != nil {
 		return err
-	}
-	if skip {
-		log.Warnf("Skipping %s: .deployignore found", absPath)
-		return nil
 	}
 
 	stage := env.Stage()
+
+	if !force {
+		skip, reason, err := shouldSkipForStage(absPath, stage)
+		if err != nil {
+			return err
+		}
+		if skip {
+			log.Warnf("Skipping %s: %s (use --force to override)", absPath, reason)
+			return nil
+		}
+	}
 
 	log.Info("Fetching AWS Account ID...")
 	accountID, err := aws.GetAccountID(env.Profile)

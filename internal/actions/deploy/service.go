@@ -18,7 +18,8 @@ type DeployResult struct {
 }
 
 // DeployService deploys one or more services (by name or path) using the given env config.
-func DeployService(env EnvConfig, args []string) []DeployResult {
+// If force is true, .deployignore is ignored.
+func DeployService(env EnvConfig, args []string, force bool) []DeployResult {
 	results := make([]DeployResult, 0, len(args))
 
 	log.Info("Fetching AWS Account ID...")
@@ -40,21 +41,27 @@ func DeployService(env EnvConfig, args []string) []DeployResult {
 			continue
 		}
 
-		err = deployServiceToDir(env, absPath, accountID)
+		err = deployServiceToDir(env, absPath, accountID, force)
 		results = append(results, DeployResult{Name: arg, Err: err})
 	}
 
 	return results
 }
 
-func deployServiceToDir(env EnvConfig, absPath, accountID string) error {
-	skip, err := validateServiceDir(absPath)
-	if err != nil {
+func deployServiceToDir(env EnvConfig, absPath, accountID string, force bool) error {
+	if err := validateServiceDir(absPath); err != nil {
 		return err
 	}
-	if skip {
-		log.Warnf("Skipping %s: .deployignore found", absPath)
-		return nil
+
+	if !force {
+		skip, reason, err := shouldSkipForStage(absPath, env.Stage())
+		if err != nil {
+			return err
+		}
+		if skip {
+			log.Warnf("Skipping %s: %s (use --force to override)", absPath, reason)
+			return nil
+		}
 	}
 
 	stage := env.Stage()
@@ -73,8 +80,7 @@ func deployServiceToDir(env EnvConfig, absPath, accountID string) error {
 		absPath, stage, accountID, slsParams, syncSecretsDry,
 	)
 
-	_, err = exec.Command(script, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr))
-	if err != nil {
+	if _, err := exec.Command(script, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr)); err != nil {
 		return fmt.Errorf("deploy failed: %w", err)
 	}
 
@@ -82,15 +88,14 @@ func deployServiceToDir(env EnvConfig, absPath, accountID string) error {
 	return nil
 }
 
-// validateServiceDir checks whether a directory is eligible for deployment.
-// Returns (true, nil) if the directory should be skipped (.deployignore present),
-// (false, err) if serverless.yml is missing, or (false, nil) if ready to deploy.
-func validateServiceDir(absPath string) (skip bool, err error) {
-	if files.Exists(filepath.Join(absPath, ".deployignore")) {
-		return true, nil
-	}
+// validateServiceDir asserts that absPath looks like a deployable serverless
+// service. It returns nil when serverless.yml is present and a descriptive
+// error otherwise. .deployignore handling is done separately by
+// shouldSkipForStage so that --force can bypass the skip without bypassing
+// this structural check.
+func validateServiceDir(absPath string) error {
 	if !files.Exists(filepath.Join(absPath, "serverless.yml")) {
-		return false, fmt.Errorf("serverless.yml not found in %s", absPath)
+		return fmt.Errorf("serverless.yml not found in %s", absPath)
 	}
-	return false, nil
+	return nil
 }
