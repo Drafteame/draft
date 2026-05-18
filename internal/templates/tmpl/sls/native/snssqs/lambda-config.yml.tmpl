@@ -1,6 +1,9 @@
 function:
   {{ .LambdaName }}:
     handler: {{if not .IsLegacy}}cmd/{{ end }}snssqs/{{ .LambdaName }}/main.go
+    {{- if .UseOtel }}
+    layers: ${self:custom.otelFunctionLayers}
+    {{- end }}
     disableLogs: true
     reservedConcurrency: ${self:custom.reservedConcurrency.{{ .ReservedConcurrency }}}
     events:

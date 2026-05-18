@@ -1,6 +1,10 @@
 package inputs
 
-import "github.com/charmbracelet/huh"
+import (
+	"sort"
+
+	"github.com/charmbracelet/huh"
+)
 
 func Select[T comparable](title string, opts ...Option[T]) error {
 	input := huh.NewSelect[T]().Title(title)
@@ -15,10 +19,15 @@ func Select[T comparable](title string, opts ...Option[T]) error {
 		input.Description(inputOpts.description)
 	}
 
-	selectOpts := make([]huh.Option[T], 0, len(opts))
+	keys := make([]string, 0, len(inputOpts.options))
+	for k := range inputOpts.options {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 
-	for optKey, optVal := range inputOpts.options {
-		selectOpts = append(selectOpts, huh.NewOption(optKey, optVal))
+	selectOpts := make([]huh.Option[T], 0, len(inputOpts.options))
+	for _, optKey := range keys {
+		selectOpts = append(selectOpts, huh.NewOption(optKey, inputOpts.options[optKey]))
 	}
 
 	input.Options(selectOpts...)
