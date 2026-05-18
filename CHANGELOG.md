@@ -1,3 +1,10 @@
+## v1.25.0 (2026-05-18)
+
+
+- chore(ci): update vendor hash for version 1.25.0
+- feat: add OpenTelemetry-aware scaffolding to new:lambda, new:service and new:domain [DEV-542] (#203)
+- Co-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+
 ## v1.24.0 (2026-05-18)
 
 
