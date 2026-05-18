@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -125,6 +126,71 @@ func deployOneFunction(env EnvConfig, absPath, serviceName, stage, functionName 
 	out, err := exec.Command(updateScript)
 	if err != nil {
 		return fmt.Errorf("lambda update failed: %w\n%s", err, out)
+	}
+
+	log.Info("Waiting for Lambda update to complete...")
+	waitScript := fmt.Sprintf(
+		`aws lambda wait function-updated --function-name %q --profile %s --region %s`,
+		fullLambdaName, env.Profile, deployRegion,
+	)
+	if out, err := exec.Command(waitScript); err != nil {
+		return fmt.Errorf("lambda wait failed: %w\n%s", err, out)
+	}
+
+	log.Info("Publishing new version...")
+	publishScript := fmt.Sprintf(
+		`aws lambda publish-version --function-name %q --profile %s --region %s --output json`,
+		fullLambdaName, env.Profile, deployRegion,
+	)
+	publishOut, err := exec.Command(publishScript)
+	if err != nil {
+		return fmt.Errorf("lambda publish-version failed: %w\n%s", err, publishOut)
+	}
+
+	var publishResult struct {
+		Version string `json:"Version"`
+	}
+	if err := json.Unmarshal([]byte(publishOut), &publishResult); err != nil {
+		return fmt.Errorf("failed to parse publish-version response: %w", err)
+	}
+
+	log.Info("Fetching aliases...")
+	listAliasesScript := fmt.Sprintf(
+		`aws lambda list-aliases --function-name %q --profile %s --region %s --output json`,
+		fullLambdaName, env.Profile, deployRegion,
+	)
+	listOut, err := exec.Command(listAliasesScript)
+	if err != nil {
+		return fmt.Errorf("lambda list-aliases failed: %w\n%s", err, listOut)
+	}
+
+	var aliasesResult struct {
+		Aliases []struct {
+			Name string `json:"Name"`
+		} `json:"Aliases"`
+	}
+	if err := json.Unmarshal([]byte(listOut), &aliasesResult); err != nil {
+		return fmt.Errorf("failed to parse list-aliases response: %w", err)
+	}
+
+	if len(aliasesResult.Aliases) == 0 {
+		log.Infof("Function %s has no aliases, skipping alias update", functionName)
+		return nil
+	}
+
+	if len(aliasesResult.Aliases) > 1 {
+		return fmt.Errorf("function %s has multiple aliases, cannot determine which one to update", functionName)
+	}
+
+	aliasName := aliasesResult.Aliases[0].Name
+
+	log.Infof("Updating alias %q → version %s...", aliasName, publishResult.Version)
+	updateAliasScript := fmt.Sprintf(
+		`aws lambda update-alias --function-name %q --name %s --function-version %s --profile %s --region %s`,
+		fullLambdaName, aliasName, publishResult.Version, env.Profile, deployRegion,
+	)
+	if out, err := exec.Command(updateAliasScript); err != nil {
+		return fmt.Errorf("lambda update-alias failed: %w\n%s", err, out)
 	}
 
 	return nil
