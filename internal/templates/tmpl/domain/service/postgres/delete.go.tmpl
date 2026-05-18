@@ -4,16 +4,21 @@ import (
 	"context"
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
-	"{{.PackageName}}/projects/framev2/pkg/tracer"
+	oteltracer "{{.PackageName}}/pkg/otel/tracer"
 )
 
 func (s *Service) Delete(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error) {
-	newCtx, seg := tracer.BeginSubSegment(ctx, "domains.{{.DomainNameLower}}.service.Delete")
-	defer seg.Close(nil)
+	ctx, span := oteltracer.StartSpan(ctx, oteltracer.ServiceSpanName("{{.DomainNameLower}}", "delete"),
+		oteltracer.WithAttributes(
+			oteltracer.Domain("{{.DomainNameLower}}"),
+			oteltracer.Layer(oteltracer.LayerService),
+		),
+	)
+	defer span.End()
 
-	deleted, err := s.repo.Delete(newCtx, id)
+	deleted, err := s.repo.Delete(ctx, id)
 	if err != nil {
-		_ = seg.AddError(err)
+		oteltracer.SetError(ctx, err)
 		return domain.{{.DomainNamePascal}}{}, err
 	}
 

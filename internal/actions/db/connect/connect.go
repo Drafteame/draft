@@ -4,9 +4,9 @@ import "time"
 
 // ConnConfig is the top-level structure of the YAML config file (~/.draft/dbconnect.yml).
 type ConnConfig struct {
-	Defaults     map[string]DefaultConfig     `yaml:"defaults"`
-	Environments map[string]EnvConfig         `yaml:"environments"`
-	Connections  map[string]ConnTypeConfig    `yaml:"connections"`
+	Defaults     map[string]DefaultConfig  `yaml:"defaults"`
+	Environments map[string]EnvConfig      `yaml:"environments"`
+	Connections  map[string]ConnTypeConfig `yaml:"connections"`
 }
 
 // DefaultConfig holds per-type defaults (e.g. remote port).

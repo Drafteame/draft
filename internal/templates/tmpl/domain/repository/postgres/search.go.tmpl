@@ -7,31 +7,25 @@ import (
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
 	"{{.PackageName}}/{{ .DomainPath }}/repository/builders"
 	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
-	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
 // Search finds records for the search options.
 func (r *Repository) Search(ctx context.Context, opts options.SearchOptions) ([]domain.{{.DomainNamePascal}}, int64, error) {
-	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.Search")
-	defer span.Close(nil)
-
 	var daoModels []daos.{{.DomainNamePascal}}
 	client := r.driver.GetClient().Model(&daoModels)
 
 	client = builders.SearchOptions(client, opts)
 
-	client = client.WithContext(newCtx)
+	client = client.WithContext(ctx)
 
 	err := client.Find(&daoModels).Error
 	if err != nil {
-		_ = span.AddError(err)
 		return nil, 0, err
 	}
 
 	var total int64
 	if opts.Pagination.Limit != 1 {
 		if err := client.Offset(-1).Count(&total).Error; err != nil {
-			_ = span.AddError(err)
 			return nil, 0, err
 		}
 	}

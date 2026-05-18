@@ -5,16 +5,21 @@ import (
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
-	"{{.PackageName}}/projects/framev2/pkg/tracer"
+	oteltracer "{{.PackageName}}/pkg/otel/tracer"
 )
 
 func (s *Service) SearchOne(ctx context.Context, filters options.SearchFilters) (domain.{{.DomainNamePascal}}, error) {
-	newCtx, seg := tracer.BeginSubSegment(ctx, "domains.{{.DomainNameLower}}.service.SearchOne")
-	defer seg.Close(nil)
+	ctx, span := oteltracer.StartSpan(ctx, oteltracer.ServiceSpanName("{{.DomainNameLower}}", "search_one"),
+		oteltracer.WithAttributes(
+			oteltracer.Domain("{{.DomainNameLower}}"),
+			oteltracer.Layer(oteltracer.LayerService),
+		),
+	)
+	defer span.End()
 
-	result, err := s.repo.SearchOne(newCtx, filters)
+	result, err := s.repo.SearchOne(ctx, filters)
 	if err != nil {
-		_ = seg.AddError(err)
+		oteltracer.SetError(ctx, err)
 		return domain.{{.DomainNamePascal}}{}, err
 	}
 
