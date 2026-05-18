@@ -10,7 +10,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        draftVersion = "1.23.1";
+        draftVersion = "1.24.0";
       in
       {
         devShell = pkgs.mkShell {
