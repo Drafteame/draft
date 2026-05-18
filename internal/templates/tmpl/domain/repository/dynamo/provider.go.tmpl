@@ -5,9 +5,8 @@ import (
 	"sync"
 
 	"{{.PackageName}}/pkg/providers"
-	"{{.PackageName}}/projects/framev2/pkg/stage"
 	dynamov2 "{{.PackageName}}/pkg/providers/dynamo/v2"
-	"{{.PackageName}}/projects/framev2/pkg/tracer"
+	"{{.PackageName}}/projects/framev2/pkg/stage"
 )
 
 const PrvRepository = "domains.{{ .DomainNameLower }}.repository"
@@ -18,9 +17,6 @@ var (
 )
 
 func Provide(ctx context.Context, opt ...providers.Option) (any, error) {
-	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.Provide")
-	defer span.Close(nil)
-
 	if stage.IsTest() {
 		return provideTest(ctx, opt...)
 	}
@@ -28,7 +24,7 @@ func Provide(ctx context.Context, opt ...providers.Option) (any, error) {
 	var err error
 
 	once.Do(func() {
-		i, errCreate := createInstance(newCtx, opt...)
+		i, errCreate := createInstance(ctx, opt...)
 		if errCreate != nil {
 			err = errCreate
 			return
@@ -38,7 +34,6 @@ func Provide(ctx context.Context, opt ...providers.Option) (any, error) {
 	})
 
 	if err != nil {
-		_ = span.AddError(err)
 		return nil, err
 	}
 
@@ -66,12 +61,8 @@ func provideTest(ctx context.Context, opt ...providers.Option) (any, error) {
 }
 
 func createInstance(ctx context.Context, opts ...providers.Option) (*Repository, error) {
-	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.createInstance")
-	defer span.Close(nil)
-
-	dynamoDriver, err := providers.As[Dynamo](newCtx, dynamov2.Provide, opts...)
+	dynamoDriver, err := providers.As[Dynamo](ctx, dynamov2.Provide, opts...)
 	if err != nil {
-		_ = span.AddError(err)
 		return nil, err
 	}
 

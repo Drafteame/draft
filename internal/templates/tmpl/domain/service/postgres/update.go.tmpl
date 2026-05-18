@@ -5,16 +5,21 @@ import (
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
-	"{{.PackageName}}/projects/framev2/pkg/tracer"
+	oteltracer "{{.PackageName}}/pkg/otel/tracer"
 )
 
 func (s *Service) Update(ctx context.Context, id string, fields options.UpdateFields) (domain.{{.DomainNamePascal}}, error) {
-	newCtx, seg := tracer.BeginSubSegment(ctx, "domains.{{.DomainNameLower}}.service.Update")
-	defer seg.Close(nil)
+	ctx, span := oteltracer.StartSpan(ctx, oteltracer.ServiceSpanName("{{.DomainNameLower}}", "update"),
+		oteltracer.WithAttributes(
+			oteltracer.Domain("{{.DomainNameLower}}"),
+			oteltracer.Layer(oteltracer.LayerService),
+		),
+	)
+	defer span.End()
 
-	updated, err := s.repo.Update(newCtx, id, fields)
+	updated, err := s.repo.Update(ctx, id, fields)
 	if err != nil {
-		_ = seg.AddError(err)
+		oteltracer.SetError(ctx, err)
 		return domain.{{.DomainNamePascal}}{}, err
 	}
 

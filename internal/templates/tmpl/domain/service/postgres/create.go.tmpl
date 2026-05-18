@@ -4,16 +4,21 @@ import (
 	"context"
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
-	"{{.PackageName}}/projects/framev2/pkg/tracer"
+	oteltracer "{{.PackageName}}/pkg/otel/tracer"
 )
 
 func (s *Service) Create(ctx context.Context, m domain.{{.DomainNamePascal}}) (domain.{{.DomainNamePascal}}, error) {
-	newCtx, seg := tracer.BeginSubSegment(ctx, "domains.{{.DomainNameLower}}.service.Create")
-	defer seg.Close(nil)
+	ctx, span := oteltracer.StartSpan(ctx, oteltracer.ServiceSpanName("{{.DomainNameLower}}", "create"),
+		oteltracer.WithAttributes(
+			oteltracer.Domain("{{.DomainNameLower}}"),
+			oteltracer.Layer(oteltracer.LayerService),
+		),
+	)
+	defer span.End()
 
-	created, err := s.repo.Create(newCtx, m)
+	created, err := s.repo.Create(ctx, m)
 	if err != nil {
-		_ = seg.AddError(err)
+		oteltracer.SetError(ctx, err)
 		return domain.{{.DomainNamePascal}}{}, err
 	}
 
