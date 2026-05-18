@@ -1,3 +1,10 @@
+## v1.24.0 (2026-05-18)
+
+
+- chore(ci): update vendor hash for version 1.24.0
+- feat: [DEV-536] publish version and update alias after function deploy (#202)
+- Co-authored-by: Claude Sonnet 4.6 <noreply@anthropic.com>
+
 ## v1.23.1 (2026-04-16)
 
 
