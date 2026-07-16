@@ -1,3 +1,10 @@
+## v1.25.1 (2026-07-16)
+
+
+- chore(ci): update vendor hash for version 1.25.1
+- fix: wait for final postgres server (#204)
+- Co-authored-by: Cursor <cursoragent@cursor.com>
+
 ## v1.25.0 (2026-05-18)
 
 
