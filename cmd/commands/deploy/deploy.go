@@ -10,10 +10,13 @@ import (
 	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
+const forceFlagUsage = "Bypass .deployignore checks and deploy regardless"
+
 // NewFuncCmd returns a deploy function command for the given environment.
 func NewFuncCmd(env deployaction.EnvConfig) *cobra.Command {
 	stage := env.Stage()
-	return &cobra.Command{
+	var force bool
+	cmd := &cobra.Command{
 		Use:   fmt.Sprintf("deploy:func:%s <service|path> <function-name> [function-name...]", stage),
 		Short: fmt.Sprintf("Deploy one or more Lambda functions to %s", stage),
 		Long: fmt.Sprintf(`Package and deploy one or more Lambda functions to %s.
@@ -24,22 +27,25 @@ All functions must belong to the same service; the service is packaged once.
 Examples:
   draft deploy:func:%s gamestats storegamestats
   draft deploy:func:%s gamestats storegamestats otherlambda
-  draft deploy:func:%s services/gamestats storegamestats`, stage, stage, stage, stage),
+  draft deploy:func:%s services/gamestats`, stage, stage, stage, stage),
 		Args: cobra.MinimumNArgs(2),
 		Run: func(c *cobra.Command, args []string) {
 			common.ChDir(c)
 
-			if err := deployaction.DeployFunction(env, args[0], args[1:]); err != nil {
+			if err := deployaction.DeployFunction(env, args[0], args[1:], force); err != nil {
 				log.Exitf(1, "deploy:func:%s failed: %v", stage, err)
 			}
 		},
 	}
+	cmd.Flags().BoolVar(&force, "force", false, forceFlagUsage)
+	return cmd
 }
 
 // NewServiceCmd returns a deploy service command for the given environment.
 func NewServiceCmd(env deployaction.EnvConfig) *cobra.Command {
 	stage := env.Stage()
-	return &cobra.Command{
+	var force bool
+	cmd := &cobra.Command{
 		Use:   fmt.Sprintf("deploy:%s <service|path> [service|path...]", stage),
 		Short: fmt.Sprintf("Deploy one or more services to %s", stage),
 		Long: fmt.Sprintf(`Deploy Serverless services to %s without changing directories.
@@ -56,7 +62,7 @@ Examples:
 		Run: func(c *cobra.Command, args []string) {
 			common.ChDir(c)
 
-			results := deployaction.DeployService(env, args)
+			results := deployaction.DeployService(env, args, force)
 
 			hasError := false
 			if len(results) > 1 {
@@ -76,4 +82,6 @@ Examples:
 			}
 		},
 	}
+	cmd.Flags().BoolVar(&force, "force", false, forceFlagUsage)
+	return cmd
 }
