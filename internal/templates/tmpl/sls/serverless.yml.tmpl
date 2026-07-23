@@ -4,7 +4,12 @@ frameworkVersion: '3'
 
 custom:
   stage: ${opt:stage, self:provider.stage}
-  datadog: ${file(../../config/sls/datadog.yml):datadog}
+  otelCollectorLayerArn: arn:aws:lambda:${self:provider.region}:901920570463:layer:aws-otel-collector-arm64-ver-0-117-0:1
+  ddExtensionLayerArn: arn:aws:lambda:us-east-2:464622532012:layer:Datadog-Extension-ARM:96
+  otelFunctionLayers:
+    - Ref: OtelCollectorConfigLambdaLayer
+    - ${self:custom.otelCollectorLayerArn}
+    - ${self:custom.ddExtensionLayerArn}
   pklConfig: ${file(../../config/sls/pkl-config.yml):config}
   reservedConcurrency: ${file(../../config/sls/concurrency.yml):${self:custom.stage}.reservedConcurrency}
   {{- if .WarmupEnabled }}
@@ -24,27 +29,39 @@ custom:
     number: 5
 
   go:
-    cmd: 'go build -ldflags="-s -w" -tags lambda.norpc'
+    cmd: 'go build -ldflags="-s -w" -tags "lambda.norpc,otel"'
     beforeBuild:
       - 'sh ../../scripts/build_pkl.sh "$PWD"'
 
 provider:
   name: aws
   architecture: arm64
-  runtime: provided.al2
+  runtime: provided.al2023
   timeout: 30
   stage: ${opt:stage, "dev"}
   region: ${opt:region, "us-east-2"}
   environment: ${file(./config/sls/environment.yml):${self:custom.stage}.environment}
-  iam: ${file(./config/sls/iam.yml):${self:custom.stage}.roles}
+  iam:
+    deploymentRole: ${ssm:/service/roles/${self:provider.stage}/deployment-role}
+    role:
+      Fn::GetAtt: [{{ .RoleName }}LambdaRole, Arn]
   vpc: ${file(../../config/sls/vpc.yml):${self:custom.stage}.vpc}
 
   httpApi:
     metrics: true
 
   tracing:
-    apiGateway: true
-    lambda: true
+    apiGateway: false
+    lambda: false
+
+layers:
+  otelCollectorConfig:
+    path: config/otel-layer
+    name: ${self:service}-${self:custom.stage}-otel-collector-config
+    compatibleArchitectures:
+      - arm64
+
+resources: ${file(./config/sls/resources.yml)}
 
 functions:
   - ${file(cmd/plain/{{ .LambdaName }}/lambda-config.yml):function}
@@ -56,7 +73,6 @@ plugins:
   - serverless-plugin-lambda-insights
   - serverless-prune-plugin
   - serverless-plugin-s3-remover
-  - serverless-plugin-datadog
   - serverless-plugin-stage-reserved-concurrency
   {{- if .WarmupEnabled }}
   - serverless-plugin-warmup

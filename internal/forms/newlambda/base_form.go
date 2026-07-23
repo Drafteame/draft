@@ -45,6 +45,11 @@ func baseForm(input *dtos.LambdaInput) error {
 		if errSrv != nil {
 			return errSrv
 		}
+
+		useOtel, errOtel := project.IsOtelService(input.ServicePath)
+		if errOtel == nil {
+			input.UseOtel = useOtel
+		}
 	}
 
 	errName := inputs.Text("Lambda Name:",

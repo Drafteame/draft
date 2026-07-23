@@ -5,28 +5,21 @@ import (
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
-	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
 // SearchOne finds the first record for the search options.
 func (r *Repository) SearchOne(ctx context.Context, filters options.SearchFilters) (domain.{{.DomainNamePascal}}, error) {
-	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.SearchOne")
-	defer span.Close(nil)
-
 	opts := options.NewSearchOptions().
 		SetFilters(filters).
 		Limit(1)
 
-	list, _, err := r.Search(newCtx, opts)
+	list, _, err := r.Search(ctx, opts)
 	if err != nil {
-		_ = span.AddError(err)
 		return domain.{{.DomainNamePascal}}{}, err
 	}
 
 	if len(list) == 0 {
-		err := domain.ErrRecordNotFound
-		_ = span.AddError(err)
-		return domain.{{.DomainNamePascal}}{}, err
+		return domain.{{.DomainNamePascal}}{}, domain.ErrRecordNotFound
 	}
 
 	return list[0], nil

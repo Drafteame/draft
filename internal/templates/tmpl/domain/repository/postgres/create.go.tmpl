@@ -7,19 +7,13 @@ import (
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
-	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
 func (r *Repository) Create(ctx context.Context, entity domain.{{.DomainNamePascal}}) (domain.{{.DomainNamePascal}}, error) {
-	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.Create")
-	defer span.Close(nil)
-
 	if entity.ID == "" {
 		id, err := r.genID.Generate()
 		if err != nil {
-			err = errors.Join(domain.ErrUnexpected, err)
-			_ = span.AddError(err)
-			return domain.{{.DomainNamePascal}}{}, err
+			return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
 		}
 
 		entity.ID = id
@@ -27,17 +21,13 @@ func (r *Repository) Create(ctx context.Context, entity domain.{{.DomainNamePasc
 
 	dao := daos.FromModel(entity)
 
-	if dbErr := r.driver.GetClient().WithContext(newCtx).Create(&dao).Error; dbErr != nil {
+	if dbErr := r.driver.GetClient().WithContext(ctx).Create(&dao).Error; dbErr != nil {
 		if strings.Contains(dbErr.Error(), "duplicate key") {
-			err := errors.Join(domain.ErrDuplicatedRecord, dbErr)
-			_ = span.AddError(err)
-			return domain.{{.DomainNamePascal}}{}, err
+			return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrDuplicatedRecord, dbErr)
 		}
 
-		err := errors.Join(domain.ErrUnexpected, dbErr)
-		_ = span.AddError(err)
-		return domain.{{.DomainNamePascal}}{}, err
+		return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, dbErr)
 	}
 
-	return r.Get(newCtx, entity.ID)
+	return r.Get(ctx, entity.ID)
 }

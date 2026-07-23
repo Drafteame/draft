@@ -8,18 +8,14 @@ import (
 
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
-	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
 func (r *Repository) Get(ctx context.Context, id string) (domain.{{.DomainNamePascal}}, error) {
-	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.Get")
-	defer span.Close(nil)
-
 	gormDB := r.driver.GetClient()
 
 	dao := daos.{{.DomainNamePascal}}{}
 
-	err := gormDB.WithContext(newCtx).
+	err := gormDB.WithContext(ctx).
 		Model(daos.{{.DomainNamePascal}}{}).
 		Where("id = ? AND deleted_at IS NULL", id).
 		First(&dao).
@@ -27,14 +23,10 @@ func (r *Repository) Get(ctx context.Context, id string) (domain.{{.DomainNamePa
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			dbErr := errors.Join(domain.ErrRecordNotFound, err)
-			_ = span.AddError(dbErr)
-			return domain.{{.DomainNamePascal}}{}, dbErr
+			return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrRecordNotFound, err)
 		}
 
-		dbErr := errors.Join(domain.ErrUnexpected, err)
-		_ = span.AddError(dbErr)
-		return domain.{{.DomainNamePascal}}{}, dbErr
+		return domain.{{.DomainNamePascal}}{}, errors.Join(domain.ErrUnexpected, err)
 	}
 
 	return daos.ToModel(dao), nil
