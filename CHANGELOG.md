@@ -1,3 +1,13 @@
+## v1.26.0 (2026-07-23)
+
+
+- chore(ci): update vendor hash for version 1.26.0
+- feat: enforce otel-only tracing in service and lambda scaffolding [DEV-590] (#205)
+- chore(deps): bump golang.org/x/crypto from 0.44.0 to 0.45.0 (#176)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Co-authored-by: Nicolás García <58498506+negarciacamilo@users.noreply.github.com>
+
 ## v1.25.3 (2026-07-23)
 
 
