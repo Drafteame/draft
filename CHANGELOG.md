@@ -1,3 +1,17 @@
+## v1.25.2 (2026-07-23)
+
+
+- chore(ci): update vendor hash for version 1.25.2
+- chore(deps): bump aws-actions/configure-aws-credentials from 5 to 6 (#192)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+- chore(deps): bump goreleaser/goreleaser-action from 6 to 7 (#193)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+- chore(deps): bump ad-m/github-push-action from 0.8.0 to 1.1.0 (#199)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+
 ## v1.25.1 (2026-07-16)
 
 
