@@ -1,3 +1,22 @@
+## v1.25.3 (2026-07-23)
+
+
+- chore(ci): update vendor hash for version 1.25.3
+- chore(deps): bump github.com/getsentry/sentry-go from 0.38.0 to 0.40.0 (#183)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+- chore(deps): bump github.com/aws/aws-sdk-go-v2/service/ssm from 1.67.2 to 1.67.5 (#184)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Co-authored-by: Nicolás García <58498506+negarciacamilo@users.noreply.github.com>
+- chore(deps): bump github.com/aws/aws-sdk-go-v2/config from 1.31.20 to 1.32.3 (#185)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+- chore(deps): bump github.com/spf13/cobra from 1.10.1 to 1.10.2 (#186)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Co-authored-by: Nicolás García <58498506+negarciacamilo@users.noreply.github.com>
+
 ## v1.25.2 (2026-07-23)
 
 
