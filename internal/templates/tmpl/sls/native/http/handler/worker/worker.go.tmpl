@@ -12,7 +12,7 @@ const Path = "{{ .HTTPPathAPIGateway }}"
 
 func Worker(r *Resources) echo.HandlerFunc {
 	return func(ec echo.Context) error {
-		_, span := oteltracer.StartSpan(ec.Request().Context(),
+		ctx, span := oteltracer.StartSpan(ec.Request().Context(),
 			oteltracer.HandlerSpanName("{{ .ServiceName }}", ec.Request().Method),
 			oteltracer.WithAttributes(
 				oteltracer.Domain("{{ .ServiceName }}"),
@@ -20,6 +20,7 @@ func Worker(r *Resources) echo.HandlerFunc {
 			),
 		)
 		defer span.End()
+		ec.SetRequest(ec.Request().WithContext(ctx))
 
 		var request dtos.RequestDTO
 

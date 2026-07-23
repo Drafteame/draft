@@ -6,8 +6,8 @@ import (
 	"{{ .PackageName }}/pkg/providers"
 {{- if .UseIdempotency }}
 	prvidempotency "{{ .PackageName }}/pkg/providers/idempotency"
-{{- end }}
 	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
+{{- end }}
 )
 
 type Resources struct {
@@ -18,14 +18,6 @@ type Resources struct {
 }
 
 func ProvideResources(ctx context.Context, opts ...providers.Option) (any, error) {
-	ctx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "provide-resources"),
-		oteltracer.WithAttributes(
-			oteltracer.Domain("{{ .ServiceName }}"),
-			oteltracer.Layer(oteltracer.LayerHandler),
-		),
-	)
-	defer span.End()
-
 {{- if .UseIdempotency }}
 	idemService, err := prvidempotency.ProvideTurbo(opts...) // TODO: change to correct idempotency provider
 	if err != nil {

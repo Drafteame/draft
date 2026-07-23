@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"{{ .PackageName }}/pkg/consumer/base"
-	"{{ .PackageName }}/projects/framev2/pkg/log"
 	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}sqs/{{ .LambdaName }}/handler/dtos"
 )
@@ -15,7 +14,7 @@ const (
 
 func Worker(r *Resources) base.Worker[dtos.Event] {
 	return func(ctx context.Context, event dtos.Event) error {
-		_, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "worker"),
+		ctx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "worker"),
 			oteltracer.WithAttributes(
 				oteltracer.Domain("{{ .ServiceName }}"),
 				oteltracer.Layer(oteltracer.LayerHandler),

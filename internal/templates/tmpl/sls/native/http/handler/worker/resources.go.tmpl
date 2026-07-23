@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"{{ .PackageName }}/pkg/providers"
-	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
 )
 
 type Resources struct {
@@ -12,14 +11,6 @@ type Resources struct {
 }
 
 func ProvideResources(ctx context.Context, opts ...providers.Option) (*Resources, error) {
-	ctx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "provide-resources"),
-		oteltracer.WithAttributes(
-			oteltracer.Domain("{{ .ServiceName }}"),
-			oteltracer.Layer(oteltracer.LayerHandler),
-		),
-	)
-	defer span.End()
-
 	// TODO: Implement your resources logic here
 
 	return &Resources{
