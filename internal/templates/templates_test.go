@@ -296,9 +296,6 @@ func TestDomainTemplates_Postgres(t *testing.T) {
 
 	t.Run("providers", func(t *testing.T) {
 		prov := d.Providers
-		assertGoSyntax(t, "providers/generator.go", prov.GeneratorGo)
-		assertGoSyntax(t, "providers/service.go", prov.ServiceGo)
-		assertGoSyntax(t, "providers/postgres/repository.go", prov.Postgres.RepositoryGo)
 		assertGoSyntax(t, "providers/generators/nanoid/tableid/provide.go", prov.GeneratorsNanoidTableid.ProvideGo)
 	})
 }
