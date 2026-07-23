@@ -8,6 +8,12 @@ import (
 
 	"github.com/Drafteame/draft/cmd/commands"
 	"github.com/Drafteame/draft/cmd/commands/config"
+	dbconnect "github.com/Drafteame/draft/cmd/commands/db/connect"
+	deploydev "github.com/Drafteame/draft/cmd/commands/deploy/dev"
+	deployfeature "github.com/Drafteame/draft/cmd/commands/deploy/feature"
+	deployfuncdev "github.com/Drafteame/draft/cmd/commands/deploy/func/dev"
+	deployfuncfeature "github.com/Drafteame/draft/cmd/commands/deploy/func/feature"
+	deployprod "github.com/Drafteame/draft/cmd/commands/deploy/prod"
 	"github.com/Drafteame/draft/cmd/commands/local/invoke"
 	migratedown "github.com/Drafteame/draft/cmd/commands/local/migrate/down"
 	migrateforce "github.com/Drafteame/draft/cmd/commands/local/migrate/force"
@@ -30,6 +36,7 @@ func main() {
 	cmd := commands.GetCmd()
 
 	cmd.AddCommand(config.GetCmd())
+	cmd.AddCommand(dbconnect.GetCmd())
 	cmd.AddCommand(newservice.GetCmd())
 	cmd.AddCommand(newlambda.GetCmd())
 	cmd.AddCommand(newdomain.GetCmd())
@@ -41,6 +48,11 @@ func main() {
 	cmd.AddCommand(migratedown.GetCmd())
 	cmd.AddCommand(testsetup.GetCmd())
 	cmd.AddCommand(mockery.GetCmd())
+	cmd.AddCommand(deploydev.GetCmd())
+	cmd.AddCommand(deployprod.GetCmd())
+	cmd.AddCommand(deployfeature.GetCmd())
+	cmd.AddCommand(deployfuncdev.GetCmd())
+	cmd.AddCommand(deployfuncfeature.GetCmd())
 
 	if err := cmd.ExecuteContext(ctx); err != nil {
 		log.Exit(1, err.Error())

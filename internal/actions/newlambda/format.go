@@ -5,5 +5,6 @@ import (
 )
 
 func (nl *NewLambda) format() error {
-	return format.Code()
+	depsPath := nl.input.ServicePath + "/deps.go"
+	return format.Code(nl.lambdaPath, depsPath)
 }

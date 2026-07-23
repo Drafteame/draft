@@ -7,7 +7,6 @@ import (
 	"{{.PackageName}}/{{ .DomainPath }}/repository"
 	"{{.PackageName}}/pkg/providers"
 	"{{.PackageName}}/projects/framev2/pkg/stage"
-	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
 const PrvService = "domains.{{ .DomainNameLower }}.service"
@@ -18,9 +17,6 @@ var (
 )
 
 func Provide(ctx context.Context, opt ...providers.Option) (any, error) {
-	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.service.Provide")
-	defer span.Close(nil)
-
 	if stage.IsTest() {
 		return provideTestService(ctx, opt...)
 	}
@@ -28,7 +24,7 @@ func Provide(ctx context.Context, opt ...providers.Option) (any, error) {
 	var err error
 
 	once.Do(func() {
-		i, errCreate := createInstance(newCtx, opt...)
+		i, errCreate := createInstance(ctx, opt...)
 		if errCreate != nil {
 			err = errCreate
 			return
@@ -38,7 +34,6 @@ func Provide(ctx context.Context, opt ...providers.Option) (any, error) {
 	})
 
 	if err != nil {
-		_ = span.AddError(err)
 		return nil, err
 	}
 
@@ -66,10 +61,7 @@ func provideTestService(ctx context.Context, opt ...providers.Option) (any, erro
 }
 
 func createInstance(ctx context.Context, opts ...providers.Option) (*Service, error) {
-	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.service.createInstance")
-	defer span.Close(nil)
-
-	repo := providers.MustAs[Repository](newCtx, repository.Provide, opts...)
+	repo := providers.MustAs[Repository](ctx, repository.Provide, opts...)
 
 	return New(repo), nil
 }

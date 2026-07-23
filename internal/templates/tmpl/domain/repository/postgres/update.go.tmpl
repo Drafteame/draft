@@ -6,16 +6,11 @@ import (
 	"{{.PackageName}}/{{ .DomainPath }}/domain"
 	"{{.PackageName}}/{{ .DomainPath }}/domain/options"
 	"{{.PackageName}}/{{ .DomainPath }}/repository/daos"
-	"{{.PackageName}}/projects/framev2/pkg/tracer"
 )
 
 func (r *Repository) Update(ctx context.Context, id string, fields options.UpdateFields) (domain.{{.DomainNamePascal}}, error) {
-	newCtx, span := tracer.BeginSubSegment(ctx, "domains.{{ .DomainNameLower }}.repository.Update")
-	defer span.Close(nil)
-
-	entity, err := r.Get(newCtx, id)
+	entity, err := r.Get(ctx, id)
 	if err != nil {
-		_ = span.AddError(err)
 		return domain.{{.DomainNamePascal}}{}, err
 	}
 
@@ -23,10 +18,9 @@ func (r *Repository) Update(ctx context.Context, id string, fields options.Updat
 
 	dao := daos.FromModel(entity)
 
-	if err := r.driver.GetClient().Model(&dao).WithContext(newCtx).Updates(updated).Error; err != nil {
-		_ = span.AddError(err)
+	if err := r.driver.GetClient().Model(&dao).WithContext(ctx).Updates(updated).Error; err != nil {
 		return domain.{{.DomainNamePascal}}{}, err
 	}
 
-	return r.Get(newCtx, id)
+	return r.Get(ctx, id)
 }

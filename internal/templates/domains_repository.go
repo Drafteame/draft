@@ -43,6 +43,7 @@ func loadRepositoryDynamo(v *Repository, data any) error {
 }
 
 type RepositoryPostgres struct {
+	DotMockeryPkgYml []byte
 	CreateGo         []byte
 	CreateTestGo     []byte
 	DeleteGo         []byte
@@ -65,6 +66,7 @@ type RepositoryPostgres struct {
 
 func loadDomainsRepositoryPostgres(v *RepositoryPostgres, data any) error {
 	loaders := []func(*RepositoryPostgres, any) error{
+		loadRepositoryPostgresDotMockeryPkgYml,
 		loadRepositoryPostgresCreateGo,
 		loadRepositoryPostgresCreateGoTest,
 		loadRepositoryPostgresDeleteGo,
@@ -90,6 +92,20 @@ func loadDomainsRepositoryPostgres(v *RepositoryPostgres, data any) error {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func loadRepositoryPostgresDotMockeryPkgYml(v *RepositoryPostgres, data any) error {
+	name := "domains/repository/postgres/.mockery.pkg.yml"
+	path := "tmpl/domain/repository/postgres/.mockery.pkg.yml.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.DotMockeryPkgYml = content
 
 	return nil
 }
@@ -471,13 +487,15 @@ func loadRepositoryPostgresDaosUpdateGo(v *RepositoryPostgresDaos, data any) err
 }
 
 type RepositoryDynamo struct {
-	InterfacesGo []byte
-	RepositoryGo []byte
-	ProviderGo   []byte
+	DotMockeryPkgYml []byte
+	InterfacesGo     []byte
+	RepositoryGo     []byte
+	ProviderGo       []byte
 }
 
 func loadDomainsRepositoryDynamo(v *RepositoryDynamo, data any) error {
 	loaders := []func(*RepositoryDynamo, any) error{
+		loadRepositoryDynamoDotMockeryPkgYml,
 		loadRepositoryDynamoInterfacesGo,
 		loadRepositoryDynamoRepositoryGo,
 		loadRepositoryDynamoProviderGo,
@@ -488,6 +506,20 @@ func loadDomainsRepositoryDynamo(v *RepositoryDynamo, data any) error {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func loadRepositoryDynamoDotMockeryPkgYml(v *RepositoryDynamo, data any) error {
+	name := "domains/repository/dynamo/.mockery.pkg.yml"
+	path := "tmpl/domain/repository/dynamo/.mockery.pkg.yml.tmpl"
+
+	content, err := loadTemplate(name, path, data, domain)
+	if err != nil {
+		return err
+	}
+
+	v.DotMockeryPkgYml = content
 
 	return nil
 }

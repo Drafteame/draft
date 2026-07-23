@@ -11,6 +11,10 @@ var (
 	sls embed.FS
 
 	//go:embed tmpl/domain
+	//go:embed tmpl/domain/service/postgres/.mockery.pkg.yml.tmpl
+	//go:embed tmpl/domain/service/dynamo/.mockery.pkg.yml.tmpl
+	//go:embed tmpl/domain/repository/postgres/.mockery.pkg.yml.tmpl
+	//go:embed tmpl/domain/repository/dynamo/.mockery.pkg.yml.tmpl
 	domain embed.FS
 )
 

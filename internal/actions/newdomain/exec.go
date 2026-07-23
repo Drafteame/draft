@@ -91,6 +91,7 @@ func (nd *NewDomain) createFiles(fileList []dtos.FileEntry) error {
 
 func (nd *NewDomain) createPostgresService() error {
 	fileList := []dtos.FileEntry{
+		{Path: nd.input.DomainPath + "/service/.mockery.pkg.yml", Data: nd.tmpl.Service.Postgres.DotMockeryPkgYml},
 		{Path: nd.input.DomainPath + "/service/create.go", Data: nd.tmpl.Service.Postgres.CreateGo},
 		{Path: nd.input.DomainPath + "/service/create_test.go", Data: nd.tmpl.Service.Postgres.CreateTestGo},
 		{Path: nd.input.DomainPath + "/service/delete.go", Data: nd.tmpl.Service.Postgres.DeleteGo},
@@ -114,6 +115,7 @@ func (nd *NewDomain) createPostgresService() error {
 
 func (nd *NewDomain) createDynamoService() error {
 	fileList := []dtos.FileEntry{
+		{Path: nd.input.DomainPath + "/service/.mockery.pkg.yml", Data: nd.tmpl.Service.Dynamo.DotMockeryPkgYml},
 		{Path: nd.input.DomainPath + "/service/interfaces.go", Data: nd.tmpl.Service.Dynamo.InterfacesGo},
 		{Path: nd.input.DomainPath + "/service/service.go", Data: nd.tmpl.Service.Dynamo.ServiceGo},
 		{Path: nd.input.DomainPath + "/service/provider.go", Data: nd.tmpl.Service.Dynamo.ProviderGo},
@@ -135,6 +137,7 @@ func (nd *NewDomain) createRepository() error {
 
 func (nd *NewDomain) createPostgresRepository() error {
 	fileList := []dtos.FileEntry{
+		{Path: nd.input.DomainPath + "/repository/.mockery.pkg.yml", Data: nd.tmpl.Repository.Postgres.DotMockeryPkgYml},
 		{Path: nd.input.DomainPath + "/repository/create.go", Data: nd.tmpl.Repository.Postgres.CreateGo},
 		{Path: nd.input.DomainPath + "/repository/create_test.go", Data: nd.tmpl.Repository.Postgres.CreateTestGo},
 		{Path: nd.input.DomainPath + "/repository/delete.go", Data: nd.tmpl.Repository.Postgres.DeleteGo},
@@ -165,6 +168,7 @@ func (nd *NewDomain) createPostgresRepository() error {
 
 func (nd *NewDomain) createDynamoRepository() error {
 	fileList := []dtos.FileEntry{
+		{Path: nd.input.DomainPath + "/repository/.mockery.pkg.yml", Data: nd.tmpl.Repository.Dynamo.DotMockeryPkgYml},
 		{Path: nd.input.DomainPath + "/repository/interfaces.go", Data: nd.tmpl.Repository.Dynamo.InterfacesGo},
 		{Path: nd.input.DomainPath + "/repository/repository.go", Data: nd.tmpl.Repository.Dynamo.RepositoryGo},
 		{Path: nd.input.DomainPath + "/repository/provider.go", Data: nd.tmpl.Repository.Dynamo.ProviderGo},

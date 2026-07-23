@@ -1,3 +1,99 @@
+## v1.25.1 (2026-07-16)
+
+
+- chore(ci): update vendor hash for version 1.25.1
+- fix: wait for final postgres server (#204)
+- Co-authored-by: Cursor <cursoragent@cursor.com>
+
+## v1.25.0 (2026-05-18)
+
+
+- chore(ci): update vendor hash for version 1.25.0
+- feat: add OpenTelemetry-aware scaffolding to new:lambda, new:service and new:domain [DEV-542] (#203)
+- Co-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+
+## v1.24.0 (2026-05-18)
+
+
+- chore(ci): update vendor hash for version 1.24.0
+- feat: [DEV-536] publish version and update alias after function deploy (#202)
+- Co-authored-by: Claude Sonnet 4.6 <noreply@anthropic.com>
+
+## v1.23.1 (2026-04-16)
+
+
+- chore(ci): update vendor hash for version 1.23.1
+- chore: add SyncSecretsDry flag to skip secrets sync in prod deployments (#200)
+
+## v1.23.0 (2026-04-09)
+
+
+- chore(ci): update vendor hash for version 1.23.0
+- feat: support multiple functions in deploy:func commands (#198)
+- Co-authored-by: Ariel Santos <ariel.santos@draftea.com>
+
+## v1.22.0 (2026-04-09)
+
+
+- chore(ci): update vendor hash for version 1.22.0
+- feat: [DEV-477] deploy commands (#197)
+- Co-authored-by: Ariel Santos <ariel.santos@draftea.com>
+
+## v1.21.2 (2026-03-11)
+
+
+- chore(ci): update vendor hash for version 1.21.2
+- chore: [PLA-224] add dbconnect command for SSM port-forwarding tunnels (#196)
+- Co-authored-by: Ariel Santos <ariel.santos@draftea.com>
+
+## v1.21.1 (2026-02-25)
+
+
+- chore(ci): update vendor hash for version 1.21.1
+- refactor: change build strategy to merge (#195)
+
+## v1.21.0 (2026-02-25)
+
+
+- chore(ci): update vendor hash for version 1.21.0
+- feat: no TTY option for mockery (#194)
+
+## v1.20.1 (2026-01-30)
+
+
+- chore(ci): update vendor hash for version 1.20.1
+- chore: [DEV-411] update service templates (#191)
+- Co-authored-by: Ariel Santos <ariel.santos@draftea.com>
+
+## v1.20.0 (2026-01-29)
+
+
+- chore(ci): update vendor hash for version 1.20.0
+- feat: enhance formatting functions to support dynamic paths for code generation [DEV-409] (#190)
+- ci: bump actions/checkout from 5 to 6 (#177)
+- Signed-off-by: dependabot[bot] <support@github.com>
+Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Co-authored-by: Eduardo Aguilar Yépez <dante.aguilar41@gmail.com>
+
+## v1.19.2 (2026-01-21)
+
+
+- chore(ci): update vendor hash for version 1.19.2
+- chore: run init.sql on migrate up command (#189)
+
+## v1.19.1 (2026-01-21)
+
+
+- chore(ci): update vendor hash for version 1.19.1
+- chore: improve draft new service command (#188)
+
+## v1.19.0 (2026-01-16)
+
+
+- chore(ci): update vendor hash for version 1.19.0
+- feat: enhance new:domain with dynamic database config and CLI flags (#187)
+- Co-authored-by: Claude Sonnet 4.5 <noreply@anthropic.com>
+
 ## v1.18.0 (2025-11-17)
 
 

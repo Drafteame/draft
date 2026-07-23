@@ -32,7 +32,7 @@ type ServiceTemplatesConfig struct {
 
 type ServiceTemplatesConfigSls struct {
 	EnvironmentYAML []byte
-	IamYAML         []byte
+	ResourcesYAML   []byte
 }
 
 type ServiceTemplatesLambda struct {

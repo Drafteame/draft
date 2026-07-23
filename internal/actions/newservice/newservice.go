@@ -19,16 +19,16 @@ func New(input dtos.ServiceInput) *NewService {
 }
 
 func (ns *NewService) Exec() error {
+	if errPre := ns.preCreate(); errPre != nil {
+		return errPre
+	}
+
 	tmpl, err := templates.NewServiceTemplates(ns.input)
 	if err != nil {
 		return err
 	}
 
 	ns.tmpl = tmpl
-
-	if errPre := ns.preCreate(); errPre != nil {
-		return errPre
-	}
 
 	if errExec := ns.exec(); errExec != nil {
 		return errExec
@@ -62,6 +62,7 @@ func (ns *NewService) createAllDirs() error {
 	folders := []string{
 		ns.input.ServicePath + "/config/app",
 		ns.input.ServicePath + "/config/sls",
+		ns.input.ServicePath + "/config/otel-layer",
 	}
 
 	return dirs.Create(folders...)
@@ -104,7 +105,8 @@ func (ns *NewService) getFileList() []dtos.FileEntry {
 		{Path: "/config/app/app.pkl", Data: ns.tmpl.Config.App.AppPkl},
 		{Path: "/config/app/modules.pkl", Data: ns.tmpl.Config.App.ModulesPkl},
 		{Path: "/config/sls/environment.yml", Data: ns.tmpl.Config.Sls.EnvironmentYAML},
-		{Path: "/config/sls/iam.yml", Data: ns.tmpl.Config.Sls.IamYAML},
+		{Path: "/config/sls/resources.yml", Data: ns.tmpl.Config.Sls.ResourcesYAML},
+		{Path: "/config/otel-layer/collector.yaml", Data: ns.tmpl.Config.Sls.OtelCollectorYAML},
 	}
 
 	entries = append(entries, ns.getEntries()...)
