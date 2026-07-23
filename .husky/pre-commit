@@ -2,7 +2,7 @@
 
 . "$(dirname "$0")/_/husky.sh"
 
-MOD_VERSION="1.24.0"
+MOD_VERSION="1.25.0"
 
 sh ./.husky/pre-commit-scripts/go-mod-tidy.sh && \
 sh ./.husky/pre-commit-scripts/force-mod-version.sh "$MOD_VERSION" && \

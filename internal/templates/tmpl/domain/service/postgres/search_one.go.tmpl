@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Service) SearchOne(ctx context.Context, filters options.SearchFilters) (domain.{{.DomainNamePascal}}, error) {
-	ctx, span := oteltracer.StartSpan(ctx, oteltracer.ServiceSpanName("{{.DomainNameLower}}", "search_one"),
+	ctx, span := oteltracer.StartSpan(ctx, oteltracer.ServiceSpanName("{{.DomainNameLower}}", "search-one"),
 		oteltracer.WithAttributes(
 			oteltracer.Domain("{{.DomainNameLower}}"),
 			oteltracer.Layer(oteltracer.LayerService),

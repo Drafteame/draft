@@ -11,7 +11,6 @@ type ServiceInput struct {
 	LambdaType            string
 	CustomDomain          bool
 	DomainPath            string
-	WarmupEnabled         bool
 	FrameVersion          string
 	QueueARN              string
 	HTTPPath              string
@@ -23,7 +22,6 @@ type ServiceInput struct {
 	NextLambdaImportTag   string
 	IsLegacy              bool
 	UseDig                bool
-	UseOtel               bool
 	ReservedConcurrency   string
 	RoleName              string
 }

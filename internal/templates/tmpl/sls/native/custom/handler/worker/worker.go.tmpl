@@ -4,14 +4,19 @@ import (
 	"context"
 	"encoding/json"
 
-	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
 )
 
 {{- if .UseIdempotency }}
 func Worker(r *Resources) func(ctx context.Context, input json.RawMessage) (result any, err error) {
 	return func(ctx context.Context, input json.RawMessage) (result any, err error) {
-		newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.{{ .CustomTypePath }}.{{ .LambdaName }}.handler.worker.Worker")
-		defer segment.Close(nil)
+		newCtx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "worker"),
+			oteltracer.WithAttributes(
+				oteltracer.Domain("{{ .ServiceName }}"),
+				oteltracer.Layer(oteltracer.LayerHandler),
+			),
+		)
+		defer span.End()
 
 		// Defer cleanup: remove idempotency key on retryable errors to allow retry
 		defer func() {
@@ -22,7 +27,7 @@ func Worker(r *Resources) func(ctx context.Context, input json.RawMessage) (resu
 
 		// Set idempotency key to prevent duplicate processing
 		if err = r.SetIdempotency(newCtx, input); err != nil {
-			_ = segment.AddError(err)
+			oteltracer.SetError(newCtx, err)
 			return nil, err
 		}
 
@@ -39,8 +44,13 @@ func Worker(r *Resources) func(ctx context.Context, input json.RawMessage) (resu
 {{- else }}
 func Worker(r *Resources) func(ctx context.Context, input json.RawMessage) (any, error) {
 	return func(ctx context.Context, input json.RawMessage) (any, error) {
-		newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.{{ .CustomTypePath }}.{{ .LambdaName }}.handler.worker.Worker")
-		defer segment.Close(nil)
+		ctx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "worker"),
+			oteltracer.WithAttributes(
+				oteltracer.Domain("{{ .ServiceName }}"),
+				oteltracer.Layer(oteltracer.LayerHandler),
+			),
+		)
+		defer span.End()
 
 		// TODO: implement worker logic here
 		// You can unmarshal the input into your custom type:

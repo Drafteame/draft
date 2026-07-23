@@ -9,14 +9,9 @@
   DD_API_KEY: ${ssm:/service/datadog/${self:custom.stage}/API_KEY}
   DD_SITE: datadoghq.com
   DD_ENV: ${self:custom.stage}
-  DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT: "localhost:4318"
   DD_SERVERLESS_LOGS_ENABLED: "true"
-  AWS_XRAY_CONTEXT_MISSING: IGNORE_ERROR
   OTEL_TRACES_ENABLED: "true"
   OTEL_METRICS_ENABLED: "true"
-  OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:4318"
-  OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "http://localhost:4319"
-  OPENTELEMETRY_COLLECTOR_CONFIG_URI: "/opt/collector.yaml"
 
 feature:
   environment:

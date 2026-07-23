@@ -9,11 +9,7 @@ import (
 	"{{ .PackageName }}/pkg/config/loader/readers"
 	"{{ .PackageName }}/pkg/lambda/decorators"
 	"{{ .PackageName }}/pkg/lambda/decorators/health"
-	{{ if .UseOtel -}}
 	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
-	{{- else -}}
-	"{{ .PackageName }}/projects/framev2/pkg/tracer"
-	{{- end }}
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}plain/{{ .LambdaName }}/handler/dtos"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}plain/{{ .LambdaName }}/handler/worker"
 )
@@ -26,7 +22,6 @@ var embedFs embed.FS
 func Bootstrap() any {
 	return decorators.Handle(
 		func(ctx context.Context, input dtos.Input) (dtos.Output, error) {
-			{{ if .UseOtel -}}
 			ctx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "{{ .LambdaName }}"),
 				oteltracer.WithAttributes(
 					oteltracer.Domain("{{ .ServiceName }}"),
@@ -50,26 +45,6 @@ func Bootstrap() any {
 			}
 
 			return worker.Worker(r)(ctx, input)
-			{{- else -}}
-			newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.plain.{{ .LambdaName }}.handler.Bootstrap")
-			defer span.Close(nil)
-
-			loader.LoadConfigs(newCtx, loader.WithReaders(
-				readers.Embed(embedFs, "embed/.app-config.yaml", yaml.Parser(), readers.IsRequired()),
-			))
-
-			r, err := worker.ProvideResources(newCtx)
-			if err != nil {
-				_ = span.AddError(err)
-				return dtos.Output{}, err
-			}
-
-			if health.CheckHealthRequest(newCtx) {
-				return dtos.Output{}, nil
-			}
-
-			return worker.Worker(r)(newCtx, input)
-			{{- end }}
 		},
 	)
 }

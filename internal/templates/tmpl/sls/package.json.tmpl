@@ -3,15 +3,14 @@
   "devDependencies": {
     "serverless": "^3.38.0",
     "serverless-hooks": "^1.0.0",
-    "serverless-plugin-datadog": "^5.103.0",
     "serverless-plugin-go": "^0.1.0",
     "serverless-plugin-lambda-insights": "^2.0.0",
     "serverless-plugin-s3-remover": "^0.1.6",
     "serverless-plugin-pkl": "^0.2.1",
     "serverless-prune-plugin": "^2.1.0",
-    "serverless-plugin-warmup": "^8.3.0",
     {{ if .CustomDomain }}"serverless-domain-manager": "^8.0.0",
-    {{ end }}"serverless-plugin-stage-reserved-concurrency": "^0.5.0"
+    {{ end }}"serverless-plugin-stage-reserved-concurrency": "^0.5.0",
+    "serverless-plugin-lambda-deployments": "^0.3.0"
   },
   "scripts": { {{ if .CustomDomain }}
     "hook:before:deploy:deploy": "./node_modules/.bin/sls create_domain --stage $STAGE --verbose $SLS_PARAMS", {{ end }}

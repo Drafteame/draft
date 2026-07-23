@@ -4,8 +4,6 @@ import (
 	"context"
 
 	"{{ .PackageName }}/pkg/providers"
-	"{{ .PackageName }}/projects/framev2/pkg/tracer"
-
 )
 
 type Resources struct {
@@ -13,9 +11,6 @@ type Resources struct {
 }
 
 func ProvideResources(ctx context.Context, opts ...providers.Option) (*Resources, error) {
-	_, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.cron.{{ .LambdaName }}.handler.worker.ProvideResources")
-	defer span.Close(nil)
-
 	// TODO: Implement your resources logic here
 
 	return &Resources{
