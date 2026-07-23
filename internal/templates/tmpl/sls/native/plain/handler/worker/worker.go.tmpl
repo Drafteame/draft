@@ -3,14 +3,19 @@ package worker
 import (
 	"context"
 
-	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}plain/{{ .LambdaName }}/handler/dtos"
 )
 
 func Worker(r *Resources) func(ctx context.Context, input dtos.Input) (dtos.Output, error) {
 	return func(ctx context.Context, input dtos.Input) (dtos.Output, error) {
-		newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.plain.{{ .LambdaName }}.handler.worker.Worker")
-		defer segment.Close(nil)
+		ctx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "worker"),
+			oteltracer.WithAttributes(
+				oteltracer.Domain("{{ .ServiceName }}"),
+				oteltracer.Layer(oteltracer.LayerHandler),
+			),
+		)
+		defer span.End()
 
 		// TODO: implement worker logic here
 		response := dtos.Output{}

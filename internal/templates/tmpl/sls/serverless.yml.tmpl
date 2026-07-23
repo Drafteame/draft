@@ -4,8 +4,8 @@ frameworkVersion: '3'
 
 custom:
   stage: ${opt:stage, self:provider.stage}
-  otelCollectorLayerArn: arn:aws:lambda:${self:provider.region}:901920570463:layer:aws-otel-collector-arm64-ver-0-117-0:1
-  ddExtensionLayerArn: arn:aws:lambda:us-east-2:464622532012:layer:Datadog-Extension-ARM:96
+  otelCollectorLayerArn: ${file(../../config/sls/layers.yml):otelCollectorLayerArn}
+  ddExtensionLayerArn: ${file(../../config/sls/layers.yml):ddExtensionLayerArn}
   otelFunctionLayers:
     - Ref: OtelCollectorConfigLambdaLayer
     - ${self:custom.otelCollectorLayerArn}

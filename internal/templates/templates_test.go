@@ -15,7 +15,7 @@ import (
 )
 
 // baseLambdaInput returns a populated LambdaInput for template rendering tests.
-func baseLambdaInput(lambdaType string, useOtel bool) dtos.LambdaInput {
+func baseLambdaInput(lambdaType string) dtos.LambdaInput {
 	return dtos.LambdaInput{
 		PackageName:         "github.com/Drafteame/api",
 		ServicePath:         "services/testsvc",
@@ -34,7 +34,6 @@ func baseLambdaInput(lambdaType string, useOtel bool) dtos.LambdaInput {
 		NextLambdaImportTag: data.NextLambdaImportTag,
 		IsLegacy:            false,
 		UseDig:              false,
-		UseOtel:             useOtel,
 		ReservedConcurrency: "medium.eventDriven",
 		UseIdempotency:      false,
 	}
@@ -59,7 +58,6 @@ func baseServiceInput() dtos.ServiceInput {
 		NextLambdaImportTag:   data.NextLambdaImportTag,
 		IsLegacy:              false,
 		UseDig:                false,
-		UseOtel:               true,
 		ReservedConcurrency:   "medium.http",
 		RoleName:              "Testsvc",
 	}
@@ -103,139 +101,85 @@ func assertYAMLSyntax(t *testing.T, name string, content []byte) {
 // =============================================================================
 
 func TestLambdaTemplates_Plain(t *testing.T) {
-	for _, useOtel := range []bool{false, true} {
-		name := "xray"
-		if useOtel {
-			name = "otel"
-		}
+	tmpl, err := templates.NewLambdaTemplates(baseLambdaInput("plain"))
+	require.NoError(t, err)
 
-		t.Run(name, func(t *testing.T) {
-			tmpl, err := templates.NewLambdaTemplates(baseLambdaInput("plain", useOtel))
-			require.NoError(t, err)
-
-			p := tmpl.Plain
-			assertGoSyntax(t, "plain/main.go", p.MainGo)
-			assertYAMLSyntax(t, "plain/lambda-config.yml", p.LambdaConfigYAML)
-			assertGoSyntax(t, "plain/handler/bootstrap.go", p.Handler.BootstrapGo)
-			assertGoSyntax(t, "plain/handler/worker/worker.go", p.Handler.WorkerGo)
-			assertGoSyntax(t, "plain/handler/worker/resources.go", p.Handler.ResourcesGo)
-			assertGoSyntax(t, "plain/handler/dtos/dto.go", p.Handler.DtosGo)
-		})
-	}
+	p := tmpl.Plain
+	assertGoSyntax(t, "plain/main.go", p.MainGo)
+	assertYAMLSyntax(t, "plain/lambda-config.yml", p.LambdaConfigYAML)
+	assertGoSyntax(t, "plain/handler/bootstrap.go", p.Handler.BootstrapGo)
+	assertGoSyntax(t, "plain/handler/worker/worker.go", p.Handler.WorkerGo)
+	assertGoSyntax(t, "plain/handler/worker/resources.go", p.Handler.ResourcesGo)
+	assertGoSyntax(t, "plain/handler/dtos/dto.go", p.Handler.DtosGo)
 }
 
 func TestLambdaTemplates_HTTP(t *testing.T) {
-	for _, useOtel := range []bool{false, true} {
-		name := "xray"
-		if useOtel {
-			name = "otel"
-		}
+	tmpl, err := templates.NewLambdaTemplates(baseLambdaInput("http"))
+	require.NoError(t, err)
 
-		t.Run(name, func(t *testing.T) {
-			tmpl, err := templates.NewLambdaTemplates(baseLambdaInput("http", useOtel))
-			require.NoError(t, err)
-
-			h := tmpl.HTTP
-			assertGoSyntax(t, "http/main.go", h.MainGo)
-			assertYAMLSyntax(t, "http/lambda-config.yml", h.LambdaConfigYAML)
-			assertGoSyntax(t, "http/handler/bootstrap.go", h.Handler.BootstrapGo)
-			assertGoSyntax(t, "http/handler/worker/worker.go", h.Handler.WorkerGo)
-			assertGoSyntax(t, "http/handler/worker/resources.go", h.Handler.ResourcesGo)
-		})
-	}
+	h := tmpl.HTTP
+	assertGoSyntax(t, "http/main.go", h.MainGo)
+	assertYAMLSyntax(t, "http/lambda-config.yml", h.LambdaConfigYAML)
+	assertGoSyntax(t, "http/handler/bootstrap.go", h.Handler.BootstrapGo)
+	assertGoSyntax(t, "http/handler/worker/worker.go", h.Handler.WorkerGo)
+	assertGoSyntax(t, "http/handler/worker/resources.go", h.Handler.ResourcesGo)
 }
 
 func TestLambdaTemplates_SQS(t *testing.T) {
-	for _, useOtel := range []bool{false, true} {
-		name := "xray"
-		if useOtel {
-			name = "otel"
-		}
+	tmpl, err := templates.NewLambdaTemplates(baseLambdaInput("sqs"))
+	require.NoError(t, err)
 
-		t.Run(name, func(t *testing.T) {
-			tmpl, err := templates.NewLambdaTemplates(baseLambdaInput("sqs", useOtel))
-			require.NoError(t, err)
-
-			s := tmpl.Sqs
-			assertGoSyntax(t, "sqs/main.go", s.MainGo)
-			assertYAMLSyntax(t, "sqs/lambda-config.yml", s.LambdaConfigYAML)
-			assertGoSyntax(t, "sqs/handler/bootstrap.go", s.Handler.BootstrapGo)
-			assertGoSyntax(t, "sqs/handler/worker/worker.go", s.Handler.WorkerGo)
-			assertGoSyntax(t, "sqs/handler/worker/resources.go", s.Handler.ResourcesGo)
-			assertGoSyntax(t, "sqs/handler/dtos/dto.go", s.Handler.DtosGo)
-			assertGoSyntax(t, "sqs/handler/worker/idempotency.go", s.Handler.IdempotencyGo)
-			assertGoSyntax(t, "sqs/handler/worker/interfaces.go", s.Handler.InterfacesGo)
-		})
-	}
+	s := tmpl.Sqs
+	assertGoSyntax(t, "sqs/main.go", s.MainGo)
+	assertYAMLSyntax(t, "sqs/lambda-config.yml", s.LambdaConfigYAML)
+	assertGoSyntax(t, "sqs/handler/bootstrap.go", s.Handler.BootstrapGo)
+	assertGoSyntax(t, "sqs/handler/worker/worker.go", s.Handler.WorkerGo)
+	assertGoSyntax(t, "sqs/handler/worker/resources.go", s.Handler.ResourcesGo)
+	assertGoSyntax(t, "sqs/handler/dtos/dto.go", s.Handler.DtosGo)
+	assertGoSyntax(t, "sqs/handler/worker/idempotency.go", s.Handler.IdempotencyGo)
+	assertGoSyntax(t, "sqs/handler/worker/interfaces.go", s.Handler.InterfacesGo)
 }
 
 func TestLambdaTemplates_Cron(t *testing.T) {
-	for _, useOtel := range []bool{false, true} {
-		name := "xray"
-		if useOtel {
-			name = "otel"
-		}
+	tmpl, err := templates.NewLambdaTemplates(baseLambdaInput("cron"))
+	require.NoError(t, err)
 
-		t.Run(name, func(t *testing.T) {
-			tmpl, err := templates.NewLambdaTemplates(baseLambdaInput("cron", useOtel))
-			require.NoError(t, err)
-
-			c := tmpl.Cron
-			assertGoSyntax(t, "cron/main.go", c.MainGo)
-			assertYAMLSyntax(t, "cron/lambda-config.yml", c.LambdaConfigYAML)
-			assertGoSyntax(t, "cron/handler/bootstrap.go", c.Handler.BootstrapGo)
-			assertGoSyntax(t, "cron/handler/worker/worker.go", c.Handler.WorkerGo)
-		})
-	}
+	c := tmpl.Cron
+	assertGoSyntax(t, "cron/main.go", c.MainGo)
+	assertYAMLSyntax(t, "cron/lambda-config.yml", c.LambdaConfigYAML)
+	assertGoSyntax(t, "cron/handler/bootstrap.go", c.Handler.BootstrapGo)
+	assertGoSyntax(t, "cron/handler/worker/worker.go", c.Handler.WorkerGo)
 }
 
 func TestLambdaTemplates_SnsSqs(t *testing.T) {
-	for _, useOtel := range []bool{false, true} {
-		name := "xray"
-		if useOtel {
-			name = "otel"
-		}
+	tmpl, err := templates.NewLambdaTemplates(baseLambdaInput("snssqs"))
+	require.NoError(t, err)
 
-		t.Run(name, func(t *testing.T) {
-			tmpl, err := templates.NewLambdaTemplates(baseLambdaInput("snssqs", useOtel))
-			require.NoError(t, err)
-
-			ss := tmpl.SnsSqs
-			assertGoSyntax(t, "snssqs/main.go", ss.MainGo)
-			assertYAMLSyntax(t, "snssqs/lambda-config.yml", ss.LambdaConfigYAML)
-			assertGoSyntax(t, "snssqs/handler/bootstrap.go", ss.Handler.BootstrapGo)
-			assertGoSyntax(t, "snssqs/handler/worker/worker.go", ss.Handler.WorkerGo)
-			assertGoSyntax(t, "snssqs/handler/worker/resources.go", ss.Handler.ResourcesGo)
-			assertGoSyntax(t, "snssqs/handler/dtos/dto.go", ss.Handler.DtosGo)
-			assertGoSyntax(t, "snssqs/handler/worker/idempotency.go", ss.Handler.IdempotencyGo)
-			assertGoSyntax(t, "snssqs/handler/worker/interfaces.go", ss.Handler.InterfacesGo)
-		})
-	}
+	ss := tmpl.SnsSqs
+	assertGoSyntax(t, "snssqs/main.go", ss.MainGo)
+	assertYAMLSyntax(t, "snssqs/lambda-config.yml", ss.LambdaConfigYAML)
+	assertGoSyntax(t, "snssqs/handler/bootstrap.go", ss.Handler.BootstrapGo)
+	assertGoSyntax(t, "snssqs/handler/worker/worker.go", ss.Handler.WorkerGo)
+	assertGoSyntax(t, "snssqs/handler/worker/resources.go", ss.Handler.ResourcesGo)
+	assertGoSyntax(t, "snssqs/handler/dtos/dto.go", ss.Handler.DtosGo)
+	assertGoSyntax(t, "snssqs/handler/worker/idempotency.go", ss.Handler.IdempotencyGo)
+	assertGoSyntax(t, "snssqs/handler/worker/interfaces.go", ss.Handler.InterfacesGo)
 }
 
 func TestLambdaTemplates_Custom(t *testing.T) {
-	for _, useOtel := range []bool{false, true} {
-		name := "xray"
-		if useOtel {
-			name = "otel"
-		}
+	tmpl, err := templates.NewLambdaTemplates(baseLambdaInput("custom"))
+	require.NoError(t, err)
 
-		t.Run(name, func(t *testing.T) {
-			tmpl, err := templates.NewLambdaTemplates(baseLambdaInput("custom", useOtel))
-			require.NoError(t, err)
-
-			c := tmpl.Custom
-			assertGoSyntax(t, "custom/main.go", c.MainGo)
-			assertYAMLSyntax(t, "custom/lambda-config.yml", c.LambdaConfigYAML)
-			assertGoSyntax(t, "custom/handler/bootstrap.go", c.Handler.BootstrapGo)
-			assertGoSyntax(t, "custom/handler/worker/worker.go", c.Handler.WorkerGo)
-			assertGoSyntax(t, "custom/handler/worker/resources.go", c.Handler.ResourcesGo)
-			assertGoSyntax(t, "custom/handler/worker/idempotency.go", c.Handler.IdempotencyGo)
-			assertGoSyntax(t, "custom/handler/worker/interfaces.go", c.Handler.InterfacesGo)
-			assertGoSyntax(t, "custom/handler/worker/worker_setup_test.go", c.Handler.WorkerSetupTestGo)
-			assertGoSyntax(t, "custom/handler/worker/worker_test.go", c.Handler.WorkerTestGo)
-		})
-	}
+	c := tmpl.Custom
+	assertGoSyntax(t, "custom/main.go", c.MainGo)
+	assertYAMLSyntax(t, "custom/lambda-config.yml", c.LambdaConfigYAML)
+	assertGoSyntax(t, "custom/handler/bootstrap.go", c.Handler.BootstrapGo)
+	assertGoSyntax(t, "custom/handler/worker/worker.go", c.Handler.WorkerGo)
+	assertGoSyntax(t, "custom/handler/worker/resources.go", c.Handler.ResourcesGo)
+	assertGoSyntax(t, "custom/handler/worker/idempotency.go", c.Handler.IdempotencyGo)
+	assertGoSyntax(t, "custom/handler/worker/interfaces.go", c.Handler.InterfacesGo)
+	assertGoSyntax(t, "custom/handler/worker/worker_setup_test.go", c.Handler.WorkerSetupTestGo)
+	assertGoSyntax(t, "custom/handler/worker/worker_test.go", c.Handler.WorkerTestGo)
 }
 
 // =============================================================================
@@ -250,7 +194,6 @@ func TestServiceTemplates(t *testing.T) {
 	assertGoSyntax(t, "deps.go", tmpl.DepsGo)
 	assertYAMLSyntax(t, "config/sls/environment.yml", tmpl.Config.Sls.EnvironmentYAML)
 	assertYAMLSyntax(t, "config/sls/resources.yml", tmpl.Config.Sls.ResourcesYAML)
-	assertYAMLSyntax(t, "config/otel-layer/collector.yaml", tmpl.Config.Sls.OtelCollectorYAML)
 
 	// Initial plain lambda generated with service
 	p := tmpl.Lambda.Plain

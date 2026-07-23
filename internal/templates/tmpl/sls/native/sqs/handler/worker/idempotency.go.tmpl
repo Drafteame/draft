@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"{{ .PackageName }}/pkg/log"
-	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}sqs/{{ .LambdaName }}/handler/dtos"
 )
 
@@ -19,8 +19,13 @@ func (r *Resources) GenerateIdempotencyKey(ctx context.Context, event dtos.Event
 }
 
 func (r *Resources) SetIdempotency(ctx context.Context, evt dtos.Event) (err error) {
-	newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.sqs.{{ .LambdaName }}.handler.Worker.Resources.SetIdempotency")
-	defer segment.Close(nil)
+	newCtx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "set-idempotency"),
+		oteltracer.WithAttributes(
+			oteltracer.Domain("{{ .ServiceName }}"),
+			oteltracer.Layer(oteltracer.LayerHandler),
+		),
+	)
+	defer span.End()
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -35,11 +40,16 @@ func (r *Resources) SetIdempotency(ctx context.Context, evt dtos.Event) (err err
 }
 
 func (r *Resources) DelIdempotency(ctx context.Context, key string) error {
-	newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.sqs.{{ .LambdaName }}.handler.Worker.Resources.DelIdempotency")
-	defer segment.Close(nil)
+	newCtx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "del-idempotency"),
+		oteltracer.WithAttributes(
+			oteltracer.Domain("{{ .ServiceName }}"),
+			oteltracer.Layer(oteltracer.LayerHandler),
+		),
+	)
+	defer span.End()
 
 	if err := r.IdemService.Delete(newCtx, key); err != nil {
-		_ = segment.AddError(err)
+		oteltracer.SetError(newCtx, err)
 		logger.Get().Err(err).Fields(map[string]any{"key": key}).Error("error deleting idempotency key")
 		return err
 	}
@@ -48,13 +58,18 @@ func (r *Resources) DelIdempotency(ctx context.Context, key string) error {
 }
 
 func (r *Resources) deleteIdempotency(ctx context.Context, evt dtos.Event) error {
-	newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.sqs.{{ .LambdaName }}.handler.Worker.Resources.deleteIdempotency")
-	defer segment.Close(nil)
+	newCtx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "delete-idempotency"),
+		oteltracer.WithAttributes(
+			oteltracer.Domain("{{ .ServiceName }}"),
+			oteltracer.Layer(oteltracer.LayerHandler),
+		),
+	)
+	defer span.End()
 
 	key := r.GenerateIdempotencyKey(newCtx, evt, Action)
 
 	if err := r.DelIdempotency(newCtx, key); err != nil {
-		_ = segment.AddError(err)
+		oteltracer.SetError(newCtx, err)
 		logger.Get().Err(err).Fields(map[string]any{"key": key}).Error("error deleting idempotency key")
 		return err
 	}

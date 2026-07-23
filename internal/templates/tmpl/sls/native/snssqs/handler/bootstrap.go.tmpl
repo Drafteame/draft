@@ -16,11 +16,7 @@ import (
 	"{{ .PackageName }}/pkg/lambda/decorators"
 	"{{ .PackageName }}/pkg/lambda/decorators/health"
 	"{{ .PackageName }}/projects/framev2/pkg/publisher/types"
-	{{ if .UseOtel -}}
 	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
-	{{- else -}}
-	"{{ .PackageName }}/projects/framev2/pkg/tracer"
-	{{- end }}
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}snssqs/{{ .LambdaName }}/handler/dtos"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}snssqs/{{ .LambdaName }}/handler/worker"
 )
@@ -32,7 +28,6 @@ var embedFs embed.FS
 func Bootstrap() any {
 	return decorators.Handle(
 		func(ctx context.Context, event events.SQSEvent) (events.SQSEventResponse, error) {
-			{{ if .UseOtel -}}
 			ctx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "{{ .LambdaName }}"),
 				oteltracer.WithAttributes(
 					oteltracer.Domain("{{ .ServiceName }}"),
@@ -64,34 +59,6 @@ func Bootstrap() any {
 				Consume()
 
 			return sqshelpers.Response(ctx, errConsume)
-			{{- else -}}
-			newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.snssqs.{{ .LambdaName }}.handler.Bootstrap")
-			defer span.Close(nil)
-
-			loader.LoadConfigs(newCtx, loader.WithReaders(
-				readers.Embed(embedFs, "embed/.app-config.yaml", yaml.Parser()),
-			))
-
-			r, err := worker.ProvideResources(newCtx)
-			if err != nil {
-				_ = span.AddError(err)
-				return events.SQSEventResponse{}, err
-			}
-
-			if health.CheckHealthRequest(newCtx) {
-				return events.SQSEventResponse{}, nil
-			}
-
-			errConsume := consumer.NewSqs(newCtx, event, worker.Worker(r), sqs.WithSNS[types.Event[dtos.Event]]()).
-				WithWorkerDecorators(consumerdecorators.IdempotencyOnDeadline[types.Event[dtos.Event]](
-					worker.Action,
-					r.GenerateIdempotencyKey,
-					r.DelIdempotency,
-				)).
-				Consume()
-
-			return sqshelpers.Response(newCtx, errConsume)
-			{{- end }}
 		},
 	)
 }

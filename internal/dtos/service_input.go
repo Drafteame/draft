@@ -23,7 +23,6 @@ type ServiceInput struct {
 	NextLambdaImportTag   string
 	IsLegacy              bool
 	UseDig                bool
-	UseOtel               bool
 	ReservedConcurrency   string
 	RoleName              string
 }

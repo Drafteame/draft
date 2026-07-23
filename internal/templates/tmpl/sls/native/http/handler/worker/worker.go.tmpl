@@ -3,7 +3,7 @@ package worker
 import (
 	"net/http"
 
-	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}http/{{ .LambdaName }}/handler/dtos"
 	"github.com/labstack/echo/v4"
 )
@@ -12,8 +12,14 @@ const Path = "{{ .HTTPPathAPIGateway }}"
 
 func Worker(r *Resources) echo.HandlerFunc {
 	return func(ec echo.Context) error {
-		newCtx, segment := tracer.BeginSubSegment(ec.Request().Context(), "{{ .ServiceName }}.http.{{ .LambdaName }}.handler.worker.Worker")
-		defer segment.Close(nil)
+		_, span := oteltracer.StartSpan(ec.Request().Context(),
+			oteltracer.HandlerSpanName("{{ .ServiceName }}", ec.Request().Method),
+			oteltracer.WithAttributes(
+				oteltracer.Domain("{{ .ServiceName }}"),
+				oteltracer.Layer(oteltracer.LayerHandler),
+			),
+		)
+		defer span.End()
 
 		var request dtos.RequestDTO
 

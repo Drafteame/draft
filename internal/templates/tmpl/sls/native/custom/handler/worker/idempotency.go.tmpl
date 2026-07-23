@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"{{ .PackageName }}/projects/framev2/pkg/logger"
-	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
 )
 
 const (
@@ -14,8 +14,13 @@ const (
 )
 
 func (r *Resources) GenerateIdempotencyKey(ctx context.Context, input json.RawMessage) string {
-	_, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.{{ .CustomTypePath }}.{{ .LambdaName }}.handler.worker.Resources.GenerateIdempotencyKey")
-	defer segment.Close(nil)
+	_, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "generate-idempotency-key"),
+		oteltracer.WithAttributes(
+			oteltracer.Domain("{{ .ServiceName }}"),
+			oteltracer.Layer(oteltracer.LayerHandler),
+		),
+	)
+	defer span.End()
 
 	// TODO: Reimplement this function to generate a unique idempotency key based on your event structure
 	// Example: Parse the input and extract a unique identifier
@@ -30,8 +35,13 @@ func (r *Resources) GenerateIdempotencyKey(ctx context.Context, input json.RawMe
 }
 
 func (r *Resources) SetIdempotency(ctx context.Context, input json.RawMessage) (err error) {
-	newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.{{ .CustomTypePath }}.{{ .LambdaName }}.handler.Worker.Resources.SetIdempotency")
-	defer segment.Close(nil)
+	newCtx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "set-idempotency"),
+		oteltracer.WithAttributes(
+			oteltracer.Domain("{{ .ServiceName }}"),
+			oteltracer.Layer(oteltracer.LayerHandler),
+		),
+	)
+	defer span.End()
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -46,11 +56,16 @@ func (r *Resources) SetIdempotency(ctx context.Context, input json.RawMessage) (
 }
 
 func (r *Resources) DelIdempotency(ctx context.Context, key string) error {
-	newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.{{ .CustomTypePath }}.{{ .LambdaName }}.handler.Worker.Resources.DelIdempotency")
-	defer segment.Close(nil)
+	newCtx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "del-idempotency"),
+		oteltracer.WithAttributes(
+			oteltracer.Domain("{{ .ServiceName }}"),
+			oteltracer.Layer(oteltracer.LayerHandler),
+		),
+	)
+	defer span.End()
 
 	if err := r.IdemService.Delete(newCtx, key); err != nil {
-		_ = segment.AddError(err)
+		oteltracer.SetError(newCtx, err)
 		logger.Get().Err(err).Fields(map[string]any{"key": key}).Error("error deleting idempotency key")
 		return err
 	}
@@ -59,13 +74,18 @@ func (r *Resources) DelIdempotency(ctx context.Context, key string) error {
 }
 
 func (r *Resources) deleteIdempotency(ctx context.Context, input json.RawMessage) error {
-	newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.{{ .CustomTypePath }}.{{ .LambdaName }}.handler.Worker.Resources.deleteIdempotency")
-	defer segment.Close(nil)
+	newCtx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "delete-idempotency"),
+		oteltracer.WithAttributes(
+			oteltracer.Domain("{{ .ServiceName }}"),
+			oteltracer.Layer(oteltracer.LayerHandler),
+		),
+	)
+	defer span.End()
 
 	key := r.GenerateIdempotencyKey(newCtx, input)
 
 	if err := r.DelIdempotency(newCtx, key); err != nil {
-		_ = segment.AddError(err)
+		oteltracer.SetError(newCtx, err)
 		logger.Get().Err(err).Fields(map[string]any{"key": key}).Error("error deleting idempotency key")
 		return err
 	}

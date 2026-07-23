@@ -6,7 +6,7 @@ import (
 	"{{ .PackageName }}/pkg/consumer/base"
 	"{{ .PackageName }}/projects/framev2/pkg/log"
 	"{{ .PackageName }}/projects/framev2/pkg/publisher/types"
-	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}snssqs/{{ .LambdaName }}/handler/dtos"
 )
 
@@ -17,8 +17,13 @@ const (
 
 func Worker(r *Resources) base.Worker[types.Event[dtos.Event]] {
 	return func(ctx context.Context, event types.Event[dtos.Event]) error {
-		newCtx, segment := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.snssqs.{{ .LambdaName }}.handler.worker.Worker")
-		defer segment.Close(nil)
+		newCtx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "worker"),
+			oteltracer.WithAttributes(
+				oteltracer.Domain("{{ .ServiceName }}"),
+				oteltracer.Layer(oteltracer.LayerHandler),
+			),
+		)
+		defer span.End()
 
 		// TODO: Implement your worker logic here
 
