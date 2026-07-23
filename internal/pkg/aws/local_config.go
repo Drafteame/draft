@@ -13,7 +13,7 @@ func GetLocalCredentials() (map[string]string, error) {
 		return nil, err
 	}
 
-	accountID, err := GetAccountID()
+	accountID, err := GetAccountID("draftea-dev")
 	if err != nil {
 		return nil, err
 	}

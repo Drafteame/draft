@@ -4,12 +4,16 @@ import (
 	"context"
 	"embed"
 
-  "{{ .PackageName }}/config/loaders/parsers/yaml"
+	"{{ .PackageName }}/config/loaders/parsers/yaml"
 	"{{ .PackageName }}/pkg/config/loader"
 	"{{ .PackageName }}/pkg/config/loader/readers"
 	"{{ .PackageName }}/pkg/lambda/decorators"
 	"{{ .PackageName }}/pkg/lambda/decorators/health"
-  "{{ .PackageName }}/projects/framev2/pkg/tracer"
+	{{ if .UseOtel -}}
+	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
+	{{- else -}}
+	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+	{{- end }}
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}plain/{{ .LambdaName }}/handler/dtos"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}plain/{{ .LambdaName }}/handler/worker"
 )
@@ -22,6 +26,31 @@ var embedFs embed.FS
 func Bootstrap() any {
 	return decorators.Handle(
 		func(ctx context.Context, input dtos.Input) (dtos.Output, error) {
+			{{ if .UseOtel -}}
+			ctx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "{{ .LambdaName }}"),
+				oteltracer.WithAttributes(
+					oteltracer.Domain("{{ .ServiceName }}"),
+					oteltracer.Layer(oteltracer.LayerHandler),
+				),
+			)
+			defer span.End()
+
+			loader.LoadConfigs(ctx, loader.WithReaders(
+				readers.Embed(embedFs, "embed/.app-config.yaml", yaml.Parser(), readers.IsRequired()),
+			))
+
+			r, err := worker.ProvideResources(ctx)
+			if err != nil {
+				oteltracer.SetError(ctx, err)
+				return dtos.Output{}, err
+			}
+
+			if health.CheckHealthRequest(ctx) {
+				return dtos.Output{}, nil
+			}
+
+			return worker.Worker(r)(ctx, input)
+			{{- else -}}
 			newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.plain.{{ .LambdaName }}.handler.Bootstrap")
 			defer span.Close(nil)
 
@@ -35,11 +64,12 @@ func Bootstrap() any {
 				return dtos.Output{}, err
 			}
 
-	  if health.CheckHealthRequest(newCtx) {
-		return dtos.Output{}, nil
-	  }
+			if health.CheckHealthRequest(newCtx) {
+				return dtos.Output{}, nil
+			}
 
 			return worker.Worker(r)(newCtx, input)
+			{{- end }}
 		},
 	)
 }

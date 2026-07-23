@@ -15,7 +15,11 @@ import (
 	"{{ .PackageName }}/pkg/lambda/decorators/health"
 	"{{ .PackageName }}/pkg/lambda/decorators"
 	"{{ .PackageName }}/projects/framev2/engine/http/middlewares"
+	{{ if .UseOtel -}}
+	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
+	{{- else -}}
 	"{{ .PackageName }}/projects/framev2/pkg/tracer"
+	{{- end }}
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}http/{{ .LambdaName }}/handler/worker"
 )
 
@@ -27,6 +31,37 @@ var embedFs embed.FS
 func Bootstrap() any {
 	return decorators.Handle(
 		func(ctx context.Context, event events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+			{{ if .UseOtel -}}
+			ctx, span := oteltracer.StartSpan(ctx, oteltracer.HandlerSpanName("{{ .ServiceName }}", "{{ .LambdaName }}"),
+				oteltracer.WithAttributes(
+					oteltracer.Domain("{{ .ServiceName }}"),
+					oteltracer.Layer(oteltracer.LayerHandler),
+				),
+			)
+			defer span.End()
+
+			loader.LoadConfigs(ctx, loader.WithReaders(
+				readers.Embed(embedFs, "embed/.app-config.yaml", yaml.Parser()),
+			))
+
+			r, err := worker.ProvideResources(ctx)
+			if err != nil {
+				oteltracer.SetError(ctx, err)
+				return events.APIGatewayV2HTTPResponse{
+					StatusCode: http.StatusInternalServerError,
+					Body:       `{"message": "error processing request", "error": "` + err.Error() + `" }`,
+				}, nil
+			}
+
+			if health.CheckHealthRequest(ctx) {
+				return events.APIGatewayV2HTTPResponse{}, nil
+			}
+
+			e := lecho.New()
+			e.{{ .HTTPMethod }}(worker.Path, worker.Worker(r), middlewares.AuthAPIKey())
+
+			return lhttp.Serve(ctx, event, e)
+			{{- else -}}
 			newCtx, span := tracer.BeginSubSegment(ctx, "{{ .ServiceName }}.http.{{ .LambdaName }}.handler.Bootstrap")
 			defer span.Close(nil)
 
@@ -50,6 +85,7 @@ func Bootstrap() any {
 			e.{{ .HTTPMethod }}(worker.Path, worker.Worker(r), middlewares.AuthAPIKey())
 
 			return lhttp.Serve(newCtx, event, e)
+			{{- end }}
 		},
 	)
 }

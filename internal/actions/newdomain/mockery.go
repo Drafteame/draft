@@ -2,29 +2,20 @@ package newdomain
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/charmbracelet/huh/spinner"
-	"gopkg.in/yaml.v3"
 
-	"github.com/Drafteame/draft/internal/pkg/exec"
-	"github.com/Drafteame/draft/internal/pkg/files"
+	"github.com/Drafteame/draft/internal/actions/mockery"
 )
 
 func (nd *NewDomain) mockery() error {
 	var err error
 
-	spin := spinner.New().Title("Adding mockery configs")
+	spin := spinner.New().Title("Generating mocks")
 
 	action := func() {
-		spin.Update("Creating mockery package")
-		err = nd.addMockeryPackages()
-		if err != nil {
-			return
-		}
-
-		spin.Update("Running mockery to create files")
-		err = nd.createMockeryFiles()
+		spin.Update("Running mockery to create mocks")
+		err = nd.runMockery()
 		if err != nil {
 			return
 		}
@@ -35,52 +26,14 @@ func (nd *NewDomain) mockery() error {
 	return errors.Join(spinErr, err)
 }
 
-func (nd *NewDomain) addMockeryPackages() error {
-	paths := map[string]string{
-		nd.input.PackageName + "/" + nd.input.DomainPath + "/service":    nd.input.DomainPath + "/service/mocks",
-		nd.input.PackageName + "/" + nd.input.DomainPath + "/repository": nd.input.DomainPath + "/repository/mocks",
-	}
+func (nd *NewDomain) runMockery() error {
+	// Build the config file paths for both service and repository
+	serviceMockeryPath := nd.input.DomainPath + "/service/.mockery.pkg.yml"
+	repositoryMockeryPath := nd.input.DomainPath + "/repository/.mockery.pkg.yml"
 
-	mockeryConfig, err := files.Read(".mockery.yml")
-	if err != nil {
-		return err
-	}
+	configFiles := []string{serviceMockeryPath, repositoryMockeryPath}
 
-	config := map[string]any{}
+	m := mockery.New(nd.ctx, configFiles, false, false)
 
-	if err := yaml.Unmarshal(mockeryConfig, &config); err != nil {
-		return err
-	}
-
-	packages, ok := config["packages"].(map[string]any)
-	if !ok {
-		return fmt.Errorf("packages key not found or invalid in .mockery.yml")
-	}
-
-	for pkgPath, mocksDir := range paths {
-		packages[pkgPath] = map[string]any{
-			"config": map[string]any{
-				"all":       true,
-				"dir":       mocksDir,
-				"filename":  "mock_{{.InterfaceName}}.go",
-				"inpackage": false,
-			},
-		}
-	}
-
-	newConfig, err := yaml.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	return files.Create(".mockery.yml", newConfig)
-}
-
-func (nd *NewDomain) createMockeryFiles() error {
-	_, err := exec.Command("mockery")
-	if err != nil {
-		return fmt.Errorf("command 'mockery' failed: %w", err)
-	}
-
-	return nil
+	return m.Exec()
 }

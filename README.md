@@ -18,6 +18,7 @@ A CLI tool to scaffold services, Lambda functions, and domain layers for Draftea
   - [Invoking Lambdas Locally](#invoking-lambdas-locally)
   - [Local Development](#local-development)
   - [Sentry Management](#sentry-management)
+  - [Database Tunnel Management](#database-tunnel-management)
   - [Global Flags](#global-flags)
 - [Development](#development)
   - [Project Structure](#project-structure)
@@ -36,6 +37,8 @@ A CLI tool to scaffold services, Lambda functions, and domain layers for Draftea
 - **Go**: 1.23.x or higher
 - **Task**: For running development commands (optional)
 - **Husky**: For git hooks (optional)
+- **AWS CLI**: Required for `db:connect` commands (`aws` in PATH)
+- **Session Manager Plugin**: Required for SSM port-forwarding tunnels ([installation guide](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html))
 
 ## Installation
 
@@ -150,12 +153,36 @@ For an HTTP Lambda:
 
 ### Creating a Domain Layer
 
-Generate a complete domain layer following Domain-Driven Design principles.
+Generate a complete domain layer following Domain-Driven Design principles with support for both interactive and non-interactive modes.
 
 #### Basic Usage
 
+**Interactive Mode** (prompts for all values):
 ```bash
 draft new:domain
+```
+
+**Non-Interactive Mode** (CI/CD friendly):
+```bash
+# Postgres domain
+draft new:domain \
+  --domain-path users \
+  --db-type postgres \
+  --table-name public.users \
+  --db-prefix usr \
+  --db-name general
+
+# DynamoDB domain
+draft new:domain \
+  --domain-path products \
+  --db-type dynamo \
+  --table-name ProductsTable
+```
+
+**Mixed Mode** (some flags, some prompts):
+```bash
+draft new:domain --domain-path orders --db-type postgres
+# Prompts only for table-name, db-prefix, and db-name
 ```
 
 #### Database Support
@@ -167,12 +194,45 @@ Draft supports multiple database backends:
 | **Postgres** | Full CRUD, search with filters/pagination, repository builders, DAOs, domain models |
 | **DynamoDB** | Simplified repository pattern, optimized for NoSQL |
 
+#### Database Configuration
+
+For Postgres domains, available databases are **dynamically loaded** from `.local-migrate-config.yml`:
+
+1. Reads `migrations.databases` from project root configuration
+2. Filters out test databases (`group: 'test'`)
+3. Presents remaining databases as options
+4. Converts database names to PascalCase for provider functions
+
+**Example**: If `.local-migrate-config.yml` contains:
+```yaml
+migrations:
+  databases:
+    general:
+      folder: 'postgres'
+    general_test:
+      group: 'test'  # This will be filtered out
+    user_preferences:
+      folder: 'user-preferences'
+    games_core:
+      folder: 'games-core'
+```
+
+The command will:
+- Show options: `General`, `User Preferences`, `Games Core`
+- Generate provider calls: `ProvideGeneral`, `ProvideUserPreferences`, `ProvideGamesCore`
+
 #### Flags
 
-```bash
-# Specify working directory
-draft new:domain -w path/to/project
-```
+| Flag | Short | Description | Example |
+|------|-------|-------------|---------|
+| `--domain-path` | `-p` | Path to domain folder | `users`, `auth/sessions` |
+| `--db-type` | | Database type | `postgres`, `dynamo` |
+| `--table-name` | | Database table name | `public.users`, `ProductsTable` |
+| `--db-prefix` | | ID prefix for Postgres (3 chars) | `usr`, `ord`, `prd` |
+| `--db-name` | | Database name (from config) | `general`, `user_preferences` |
+| `--working-dir` | `-w` | Working directory | `path/to/project` |
+
+**Note**: The `--db-name` flag accepts snake_case database names as they appear in `.local-migrate-config.yml`. The tool automatically converts them to PascalCase for provider function names.
 
 #### What Gets Created (Postgres)
 
@@ -312,11 +372,14 @@ Failed packages:
 #### Integration with `new:domain`
 
 When creating domains with `draft new:domain`, mocks are automatically generated:
-- Domain service and repository packages are added to `.mockery.yml`
-- Mockery runs to generate mock implementations
+- Creates `.mockery.pkg.yml` files for service and repository packages
+- Calls the mockery action directly (reuses `internal/actions/mockery`)
+- Runs concurrently with `jobsNum=2` for service and repository
+- Provides progress reporting and error handling
+- Supports cancellation with Ctrl+C
 - Mocks are placed in `domain/service/mocks` and `domain/repository/mocks`
 
-**Note**: The `new:domain` action uses a simpler approach by directly updating `.mockery.yml` rather than the base/package config merging system.
+The domain command benefits from the same mockery infrastructure used by the standalone `draft mockery` command, including concurrent execution, progress tracking, and proper error handling.
 
 ---
 
@@ -400,6 +463,161 @@ draft sentry:project:delete
 
 ---
 
+### Database Tunnel Management
+
+Manage SSM port-forwarding tunnels to remote databases. Tunnels are opened via AWS Session Manager, connecting your local machine to RDS (Postgres), ElastiCache (Redis), or DocumentDB (MongoDB) instances in private subnets.
+
+#### Prerequisites
+
+- AWS CLI configured with the appropriate profiles
+- [Session Manager Plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) installed
+- Config file at `~/.draft/dbconnect.yml` (see [Config File Format](#config-file-format) below)
+
+#### Subcommands
+
+| Command | Description |
+|---------|-------------|
+| `draft db:connect list` | List all available connections from config |
+| `draft db:connect status` | Show status of active tunnels |
+| `draft db:connect start <type> <name>` | Open a tunnel to a database |
+| `draft db:connect stop [type] [name]` | Close one or more tunnels |
+
+#### List Available Connections
+
+```bash
+draft db:connect list
+```
+
+Displays a table of all connections that can be derived from the config file by combining every service with every environment:
+
+```
+ENV   TYPE      NAME                    HOST                                              REMOTE PORT   LOCAL PORT
+----------------------------------------------------------------------------------------------------------------------
+dev   mongo     main-dev                draftea-dev-maincluster.cluster-xxx.docdb.com     27017         56200
+dev   postgres  turbo-dev               turbo-dev.cluster-xxx.rds.amazonaws.com           5432          56024
+prod  postgres  turbo-prod              turbo-prod.cluster-xxx.rds.amazonaws.com          5432          56011
+...
+```
+
+#### Check Tunnel Status
+
+```bash
+draft db:connect status
+```
+
+Shows all tunnels that have been started, including whether the process is still alive:
+
+```
+TYPE      NAME        STATUS   PID     ADDRESS
+---------------------------------------------------------
+postgres  turbo-dev   up       60452   localhost:56024
+redis     turbo-dev   down     -       -
+```
+
+Dead tunnels (e.g. killed by idle timeout) are automatically cleaned up from state on the next `status` or `start` call.
+
+#### Start a Tunnel
+
+```bash
+# Start with the port defined in config
+draft db:connect start postgres turbo-dev
+
+# Start with a custom local port
+draft db:connect start postgres turbo-dev --port 15432
+```
+
+The connection name must end with `-dev` or `-prod`. The tunnel runs as a background process; the command returns once the port is confirmed to be listening (up to 10 seconds).
+
+#### Flags
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--port` | `-p` | Override the local port for this connection |
+
+#### Stop Tunnels
+
+```bash
+# Stop a specific tunnel
+draft db:connect stop postgres turbo-dev
+
+# Stop all tunnels of a given type
+draft db:connect stop postgres
+
+# Stop all active tunnels
+draft db:connect stop --all
+```
+
+#### Config File Format
+
+Create `~/.draft/dbconnect.yml`:
+
+```yaml
+defaults:
+  postgres:
+    remote_port: 5432
+  redis:
+    remote_port: 6379
+  mongo:
+    remote_port: 27017
+
+environments:
+  dev:
+    bastion:
+      target: i-0xxxxxxxxxxxxxxxxx   # EC2 instance ID of the bastion
+      profile: my-aws-dev-profile
+      region: us-east-2
+    clusters:
+      rds:   xxxxxxxxxx.us-east-2.rds.amazonaws.com      # RDS cluster suffix
+      cache: xxxxxxxxxx.use2.cache.amazonaws.com          # ElastiCache suffix
+      docdb: xxxxxxxxxx.us-east-2.docdb.amazonaws.com    # DocumentDB suffix
+
+  prod:
+    bastion:
+      target: i-0yyyyyyyyyyyyyyyyy
+      profile: my-aws-prod-profile
+      region: us-east-2
+    clusters:
+      rds:   yyyyyyyyyy.us-east-2.rds.amazonaws.com
+      cache: yyyyyyyyyy.use2.cache.amazonaws.com
+      docdb: yyyyyyyyyy.us-east-2.docdb.amazonaws.com
+
+connections:
+  postgres:
+    instances:
+      - name: my-service
+        local_ports:
+          dev: 56000
+          prod: 56001
+
+  redis:
+    instances:
+      - name: my-cache
+        local_ports:
+          dev: 56100
+          prod: 56101
+
+  mongo:
+    instances:
+      - name: main
+        local_ports:
+          dev: 56200
+          prod: 56201
+```
+
+**Host construction per engine:**
+
+| Type | Pattern |
+|------|---------|
+| `postgres` | `{service}-{env}.cluster-{clusters.rds}` |
+| `redis` | `{service}-{env}.{clusters.cache}` |
+| `mongo` | `draftea-{env}-maincluster.cluster-{clusters.docdb}` |
+
+#### Runtime State
+
+Active tunnels are persisted in `~/.draft/dbconnect.state.json`. This file is managed automatically — you do not need to edit it manually. When a tunnel dies (e.g. AWS idle timeout), the state file is **not** updated automatically; the stale entry is cleaned up the next time you run `status` or `start`.
+
+---
+
 ### Global Flags
 
 These flags are available for all commands:
@@ -474,6 +692,7 @@ draft/
 │       ├── log/                   # Logging utilities
 │       ├── format/                # Code formatting
 │       ├── constants/             # Shared constants
+│       ├── migrateconfig/         # Database config utilities
 │       └── ...                    # Other utilities
 ├── Taskfile.yml                   # Task runner configuration
 ├── go.mod                         # Go module definition
