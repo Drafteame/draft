@@ -10,7 +10,7 @@ import (
   dmnoptions "{{.PackageName}}/{{ .DomainPath }}/domain/options"
 	"{{.PackageName}}/{{ .DomainPath }}/service"
 	"{{.PackageName}}/pkg/providers"
-	"{{.PackageName}}/projects/framev2/pkg/logger"
+	"{{.PackageName}}/projects/framev2/pkg/log"
 )
 
 // Service is an abstration of the Service struct that allow to use a mock struct and the real struct at the same time
@@ -41,8 +41,7 @@ func ProvideService(opts ...providers.Option) (Service, error) {
 	srv, err := createServiceInstance(opts...)
 	if err != nil {
 	  initErr = err
-	  logger.Get().Err(err).Fields(map[string]any{"name": PrvService}).
-		Error("error creating service instance")
+	  log.Get().Error("error creating service instance", "name", PrvService, "error", err)
 	}
 
 	serviceInstance = srv

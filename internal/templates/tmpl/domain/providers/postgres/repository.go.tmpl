@@ -12,7 +12,7 @@ import (
 	"{{.PackageName}}/pkg/providers"
 	prvclock "{{.PackageName}}/pkg/providers/clock"
 	prvpostgres "{{.PackageName}}/pkg/providers/postgres"
-	"{{.PackageName}}/projects/framev2/pkg/logger"
+	"{{.PackageName}}/projects/framev2/pkg/log"
 )
 
 // Repository is an abstration of the Repository struct that allow to use a mock struct and the real struct at the same time
@@ -43,8 +43,7 @@ func ProvideRepository(opts ...providers.Option) (Repository, error) {
   	repo, err := createRepoInstance(opts...)
   	if err != nil {
   		initErr = err
-  		logger.Get().Err(err).Fields(map[string]any{"name": PrvRepository}).
-  			Error("error creating repository instance")
+  		log.Get().Error("error creating repository instance", "name", PrvRepository, "error", err)
   	}
 
   	repoInstance = repo
