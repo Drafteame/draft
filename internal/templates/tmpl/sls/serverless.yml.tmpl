@@ -12,9 +12,6 @@ custom:
     - ${self:custom.ddExtensionLayerArn}
   pklConfig: ${file(../../config/sls/pkl-config.yml):config}
   reservedConcurrency: ${file(../../config/sls/concurrency.yml):${self:custom.stage}.reservedConcurrency}
-  {{- if .WarmupEnabled }}
-  warmup: ${file(../../config/sls/concurrency.yml):${self:custom.stage}.warmup}
-  {{- end }}
   {{- if .CustomDomain }}
   customDomain: ${file(../../config/sls/domains.yml):${self:custom.stage}.customDomain}
   domain:
@@ -32,6 +29,12 @@ custom:
     cmd: 'go build -ldflags="-s -w" -tags "lambda.norpc,otel"'
     beforeBuild:
       - 'sh ../../scripts/build_pkl.sh "$PWD"'
+
+  group:
+    - {{ .NormalizedServiceName }}
+    - otel
+
+  deploymentSettings: ${file(../../config/sls/deploymentSettings.yml):deploymentSettings}
 
 provider:
   name: aws
@@ -74,9 +77,7 @@ plugins:
   - serverless-prune-plugin
   - serverless-plugin-s3-remover
   - serverless-plugin-stage-reserved-concurrency
-  {{- if .WarmupEnabled }}
-  - serverless-plugin-warmup
-  {{- end }}
   {{- if .CustomDomain }}
   - serverless-domain-manager
   {{- end }}
+  - serverless-plugin-lambda-deployments

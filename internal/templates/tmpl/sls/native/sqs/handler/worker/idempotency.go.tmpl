@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"{{ .PackageName }}/pkg/consumer/base"
 	"{{ .PackageName }}/projects/framev2/pkg/log"
 	oteltracer "{{ .PackageName }}/pkg/otel/tracer"
 	"{{ .PackageName }}/{{ .ServicePath }}/{{ if not .IsLegacy }}cmd/{{ end }}sqs/{{ .LambdaName }}/handler/dtos"

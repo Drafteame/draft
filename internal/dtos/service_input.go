@@ -11,7 +11,6 @@ type ServiceInput struct {
 	LambdaType            string
 	CustomDomain          bool
 	DomainPath            string
-	WarmupEnabled         bool
 	FrameVersion          string
 	QueueARN              string
 	HTTPPath              string

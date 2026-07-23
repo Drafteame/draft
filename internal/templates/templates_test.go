@@ -50,7 +50,6 @@ func baseServiceInput() dtos.ServiceInput {
 		LambdaType:            "plain",
 		CustomDomain:          false,
 		DomainPath:            "",
-		WarmupEnabled:         false,
 		FrameVersion:          "v2",
 		HasSentry:             false,
 		SentryDSN:             "",
@@ -209,16 +208,6 @@ func TestServiceTemplates_WithCustomDomain(t *testing.T) {
 	input := baseServiceInput()
 	input.CustomDomain = true
 	input.DomainPath = "api/v1"
-
-	tmpl, err := templates.NewServiceTemplates(input)
-	require.NoError(t, err)
-
-	assertYAMLSyntax(t, "serverless.yml", tmpl.ServerlessYAML)
-}
-
-func TestServiceTemplates_WithWarmup(t *testing.T) {
-	input := baseServiceInput()
-	input.WarmupEnabled = true
 
 	tmpl, err := templates.NewServiceTemplates(input)
 	require.NoError(t, err)
