@@ -52,7 +52,12 @@ func Start(input StartInput) error {
 		return err
 	}
 
-	pid, err := launchTunnel(resolved.Bastion, resolved.Host, resolved.RemotePort, localPort)
+	logPath, err := tunnelLogPath(key)
+	if err != nil {
+		return err
+	}
+
+	pid, err := launchTunnel(resolved.Bastion, resolved.Host, resolved.RemotePort, localPort, logPath)
 	if err != nil {
 		return err
 	}
@@ -77,7 +82,13 @@ func Start(input StartInput) error {
 	log.Infof("  PID     : %d", pid)
 	log.Infof("  Local   : localhost:%d", localPort)
 	log.Infof("  Remote  : %s:%d", resolved.Host, resolved.RemotePort)
+	log.Infof("  Log     : %s", logPath)
 	log.Infof("  Stop    : draft db:connect stop %s %s", input.DBType, input.Name)
+
+	if resolved.Serverless {
+		log.Warnf("ElastiCache Serverless requires TLS. Connect with: redis-cli -p %d --tls --insecure", localPort)
+		log.Warnf("(--insecure is needed because the certificate is *.serverless... and the client connects to localhost)")
+	}
 
 	return nil
 }

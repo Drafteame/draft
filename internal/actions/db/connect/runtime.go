@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/Drafteame/draft/internal/pkg/files"
 )
 
-const stateFileName = "dbconnect.state.json"
+const (
+	stateFileName = "dbconnect.state.json"
+	logsDirName   = "dbconnect-logs"
+)
 
 func stateFilePath() (string, error) {
 	home, err := os.UserHomeDir()
@@ -19,6 +23,19 @@ func stateFilePath() (string, error) {
 	}
 
 	return filepath.Join(home, ".draft", stateFileName), nil
+}
+
+// tunnelLogPath returns the file that captures SSM session output for a tunnel,
+// e.g. ~/.draft/dbconnect-logs/redis_api-cache-dev.log.
+func tunnelLogPath(key string) (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("could not determine home directory: %w", err)
+	}
+
+	name := strings.ReplaceAll(key, ":", "_") + ".log"
+
+	return filepath.Join(home, ".draft", logsDirName, name), nil
 }
 
 func loadRuntimeState() (RuntimeState, error) {

@@ -24,7 +24,7 @@ task hooks
 The project uses `go install` for distribution. Build artifacts are managed in `.bin/` directories (ignored by git).
 
 ### Testing
-No test suite is currently configured. The codebase does not contain test files.
+Run `go test ./...`. Tests exist for templates (`internal/templates`) and db:connect config resolution (`internal/actions/db/connect`).
 
 ### Running Draft Commands
 ```bash
@@ -251,6 +251,7 @@ Key behaviors:
 - **Subprocess isolation**: tunnel launched with `Setpgid=true` (own process group) so terminal doesn't hang and `stop` can kill the entire group including the Session Manager Plugin child
 - **Liveness verification**: `start` polls every 300ms (up to 10s) waiting for the local port to accept TCP connections before reporting success — avoids false positives
 - **Lazy state cleanup**: dead entries (idle timeout, manual kill) are cleaned from state on next `status` or `start` call — no background monitor needed
+- **Session logs**: `aws ssm` stdout/stderr go to `~/.draft/dbconnect-logs/<type>_<name>.log` (a file, not a pipe, so the detached tunnel survives `draft` exiting); the log tail is embedded in startup errors
 - **Connection name convention**: `{service}-{env}` (e.g. `turbo-dev`, `turbo-prod`) — `splitServiceEnv()` parses it back into service + env at resolution time
 
 ## Configuration Files
@@ -281,20 +282,25 @@ defaults:          # remote port per engine type
 environments:      # dev/prod bastions and cluster host suffixes
   dev:
     bastion: { target, profile, region }
-    clusters: { rds, cache, docdb }    # host suffix fragments
+    clusters: { rds, cache, cache_serverless, docdb }    # host suffix fragments
   prod: ...
 connections:       # instances per engine type
   postgres:
     instances:
       - name: turbo
         local_ports: { dev: 56000, prod: 56011 }
-  redis: ...
+  redis:
+    instances:
+      - name: api-cache
+        serverless: true                 # or { dev: true, prod: false }; redis only
+        local_ports: { dev: 56150, prod: 56151 }
   mongo: ...
 ```
 
 Host is built at runtime per engine:
 - **Postgres**: `{name}-{env}.cluster-{clusters.rds}`
 - **Redis**: `{name}-{env}.{clusters.cache}`
+- **Redis (serverless)**: `{name}-{env}-{clusters.cache_serverless}` (error if `cache_serverless` is unset; `serverless` on postgres/mongo is a validation error)
 - **MongoDB**: `draftea-{env}-maincluster.cluster-{clusters.docdb}`
 
 ## Code Standards

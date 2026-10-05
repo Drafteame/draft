@@ -491,13 +491,16 @@ draft db:connect list
 Displays a table of all connections that can be derived from the config file by combining every service with every environment:
 
 ```
-ENV   TYPE      NAME                    HOST                                              REMOTE PORT   LOCAL PORT
-----------------------------------------------------------------------------------------------------------------------
-dev   mongo     main-dev                draftea-dev-maincluster.cluster-xxx.docdb.com     27017         56200
-dev   postgres  turbo-dev               turbo-dev.cluster-xxx.rds.amazonaws.com           5432          56024
-prod  postgres  turbo-prod              turbo-prod.cluster-xxx.rds.amazonaws.com          5432          56011
+ENV   TYPE      NAME            SERVERLESS   HOST                                                      REMOTE PORT   LOCAL PORT
+-----------------------------------------------------------------------------------------------------------------------------------
+dev   mongo     main-dev        -            draftea-dev-maincluster.cluster-xxx.docdb.com             27017         56200
+dev   postgres  turbo-dev       -            turbo-dev.cluster-xxx.rds.amazonaws.com                   5432          56024
+prod  postgres  turbo-prod      -            turbo-prod.cluster-xxx.rds.amazonaws.com                  5432          56011
+dev   redis     api-cache-dev   yes          api-cache-dev-xxxxxx.serverless.use2.cache.amazonaws.com  6379          56150
 ...
 ```
+
+The `SERVERLESS` column marks ElastiCache Serverless instances. Entries with an invalid config (for example a serverless instance in an environment without `cache_serverless`) are skipped with a warning.
 
 #### Check Tunnel Status
 
@@ -527,6 +530,16 @@ draft db:connect start postgres turbo-dev --port 15432
 ```
 
 The connection name must end with `-dev` or `-prod`. The tunnel runs as a background process; the command returns once the port is confirmed to be listening (up to 10 seconds).
+
+The output of `aws ssm start-session` / `session-manager-plugin` is written to `~/.draft/dbconnect-logs/<type>_<name>.log`. If the session ends or times out before the local port is available, the end of that log is shown in the error. For example, a `no such host` from the bastion shows up there.
+
+**ElastiCache Serverless:** serverless caches require TLS. When you start a tunnel to a Redis instance marked `serverless`, draft prints a reminder:
+
+```bash
+redis-cli -p 56150 --tls --insecure
+```
+
+`--insecure` is needed because the certificate is issued for `*.serverless.<region>.cache.amazonaws.com` while the client connects to `localhost`.
 
 #### Flags
 
@@ -568,7 +581,8 @@ environments:
       region: us-east-2
     clusters:
       rds:   xxxxxxxxxx.us-east-2.rds.amazonaws.com      # RDS cluster suffix
-      cache: xxxxxxxxxx.use2.cache.amazonaws.com          # ElastiCache suffix
+      cache: xxxxxx.0001.use2.cache.amazonaws.com         # ElastiCache suffix
+      cache_serverless: xxxxxx.serverless.use2.cache.amazonaws.com  # ElastiCache Serverless suffix
       docdb: xxxxxxxxxx.us-east-2.docdb.amazonaws.com    # DocumentDB suffix
 
   prod:
@@ -578,7 +592,8 @@ environments:
       region: us-east-2
     clusters:
       rds:   yyyyyyyyyy.us-east-2.rds.amazonaws.com
-      cache: yyyyyyyyyy.use2.cache.amazonaws.com
+      cache: yyyyyy.0001.use2.cache.amazonaws.com
+      cache_serverless: yyyyyy.serverless.use2.cache.amazonaws.com
       docdb: yyyyyyyyyy.us-east-2.docdb.amazonaws.com
 
 connections:
@@ -595,6 +610,18 @@ connections:
         local_ports:
           dev: 56100
           prod: 56101
+      - name: api-cache
+        serverless: true            # ElastiCache Serverless (redis only)
+        local_ports:
+          dev: 56150
+          prod: 56151
+      - name: half-migrated-cache
+        serverless:                 # per-environment form
+          dev: true
+          prod: false
+        local_ports:
+          dev: 56160
+          prod: 56161
 
   mongo:
     instances:
@@ -610,7 +637,13 @@ connections:
 |------|---------|
 | `postgres` | `{service}-{env}.cluster-{clusters.rds}` |
 | `redis` | `{service}-{env}.{clusters.cache}` |
+| `redis` (`serverless`) | `{service}-{env}-{clusters.cache_serverless}` (dash before the cluster id, not a dot) |
 | `mongo` | `draftea-{env}-maincluster.cluster-{clusters.docdb}` |
+
+**`serverless` flag:** optional, defaults to `false`. Use `serverless: true` when every environment is serverless, or a per-environment map (`serverless: { dev: true, prod: false }`) when a cache is only migrated in some environments. Environments missing from the map count as `false`. Serverless is never auto-detected, so you have to set it in the config.
+
+- A serverless instance requires `environments.<env>.clusters.cache_serverless`. If that field is missing, `start` fails with a clear error and `list` skips the entry with a warning.
+- `serverless` is only valid for `redis`. Setting it on a `postgres` or `mongo` instance is a validation error: `start` fails and `list` skips the entry with a warning.
 
 #### Runtime State
 

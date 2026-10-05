@@ -1,6 +1,11 @@
 package connect
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"gopkg.in/yaml.v3"
+)
 
 // ConnConfig is the top-level structure of the YAML config file (~/.draft/dbconnect.yml).
 type ConnConfig struct {
@@ -31,7 +36,10 @@ type BastionConfig struct {
 type ClustersConfig struct {
 	RDS   string `yaml:"rds"`
 	Cache string `yaml:"cache"`
-	DocDB string `yaml:"docdb"`
+	// CacheServerless is the host suffix for ElastiCache Serverless caches,
+	// e.g. "6erhpv.serverless.use2.cache.amazonaws.com".
+	CacheServerless string `yaml:"cache_serverless"`
+	DocDB           string `yaml:"docdb"`
 }
 
 // ConnTypeConfig holds the instance list for one DB type.
@@ -41,9 +49,56 @@ type ConnTypeConfig struct {
 
 // ServiceConfig is a single instance entry inside a DB type.
 // LocalPorts maps environment name → local port, e.g. {"dev": 56000, "prod": 56011}.
+// Serverless marks a Redis instance as ElastiCache Serverless (only valid for redis).
 type ServiceConfig struct {
 	Name       string         `yaml:"name"`
+	Serverless ServerlessFlag `yaml:"serverless"`
 	LocalPorts map[string]int `yaml:"local_ports"`
+}
+
+// ServerlessFlag accepts either a plain bool (applies to every environment)
+// or a per-environment map, e.g. `serverless: true` or
+// `serverless: { dev: true, prod: false }`. Environments missing from the map
+// default to false.
+type ServerlessFlag struct {
+	all   bool
+	byEnv map[string]bool
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (f *ServerlessFlag) UnmarshalYAML(node *yaml.Node) error {
+	switch node.Kind {
+	case yaml.ScalarNode:
+		return node.Decode(&f.all)
+	case yaml.MappingNode:
+		return node.Decode(&f.byEnv)
+	default:
+		return fmt.Errorf("line %d: serverless must be a bool or a map of env → bool", node.Line)
+	}
+}
+
+// For reports whether the instance is serverless in the given environment.
+func (f ServerlessFlag) For(env string) bool {
+	if f.byEnv != nil {
+		return f.byEnv[env]
+	}
+
+	return f.all
+}
+
+// Any reports whether the instance is serverless in at least one environment.
+func (f ServerlessFlag) Any() bool {
+	if f.all {
+		return true
+	}
+
+	for _, v := range f.byEnv {
+		if v {
+			return true
+		}
+	}
+
+	return false
 }
 
 // ResolvedConnection contains all values needed to open an SSM tunnel,
@@ -57,6 +112,7 @@ type ResolvedConnection struct {
 	Host       string
 	RemotePort int
 	LocalPort  int
+	Serverless bool // true for ElastiCache Serverless redis instances (TLS required)
 }
 
 // RuntimeState holds the persisted state of active tunnels.
