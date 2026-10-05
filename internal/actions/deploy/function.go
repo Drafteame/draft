@@ -54,9 +54,14 @@ func DeployFunction(env EnvConfig, serviceArg string, functionNames []string) er
 		syncSecretsDry = "true"
 	}
 
+	// Use the service's local serverless binary, same as `npm run deploy` does
+	if !files.Exists(filepath.Join(absPath, "node_modules", ".bin", "sls")) {
+		return fmt.Errorf("serverless not found in %s/node_modules/.bin — add it to the service devDependencies", absPath)
+	}
+
 	log.Info("Packaging service...")
 	packageScript := fmt.Sprintf(
-		`cd %q && env STAGE=%s AWS_ACCOUNT=%s SLS_SYNC_SECRETS_DRY=%s sls package --stage %s --verbose --aws-profile %s`,
+		`cd %q && env STAGE=%s AWS_ACCOUNT=%s SLS_SYNC_SECRETS_DRY=%s ./node_modules/.bin/sls package --stage %s --verbose --aws-profile %s`,
 		absPath, stage, accountID, syncSecretsDry, stage, env.Profile,
 	)
 	if _, err := exec.Command(packageScript, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr)); err != nil {
