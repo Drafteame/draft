@@ -31,7 +31,10 @@ type BastionConfig struct {
 type ClustersConfig struct {
 	RDS   string `yaml:"rds"`
 	Cache string `yaml:"cache"`
-	DocDB string `yaml:"docdb"`
+	// CacheServerless is the host suffix for ElastiCache Serverless caches,
+	// e.g. "6erhpv.serverless.use2.cache.amazonaws.com".
+	CacheServerless string `yaml:"cache_serverless"`
+	DocDB           string `yaml:"docdb"`
 }
 
 // ConnTypeConfig holds the instance list for one DB type.
@@ -41,9 +44,16 @@ type ConnTypeConfig struct {
 
 // ServiceConfig is a single instance entry inside a DB type.
 // LocalPorts maps environment name → local port, e.g. {"dev": 56000, "prod": 56011}.
+// Serverless marks a Redis instance as ElastiCache Serverless in every environment (only valid for redis).
 type ServiceConfig struct {
 	Name       string         `yaml:"name"`
+	Serverless bool           `yaml:"serverless"`
 	LocalPorts map[string]int `yaml:"local_ports"`
+}
+
+// isServerlessRedis reports whether the instance is an ElastiCache Serverless redis.
+func (s ServiceConfig) isServerlessRedis(dbType string) bool {
+	return dbType == "redis" && s.Serverless
 }
 
 // ResolvedConnection contains all values needed to open an SSM tunnel,
@@ -57,6 +67,7 @@ type ResolvedConnection struct {
 	Host       string
 	RemotePort int
 	LocalPort  int
+	Serverless bool // true for ElastiCache Serverless redis instances (TLS required)
 }
 
 // RuntimeState holds the persisted state of active tunnels.

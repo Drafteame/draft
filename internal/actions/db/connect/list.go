@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
 // List prints all connections that can be derived from the config
@@ -19,6 +21,7 @@ func List() error {
 		dbType     string
 		name       string
 		host       string
+		serverless bool
 		remotePort int
 		localPort  int
 	}
@@ -35,14 +38,15 @@ func List() error {
 			for _, env := range envOrder {
 				envCfg := cfg.Environments[env]
 
-				host, err := buildHost(dbType, svc.Name, env, envCfg.Clusters)
-				if err != nil {
-					continue
-				}
-
 				localPort, ok := svc.LocalPorts[env]
 				if !ok {
 					continue // env not defined for this service, skip
+				}
+
+				host, err := buildHost(dbType, &svc, env, envCfg.Clusters)
+				if err != nil {
+					log.Warnf("skipping %s/%s-%s: %s", dbType, svc.Name, env, err)
+					continue
 				}
 
 				rows = append(rows, row{
@@ -50,6 +54,7 @@ func List() error {
 					dbType:     dbType,
 					name:       svc.Name + "-" + env,
 					host:       host,
+					serverless: svc.isServerlessRedis(dbType),
 					remotePort: remotePort,
 					localPort:  localPort,
 				})
@@ -102,13 +107,20 @@ func List() error {
 	wName += 2
 	wHost += 2
 
-	fmt.Printf("%-*s %-*s %-*s %-*s %-13s %s\n",
-		wEnv, "ENV", wType, "TYPE", wName, "NAME", wHost, "HOST", "REMOTE PORT", "LOCAL PORT")
-	fmt.Println(strings.Repeat("-", wEnv+wType+wName+wHost+26))
+	const wServerless = len("SERVERLESS") + 2
+
+	fmt.Printf("%-*s %-*s %-*s %-*s %-*s %-13s %s\n",
+		wEnv, "ENV", wType, "TYPE", wName, "NAME", wServerless, "SERVERLESS", wHost, "HOST", "REMOTE PORT", "LOCAL PORT")
+	fmt.Println(strings.Repeat("-", wEnv+wType+wName+wServerless+wHost+27))
 
 	for _, r := range rows {
-		fmt.Printf("%-*s %-*s %-*s %-*s %-13d %d\n",
-			wEnv, r.env, wType, r.dbType, wName, r.name, wHost, r.host, r.remotePort, r.localPort)
+		serverless := "-"
+		if r.serverless {
+			serverless = "yes"
+		}
+
+		fmt.Printf("%-*s %-*s %-*s %-*s %-*s %-13d %d\n",
+			wEnv, r.env, wType, r.dbType, wName, r.name, wServerless, serverless, wHost, r.host, r.remotePort, r.localPort)
 	}
 
 	return nil

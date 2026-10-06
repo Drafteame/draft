@@ -62,14 +62,14 @@ func (cfg ConnConfig) ResolveConnection(dbType, name string) (ResolvedConnection
 		return ResolvedConnection{}, fmt.Errorf("service %q not found in %s connections", service, dbType)
 	}
 
-	host, err := buildHost(dbType, service, env, envCfg.Clusters)
-	if err != nil {
-		return ResolvedConnection{}, err
-	}
-
 	localPort, ok := svc.LocalPorts[env]
 	if !ok {
 		return ResolvedConnection{}, fmt.Errorf("no local_port defined for env %q in service %q/%s", env, dbType, service)
+	}
+
+	host, err := buildHost(dbType, svc, env, envCfg.Clusters)
+	if err != nil {
+		return ResolvedConnection{}, err
 	}
 
 	remotePort := cfg.Defaults[dbType].RemotePort
@@ -83,6 +83,7 @@ func (cfg ConnConfig) ResolveConnection(dbType, name string) (ResolvedConnection
 		Host:       host,
 		RemotePort: remotePort,
 		LocalPort:  localPort,
+		Serverless: svc.isServerlessRedis(dbType),
 	}, nil
 }
 
@@ -99,17 +100,34 @@ func splitServiceEnv(name string) (service, env string, err error) {
 	return "", "", fmt.Errorf("connection name %q must end with -dev or -prod", name)
 }
 
-// buildHost constructs the remote host string for the given db type, service, and environment.
+// buildHost constructs the remote host string for the given db type, service instance, and environment.
 //
-// PostgreSQL : {service}-{env}.cluster-{clusters.rds}
-// Redis      : {service}-{env}.{clusters.cache}
-// MongoDB    : draftea-{env}-maincluster.cluster-{clusters.docdb}
-func buildHost(dbType, service, env string, clusters ClustersConfig) (string, error) {
+// PostgreSQL        : {service}-{env}.cluster-{clusters.rds}
+// Redis             : {service}-{env}.{clusters.cache}
+// Redis (serverless): {service}-{env}-{clusters.cache_serverless}
+// MongoDB           : draftea-{env}-maincluster.cluster-{clusters.docdb}
+//
+// The serverless flag is only valid for redis; setting it on any other type
+// is a configuration error.
+func buildHost(dbType string, svc *ServiceConfig, env string, clusters ClustersConfig) (string, error) {
+	if dbType != "redis" && svc.Serverless {
+		return "", fmt.Errorf("%s service %q has serverless set, but serverless is only supported for redis", dbType, svc.Name)
+	}
+
 	switch dbType {
 	case "postgres":
-		return fmt.Sprintf("%s-%s.cluster-%s", service, env, clusters.RDS), nil
+		return fmt.Sprintf("%s-%s.cluster-%s", svc.Name, env, clusters.RDS), nil
 	case "redis":
-		return fmt.Sprintf("%s-%s.%s", service, env, clusters.Cache), nil
+		if !svc.Serverless {
+			return fmt.Sprintf("%s-%s.%s", svc.Name, env, clusters.Cache), nil
+		}
+
+		if clusters.CacheServerless == "" {
+			return "", fmt.Errorf("redis service %q is marked serverless but environments.%s.clusters.cache_serverless is not set",
+				svc.Name, env)
+		}
+
+		return fmt.Sprintf("%s-%s-%s", svc.Name, env, clusters.CacheServerless), nil
 	case "mongo":
 		return fmt.Sprintf("draftea-%s-maincluster.cluster-%s", env, clusters.DocDB), nil
 	default:
