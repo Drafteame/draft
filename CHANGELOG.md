@@ -1,3 +1,11 @@
+## v1.27.0 (2026-10-06)
+
+
+- chore(ci): update vendor hash for version 1.27.0
+- feat(db-connect): support ElastiCache Serverless redis instances (#225)
+- Co-authored-by: Gabriel Bursztein <gabrielbursztein94@gmail.com>
+Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>
+
 ## v1.26.1 (2026-10-06)
 
 
