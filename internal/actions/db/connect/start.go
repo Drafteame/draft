@@ -83,12 +83,14 @@ func Start(input StartInput) error {
 	log.Infof("  Local   : localhost:%d", localPort)
 	log.Infof("  Remote  : %s:%d", resolved.Host, resolved.RemotePort)
 	log.Infof("  Log     : %s", logPath)
-	log.Infof("  Stop    : draft db:connect stop %s %s", input.DBType, input.Name)
 
+	// ElastiCache Serverless requires TLS; --insecure because the certificate
+	// is issued for *.serverless.<region>.cache.amazonaws.com, not localhost.
 	if resolved.Serverless {
-		log.Warnf("ElastiCache Serverless requires TLS. Connect with: redis-cli -p %d --tls --insecure", localPort)
-		log.Warnf("(--insecure is needed because the certificate is *.serverless... and the client connects to localhost)")
+		log.Infof("  Connect : redis-cli -p %d --tls --insecure", localPort)
 	}
+
+	log.Infof("  Stop    : draft db:connect stop %s %s", input.DBType, input.Name)
 
 	return nil
 }

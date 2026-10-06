@@ -533,10 +533,10 @@ The connection name must end with `-dev` or `-prod`. The tunnel runs as a backgr
 
 The output of `aws ssm start-session` / `session-manager-plugin` is written to `~/.draft/dbconnect-logs/<type>_<name>.log`. If the session ends or times out before the local port is available, the end of that log is shown in the error. For example, a `no such host` from the bastion shows up there.
 
-**ElastiCache Serverless:** serverless caches require TLS. When you start a tunnel to a Redis instance marked `serverless`, draft prints a reminder:
+**ElastiCache Serverless:** serverless caches require TLS. When you start a tunnel to a Redis instance marked `serverless`, draft prints the command to connect:
 
 ```bash
-redis-cli -p 56150 --tls --insecure
+  Connect : redis-cli -p 56150 --tls --insecure
 ```
 
 `--insecure` is needed because the certificate is issued for `*.serverless.<region>.cache.amazonaws.com` while the client connects to `localhost`.
@@ -615,13 +615,10 @@ connections:
         local_ports:
           dev: 56150
           prod: 56151
-      - name: half-migrated-cache
-        serverless:                 # per-environment form
-          dev: true
-          prod: false
-        local_ports:
+      - name: dev-only-cache
+        serverless: true
+        local_ports:                # only listed for the envs that have a port
           dev: 56160
-          prod: 56161
 
   mongo:
     instances:
@@ -640,7 +637,7 @@ connections:
 | `redis` (`serverless`) | `{service}-{env}-{clusters.cache_serverless}` (dash before the cluster id, not a dot) |
 | `mongo` | `draftea-{env}-maincluster.cluster-{clusters.docdb}` |
 
-**`serverless` flag:** optional, defaults to `false`. Use `serverless: true` when every environment is serverless, or a per-environment map (`serverless: { dev: true, prod: false }`) when a cache is only migrated in some environments. Environments missing from the map count as `false`. Serverless is never auto-detected, so you have to set it in the config.
+**`serverless` flag:** optional bool, defaults to `false`. `serverless: true` applies to every environment the instance defines in `local_ports`; an environment without a local port is not listed. Serverless is never auto-detected, so you have to set it in the config.
 
 - A serverless instance requires `environments.<env>.clusters.cache_serverless`. If that field is missing, `start` fails with a clear error and `list` skips the entry with a warning.
 - `serverless` is only valid for `redis`. Setting it on a `postgres` or `mongo` instance is a validation error: `start` fails and `list` skips the entry with a warning.

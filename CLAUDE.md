@@ -292,7 +292,7 @@ connections:       # instances per engine type
   redis:
     instances:
       - name: api-cache
-        serverless: true                 # or { dev: true, prod: false }; redis only
+        serverless: true                 # redis only, applies to every env
         local_ports: { dev: 56150, prod: 56151 }
   mongo: ...
 ```

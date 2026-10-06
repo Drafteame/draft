@@ -44,9 +44,9 @@ connections:
       - name: api-cache
         serverless: true
         local_ports: { dev: 56150, prod: 56151 }
-      - name: mixed-cache
-        serverless: { dev: true, prod: false }
-        local_ports: { dev: 56160, prod: 56161 }
+      - name: dev-only-cache
+        serverless: true
+        local_ports: { dev: 56160 }
   mongo:
     instances:
       - name: main
@@ -110,19 +110,10 @@ func TestResolveConnection(t *testing.T) {
 			wantErr:  `redis service "api-cache" is marked serverless but environments.prod.clusters.cache_serverless is not set`,
 		},
 		{
-			name:           "redis per-env serverless, serverless env",
-			dbType:         "redis",
-			connName:       "mixed-cache-dev",
-			wantHost:       "mixed-cache-dev-6erhpv.serverless.use2.cache.amazonaws.com",
-			wantServerless: true,
-			wantLocalPort:  56160,
-		},
-		{
-			name:          "redis per-env serverless, regular env",
-			dbType:        "redis",
-			connName:      "mixed-cache-prod",
-			wantHost:      "mixed-cache-prod.kct7ey.0001.use2.cache.amazonaws.com",
-			wantLocalPort: 56161,
+			name:     "redis serverless without local port reports missing port first",
+			dbType:   "redis",
+			connName: "dev-only-cache-prod",
+			wantErr:  `no local_port defined for env "prod" in service "redis"/dev-only-cache`,
 		},
 		{
 			name:     "serverless on postgres is rejected",
@@ -189,21 +180,21 @@ func TestBuildHost(t *testing.T) {
 		{
 			name:     "redis serverless",
 			dbType:   "redis",
-			svc:      ServiceConfig{Name: "api-cache", Serverless: ServerlessFlag{all: true}},
+			svc:      ServiceConfig{Name: "api-cache", Serverless: true},
 			clusters: clusters,
 			want:     "api-cache-dev-6erhpv.serverless.use2.cache.amazonaws.com",
 		},
 		{
 			name:     "redis serverless missing suffix",
 			dbType:   "redis",
-			svc:      ServiceConfig{Name: "api-cache", Serverless: ServerlessFlag{all: true}},
+			svc:      ServiceConfig{Name: "api-cache", Serverless: true},
 			clusters: ClustersConfig{Cache: clusters.Cache},
 			wantErr:  true,
 		},
 		{
 			name:     "mongo serverless rejected",
 			dbType:   "mongo",
-			svc:      ServiceConfig{Name: "main", Serverless: ServerlessFlag{byEnv: map[string]bool{"prod": true}}},
+			svc:      ServiceConfig{Name: "main", Serverless: true},
 			clusters: clusters,
 			wantErr:  true,
 		},
@@ -227,38 +218,6 @@ func TestBuildHost(t *testing.T) {
 
 			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
-		})
-	}
-}
-
-func TestServerlessFlagUnmarshal(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		wantDev  bool
-		wantProd bool
-		wantErr  bool
-	}{
-		{name: "omitted", input: `name: x`},
-		{name: "bool true", input: `serverless: true`, wantDev: true, wantProd: true},
-		{name: "bool false", input: `serverless: false`},
-		{name: "per env", input: `serverless: { dev: true }`, wantDev: true},
-		{name: "invalid", input: `serverless: [true]`, wantErr: true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var svc ServiceConfig
-			err := yaml.Unmarshal([]byte(tt.input), &svc)
-
-			if tt.wantErr {
-				require.Error(t, err)
-				return
-			}
-
-			require.NoError(t, err)
-			assert.Equal(t, tt.wantDev, svc.Serverless.For("dev"))
-			assert.Equal(t, tt.wantProd, svc.Serverless.For("prod"))
 		})
 	}
 }

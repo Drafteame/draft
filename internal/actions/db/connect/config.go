@@ -62,14 +62,14 @@ func (cfg ConnConfig) ResolveConnection(dbType, name string) (ResolvedConnection
 		return ResolvedConnection{}, fmt.Errorf("service %q not found in %s connections", service, dbType)
 	}
 
-	host, err := buildHost(dbType, svc, env, envCfg.Clusters)
-	if err != nil {
-		return ResolvedConnection{}, err
-	}
-
 	localPort, ok := svc.LocalPorts[env]
 	if !ok {
 		return ResolvedConnection{}, fmt.Errorf("no local_port defined for env %q in service %q/%s", env, dbType, service)
+	}
+
+	host, err := buildHost(dbType, svc, env, envCfg.Clusters)
+	if err != nil {
+		return ResolvedConnection{}, err
 	}
 
 	remotePort := cfg.Defaults[dbType].RemotePort
@@ -83,7 +83,7 @@ func (cfg ConnConfig) ResolveConnection(dbType, name string) (ResolvedConnection
 		Host:       host,
 		RemotePort: remotePort,
 		LocalPort:  localPort,
-		Serverless: dbType == "redis" && svc.Serverless.For(env),
+		Serverless: svc.isServerlessRedis(dbType),
 	}, nil
 }
 
@@ -110,7 +110,7 @@ func splitServiceEnv(name string) (service, env string, err error) {
 // The serverless flag is only valid for redis; setting it on any other type
 // is a configuration error.
 func buildHost(dbType string, svc *ServiceConfig, env string, clusters ClustersConfig) (string, error) {
-	if dbType != "redis" && svc.Serverless.Any() {
+	if dbType != "redis" && svc.Serverless {
 		return "", fmt.Errorf("%s service %q has serverless set, but serverless is only supported for redis", dbType, svc.Name)
 	}
 
@@ -118,7 +118,7 @@ func buildHost(dbType string, svc *ServiceConfig, env string, clusters ClustersC
 	case "postgres":
 		return fmt.Sprintf("%s-%s.cluster-%s", svc.Name, env, clusters.RDS), nil
 	case "redis":
-		if !svc.Serverless.For(env) {
+		if !svc.Serverless {
 			return fmt.Sprintf("%s-%s.%s", svc.Name, env, clusters.Cache), nil
 		}
 

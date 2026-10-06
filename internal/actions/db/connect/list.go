@@ -54,7 +54,7 @@ func List() error {
 					dbType:     dbType,
 					name:       svc.Name + "-" + env,
 					host:       host,
-					serverless: dbType == "redis" && svc.Serverless.For(env),
+					serverless: svc.isServerlessRedis(dbType),
 					remotePort: remotePort,
 					localPort:  localPort,
 				})

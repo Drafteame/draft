@@ -11,6 +11,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/Drafteame/draft/internal/pkg/dirs"
 )
 
 // checkPortFree returns an error if the given local TCP port is already in use.
@@ -48,7 +50,7 @@ func launchTunnel(bastion BastionConfig, host string, remotePort, localPort int,
 		return 0, fmt.Errorf("failed to build SSM parameters: %w", err)
 	}
 
-	if err := os.MkdirAll(filepath.Dir(logPath), 0o755); err != nil {
+	if err := dirs.Create(filepath.Dir(logPath)); err != nil {
 		return 0, fmt.Errorf("failed to create tunnel log directory: %w", err)
 	}
 
