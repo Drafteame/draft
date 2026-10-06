@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Drafteame/draft/internal/pkg/dirs"
 	"gopkg.in/yaml.v3"
 
 	"github.com/Drafteame/draft/internal/pkg/constants"
-	"github.com/Drafteame/draft/internal/pkg/dirs"
 )
 
 func Read(path string) ([]byte, error) {
