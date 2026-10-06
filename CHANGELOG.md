@@ -1,3 +1,9 @@
+## v1.26.1 (2026-10-06)
+
+
+- chore(ci): update vendor hash for version 1.26.1
+- fix(deploy): use service-local sls binary in deploy:func commands (#224)
+
 ## v1.26.0 (2026-07-23)
 
 
