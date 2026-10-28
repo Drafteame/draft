@@ -69,8 +69,8 @@ func deployServiceToDir(env EnvConfig, absPath, accountID string) error {
 	}
 
 	script := fmt.Sprintf(
-		`cd %q && npm install && env STAGE=%s AWS_ACCOUNT=%s SLS_PARAMS=%q SLS_SYNC_SECRETS_DRY=%s npm run deploy`,
-		absPath, stage, accountID, slsParams, syncSecretsDry,
+		`cd %q && %s && env STAGE=%s AWS_ACCOUNT=%s SLS_PARAMS=%q SLS_SYNC_SECRETS_DRY=%s npm run deploy`,
+		absPath, installCommand(absPath), stage, accountID, slsParams, syncSecretsDry,
 	)
 
 	_, err = exec.Command(script, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr))
@@ -80,6 +80,16 @@ func deployServiceToDir(env EnvConfig, absPath, accountID string) error {
 
 	log.Successf("✓ Deployed: %s", absPath)
 	return nil
+}
+
+// installCommand returns the dependency install command for the service at dir:
+// pnpm when it ships a pnpm-lock.yaml, npm otherwise.
+func installCommand(dir string) string {
+	if files.Exists(filepath.Join(dir, "pnpm-lock.yaml")) {
+		return "pnpm install"
+	}
+
+	return "npm install"
 }
 
 // validateServiceDir checks whether a directory is eligible for deployment.

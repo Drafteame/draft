@@ -100,6 +100,7 @@ func (ns *NewService) getFileList() []dtos.FileEntry {
 	entries := []dtos.FileEntry{
 		{Path: "/serverless.yml", Data: ns.tmpl.ServerlessYAML},
 		{Path: "/package.json", Data: ns.tmpl.PackageJSON},
+		{Path: "/pnpm-workspace.yaml", Data: ns.tmpl.PnpmWorkspaceYAML},
 		{Path: "/deps.go", Data: ns.tmpl.DepsGo},
 		{Path: "/config/app/app.pkl", Data: ns.tmpl.Config.App.AppPkl},
 		{Path: "/config/app/modules.pkl", Data: ns.tmpl.Config.App.ModulesPkl},

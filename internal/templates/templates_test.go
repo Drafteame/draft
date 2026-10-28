@@ -194,6 +194,13 @@ func TestServiceTemplates(t *testing.T) {
 	assertYAMLSyntax(t, "config/sls/environment.yml", tmpl.Config.Sls.EnvironmentYAML)
 	assertYAMLSyntax(t, "config/sls/resources.yml", tmpl.Config.Sls.ResourcesYAML)
 
+	// pnpm: package.json pins the manager, pnpm-workspace.yaml carries overrides and denied builds
+	assert.Contains(t, string(tmpl.PackageJSON), `"packageManager": "pnpm@`)
+	assertYAMLSyntax(t, "pnpm-workspace.yaml", tmpl.PnpmWorkspaceYAML)
+	assert.Contains(t, string(tmpl.PnpmWorkspaceYAML), "allowBuilds:")
+	assert.Contains(t, string(tmpl.PnpmWorkspaceYAML), "overrides:")
+	assert.Contains(t, string(tmpl.PnpmWorkspaceYAML), `"simple-git": "~3.33.0"`)
+
 	// Initial plain lambda generated with service
 	p := tmpl.Lambda.Plain
 	assertGoSyntax(t, "cmd/plain/helloworld/main.go", p.MainGo)
