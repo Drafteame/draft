@@ -6,11 +6,12 @@ import (
 )
 
 type ServiceTemplates struct {
-	ServerlessYAML []byte
-	PackageJSON    []byte
-	DepsGo         []byte
-	Config         ServiceTemplatesConfig
-	Lambda         ServiceTemplatesLambda
+	ServerlessYAML    []byte
+	PackageJSON       []byte
+	PnpmWorkspaceYAML []byte
+	DepsGo            []byte
+	Config            ServiceTemplatesConfig
+	Lambda            ServiceTemplatesLambda
 }
 
 func (s *ServiceTemplates) SetPlain(plain LambdaPlain) {
@@ -45,6 +46,7 @@ func NewServiceTemplates(data any) (*ServiceTemplates, error) {
 	loaders := []func(*ServiceTemplates, any) error{
 		loadServerlessYAML,
 		loadPackageJSON,
+		loadPnpmWorkspaceYAML,
 		loadDepsGo,
 		loadConfig,
 		loadLambda,
@@ -135,4 +137,15 @@ func loadConfig(v *ServiceTemplates, data any) error {
 
 func loadLambda(v *ServiceTemplates, data any) error {
 	return loadLambdaPlain(v, data)
+}
+
+func loadPnpmWorkspaceYAML(v *ServiceTemplates, _ any) error {
+	content, err := sls.ReadFile("tmpl/sls/pnpm-workspace.yaml.tmpl")
+	if err != nil {
+		return err
+	}
+
+	v.PnpmWorkspaceYAML = content
+
+	return nil
 }

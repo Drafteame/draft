@@ -93,7 +93,8 @@ draft new:service -t=false
 #### What Gets Created
 
 - `serverless.yml` - Serverless Framework configuration
-- `package.json` - Node.js dependencies for Serverless plugins
+- `package.json` - Node.js dependencies for Serverless plugins (installed with pnpm)
+- `pnpm-workspace.yaml` - pnpm settings: security `overrides`, denied dependency build scripts
 - `config/` - Application and Serverless configuration files
 - `cmd/` - Initial Lambda function (HTTP, Cron, SQS, etc.)
 - `deps.go` - Dependency injection setup

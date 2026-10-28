@@ -17,5 +17,6 @@
     "deploy": "./node_modules/.bin/sls deploy --stage $STAGE --verbose $SLS_PARAMS",
     "print:dev": "env STAGE=dev ./node_modules/.bin/sls print --stage dev --verbose --aws-profile draftea-dev $SLS_PARAMS",
     "deploy:function": "./node_modules/.bin/sls deploy function -f $FUNCTION_NAME --stage $STAGE --update-config --verbose $SLS_PARAMS"
-  }
+  },
+  "packageManager": "pnpm@12.15.0"
 }

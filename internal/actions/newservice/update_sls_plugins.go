@@ -19,7 +19,7 @@ func (ns *NewService) updateSlsPlugins() error {
 			return
 		}
 
-		cmd := "npx npm-check-updates '/serverless-.*/' -u && npm install"
+		cmd := "pnpm dlx npm-check-updates '/serverless-.*/' -u && pnpm install"
 
 		_, errCmd := exec.Command(cmd)
 		if errCmd != nil {
