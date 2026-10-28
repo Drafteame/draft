@@ -43,9 +43,10 @@ func DeployFunction(env EnvConfig, serviceArg string, functionNames []string) er
 
 	if files.Exists(filepath.Join(absPath, "package.json")) {
 		log.Info("Installing dependencies...")
-		installScript := fmt.Sprintf("cd %q && npm install", absPath)
+		installCmd := installCommand(absPath)
+		installScript := fmt.Sprintf("cd %q && %s", absPath, installCmd)
 		if _, err := exec.Command(installScript, exec.WithStdout(os.Stdout), exec.WithStderr(os.Stderr)); err != nil {
-			return fmt.Errorf("npm install failed: %w", err)
+			return fmt.Errorf("%s failed: %w", installCmd, err)
 		}
 	}
 

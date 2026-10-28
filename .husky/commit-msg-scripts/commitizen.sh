@@ -7,7 +7,7 @@ fi
 
 echo "[commitizen] checking commit message with commitizen"
 
-cz check --commit-msg-file .git/COMMIT_EDITMSG
+cz check --commit-msg-file "$(git rev-parse --git-path COMMIT_EDITMSG)"
 
 # shellcheck disable=SC2181
 if [ $? -ne 0 ]; then
