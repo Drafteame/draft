@@ -17,6 +17,7 @@ A CLI tool to scaffold services, Lambda functions, and domain layers for Draftea
   - [Mock Generation](#mock-generation)
   - [Invoking Lambdas Locally](#invoking-lambdas-locally)
   - [Local Development](#local-development)
+  - [WorkOS API Access Tokens](#workos-api-access-tokens)
   - [Sentry Management](#sentry-management)
   - [Database Tunnel Management](#database-tunnel-management)
   - [Global Flags](#global-flags)
@@ -442,6 +443,90 @@ draft local:migrate:down
 # Force migration version
 draft local:migrate:force <version>
 ```
+
+---
+
+### WorkOS API Access Tokens
+
+Sign in with Google and obtain an API access token for the selected environment:
+
+```bash
+draft auth:token dev
+draft auth:token prod
+# Short alias:
+draft token dev
+```
+
+Draft opens the system browser, receives the authorization code on a loopback callback,
+and exchanges it with WorkOS using PKCE (S256). The token retains the permissions of the
+signed-in account; signing in does not grant administrative access. This command does
+not require Node.js, AWS credentials, an API key, or a client secret.
+
+The default copies the token to the clipboard without printing it. On Linux, install
+`wl-copy`, `xclip`, or `xsel`; macOS uses `pbcopy`, and Windows uses PowerShell.
+For scripts, request explicit token output:
+
+```bash
+draft token dev --raw                     # Only the token goes to stdout
+draft token prod --raw --copy             # Also copy it to the clipboard
+draft token dev --claims                  # Inspect claims on stderr (not signature verification)
+draft token dev --no-browser              # Open the printed login URL manually
+draft token dev --timeout 5m
+```
+
+Login progress and optional claims go to stderr. Tokens, refresh tokens, and PKCE
+verifiers are never written to configuration or token-cache files. Refresh tokens
+returned by WorkOS are ignored; rerun the command when a token expires. Clipboard
+failure produces an error with instructions to rerun using `--raw`, without exposing
+the token automatically.
+
+#### WorkOS setup
+
+In **each WorkOS environment**, register this redirect URI, preserving other redirects:
+
+```text
+http://127.0.0.1:3001/callback
+```
+
+Google OAuth must be enabled. Production uses `127.0.0.1`, not `localhost`. The loopback
+listener accepts only the `/callback` GET route, checks a random OAuth `state`, and
+accepts one authorization response per run. Login times out after ten minutes.
+If port 3001 is occupied, stop the other local login helper or choose `--port 3002`
+and register `http://127.0.0.1:3002/callback` in WorkOS first.
+
+#### Public client configuration
+
+The Draftea dev/prod public client IDs are included as defaults. Override settings using
+**command flags > environment variables > local TOML > built-in defaults**. Auth reads
+only its section of `~/.draftea/draft/config.toml`; it does not initialize Sentry or AWS.
+No `.env` files are loaded by this command.
+
+```toml
+[auth.workos.dev]
+client_id = "client_..."
+provider = "GoogleOAuth"
+port = 3001
+
+[auth.workos.prod]
+client_id = "client_..."
+provider = "GoogleOAuth"
+port = 3001
+```
+
+| Setting | Environment variable | Flag |
+|---------|----------------------|------|
+| Public client ID | `DRAFT_WORKOS_CLIENT_ID` | `--client-id` |
+| Provider | `DRAFT_WORKOS_PROVIDER` | `--provider` |
+| Callback port | `DRAFT_WORKOS_PORT` | `--port` |
+| HTTPS authorization URL | `DRAFT_WORKOS_AUTH_URL` | `--auth-url` |
+| HTTPS token exchange URL | `DRAFT_WORKOS_TOKEN_URL` | `--token-url` |
+
+The provider defaults to `GoogleOAuth`; use `--provider authkit` for the hosted AuthKit
+screen. Only configure endpoints you trust: the token exchange endpoint receives the
+authorization code and PKCE verifier. Endpoint overrides require HTTPS, and exchange
+requests never follow redirects.
+
+Reference: [WorkOS authorization URL and PKCE](https://workos.com/docs/reference/authkit/authentication/get-authorization-url).
 
 ---
 

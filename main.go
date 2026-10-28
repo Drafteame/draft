@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/Drafteame/draft/cmd/commands"
+	authtoken "github.com/Drafteame/draft/cmd/commands/auth/token"
 	"github.com/Drafteame/draft/cmd/commands/config"
 	dbconnect "github.com/Drafteame/draft/cmd/commands/db/connect"
 	deploydev "github.com/Drafteame/draft/cmd/commands/deploy/dev"
@@ -36,6 +37,7 @@ func main() {
 	cmd := commands.GetCmd()
 
 	cmd.AddCommand(config.GetCmd())
+	cmd.AddCommand(authtoken.GetCmd())
 	cmd.AddCommand(dbconnect.GetCmd())
 	cmd.AddCommand(newservice.GetCmd())
 	cmd.AddCommand(newlambda.GetCmd())
