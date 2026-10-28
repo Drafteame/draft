@@ -199,6 +199,7 @@ func TestServiceTemplates(t *testing.T) {
 	assertYAMLSyntax(t, "pnpm-workspace.yaml", tmpl.PnpmWorkspaceYAML)
 	assert.Contains(t, string(tmpl.PnpmWorkspaceYAML), "allowBuilds:")
 	assert.Contains(t, string(tmpl.PnpmWorkspaceYAML), "overrides:")
+	assert.Contains(t, string(tmpl.PnpmWorkspaceYAML), `"simple-git": "~3.33.0"`)
 
 	// Initial plain lambda generated with service
 	p := tmpl.Lambda.Plain
