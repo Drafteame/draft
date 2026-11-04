@@ -33,7 +33,7 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ vars.PYTHON_VERSION }}
 
