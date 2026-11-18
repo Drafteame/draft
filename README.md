@@ -479,7 +479,7 @@ Manage SSM port-forwarding tunnels to remote databases. Tunnels are opened via A
 |---------|-------------|
 | `draft db:connect list` | List all available connections from config |
 | `draft db:connect status` | Show status of active tunnels |
-| `draft db:connect start <type> <name>` | Open a tunnel to a database |
+| `draft db:connect start <type> <name>` | Open a tunnel to a database (`--token` also issues/refreshes an RDS IAM auth token) |
 | `draft db:connect stop [type] [name]` | Close one or more tunnels |
 
 #### List Available Connections
@@ -546,6 +546,45 @@ The output of `aws ssm start-session` / `session-manager-plugin` is written to `
 | Flag | Short | Description |
 |------|-------|-------------|
 | `--port` | `-p` | Override the local port for this connection |
+| `--token` | | Generate an RDS IAM auth token once the tunnel is up and store it in `.pgpass`; if the tunnel is already running, only refresh the token (postgres only) |
+
+#### Connect to Postgres with IAM Authentication
+
+RDS clusters with IAM database authentication accept a short-lived token instead of a password. `draft` generates it with the profile, region, RDS host and remote port already resolved from `dbconnect.yml`, and writes it to the PostgreSQL password file so `psql` (and any libpq client) picks it up without copying anything by hand.
+
+```bash
+# Open the tunnel and issue a token in one go
+draft db:connect start postgres turbo-dev --token
+
+# Same command while the tunnel is up: only refreshes the token
+draft db:connect start postgres turbo-dev --token
+```
+
+After `start --token`, draft prints the user the token was issued for:
+
+```
+  IAM user: name.lastname@draftea.com
+  Refresh : draft db:connect start postgres turbo-dev --token
+```
+
+Then connect with any libpq client without a password, for example:
+
+```bash
+psql "host=localhost port=56024 user=name.lastname@draftea.com dbname=postgres sslmode=require"
+```
+
+**About the 15 minutes:** the token is a password with an expiry, not a session. RDS accepts it only for logins made within 15 minutes of generating it. A connection opened in time stays open as long as you want. If you close `psql` and reopen it later, or open a second client, and the token has expired, the login fails; run `start --token` again to get a fresh one. The tunnel is never restarted.
+
+How it works:
+
+- The token is signed for the **real RDS hostname and remote port**, but the client connects to `localhost:<local_port>`. The entry written is `localhost:<local_port>:*:<user>:<token>`, with `:` and `\` escaped as libpq requires.
+- The password file is `$PGPASSFILE` if set, otherwise `~/.pgpass`. Only the line for that `localhost:<port>` + user is replaced; every other entry is left as is. The file is written with `0600` permissions.
+- `stop` removes the entry for that tunnel. If `DRAFTEA_EMAIL` changed since the tunnel was started, `start --token` replaces the previous user's entry.
+- IAM auth requires SSL. Over the tunnel use `sslmode=require`; `verify-full` fails because the RDS certificate is not issued for `localhost`.
+
+**Requirements on the database side:** the cluster must have IAM database authentication enabled and the postgres user must exist with the `rds_iam` role granted. Your AWS profile needs `rds-db:connect` on that user.
+
+**Which user is used:** the postgres user is always your Draftea email, read from the `DRAFTEA_EMAIL` environment variable; there is no flag to override it. home-manager exports it from the `drafteaEmail` field of `~/.config/nix-modules/user/identity.nix`; set it once with `hms-set-email name.lastname@draftea.com`. If it is missing, `start --token` fails before opening anything and tells you to run that command.
 
 #### Stop Tunnels
 
@@ -644,7 +683,7 @@ connections:
 
 #### Runtime State
 
-Active tunnels are persisted in `~/.draft/dbconnect.state.json`. This file is managed automatically — you do not need to edit it manually. When a tunnel dies (e.g. AWS idle timeout), the state file is **not** updated automatically; the stale entry is cleaned up the next time you run `status` or `start`.
+Active tunnels are persisted in `~/.draft/dbconnect.state.json`. This file is managed automatically — you do not need to edit it manually. When a tunnel dies (e.g. AWS idle timeout), the state file is **not** updated automatically; the stale entry is cleaned up the next time you run `status` or `start`. Tunnels started with `--token` also record the postgres user so `stop` can remove the matching `.pgpass` entry.
 
 ---
 
