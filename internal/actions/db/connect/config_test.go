@@ -78,7 +78,7 @@ func TestResolveConnection(t *testing.T) {
 			name:          "postgres unchanged",
 			dbType:        "postgres",
 			connName:      "turbo-dev",
-			wantHost:      "turbo-dev.cluster-aaa.us-east-2.rds.amazonaws.com",
+			wantHost:      "proxy-turbo-dev-iam.proxy-aaa.us-east-2.rds.amazonaws.com",
 			wantLocalPort: 56000,
 		},
 		{
@@ -161,7 +161,7 @@ func TestBuildHost(t *testing.T) {
 			dbType:   "postgres",
 			svc:      ServiceConfig{Name: "turbo"},
 			clusters: clusters,
-			want:     "turbo-dev.cluster-aaa.rds.amazonaws.com",
+			want:     "proxy-turbo-dev-iam.proxy-aaa.rds.amazonaws.com",
 		},
 		{
 			name:     "mongo",

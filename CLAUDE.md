@@ -61,6 +61,7 @@ draft db:connect status                              # Show active tunnels and t
 draft db:connect start <type> <name>                 # Start a tunnel (type: postgres, redis, mongo)
 draft db:connect start postgres turbo-dev            # Connect to turbo postgres in dev
 draft db:connect start postgres turbo-prod --port 5540  # Connect with local port override
+draft db:connect start postgres turbo-dev            # Postgres also gets an RDS IAM auth token into .pgpass (re-run to refresh)
 draft db:connect stop postgres turbo-dev             # Stop a specific tunnel
 draft db:connect stop postgres                       # Stop all postgres tunnels
 draft db:connect stop --all                          # Stop all active tunnels
@@ -243,16 +244,19 @@ internal/actions/db/connect/
   exec.go       ← launchTunnel(), waitForTunnel(), checkPortFree()
   list.go       ← List() — enumerates all type×instance×env combinations
   status.go     ← Status() — reads state, verifies PIDs live, cleans dead entries
-  start.go      ← Start(StartInput) — resolves config, checks port, launches tunnel
-  stop.go       ← Stop(StopInput) — stopAll / stopByType / stopOne + killEntry()
+  start.go      ← Start(StartInput) — resolves config, checks port, launches tunnel, optionally issues IAM token
+  stop.go       ← Stop(StopInput) — stopAll / stopByType / stopOne + killEntry() (removes .pgpass entry)
+  iam.go        ← issueIAMToken(), refreshToken(), generateAuthToken() (SDK signer via internal/pkg/aws/rds.go), resolveIAMUser()
+  pgpass.go     ← pgpassPath() ($PGPASSFILE or ~/.pgpass), upsertPgpassEntry(), removePgpassEntry(), escapePgpass()
 ```
 
 Key behaviors:
 - **Subprocess isolation**: tunnel launched with `Setpgid=true` (own process group) so terminal doesn't hang and `stop` can kill the entire group including the Session Manager Plugin child
-- **Liveness verification**: `start` polls every 300ms (up to 10s) waiting for the local port to accept TCP connections before reporting success — avoids false positives
+- **Liveness verification**: `start` polls every 300ms (up to 10s) until the local port accepts a TCP connection, then `confirmTunnel()` keeps that connection open: the plugin opens the port before the bastion has reached anything, so a wrong host or closed remote port only shows up afterwards. Postgres gets an `SSLRequest` probe: the one-byte reply is success and no reply within `tunnelSettleTimeout` (3s) is an error (unknown proxy names can hang instead of failing DNS). Other engines send nothing (TLS-only endpoints) and succeed after 3s of silence. EOF on the probe connection or the process exiting is always an error, with the session log tail
 - **Lazy state cleanup**: dead entries (idle timeout, manual kill) are cleaned from state on next `status` or `start` call — no background monitor needed
 - **Session logs**: `aws ssm` stdout/stderr go to `~/.draft/dbconnect-logs/<type>_<name>.log` (a file, not a pipe, so the detached tunnel survives `draft` exiting); the log tail is embedded in startup errors
 - **Connection name convention**: `{service}-{env}` (e.g. `turbo-dev`, `turbo-prod`) — `splitServiceEnv()` parses it back into service + env at resolution time
+- **IAM auth (postgres, always on)**: postgres tunnels target the RDS Proxy with IAM auth (`proxy-{service}-{env}-iam.proxy-{clusters.rds}`), which rejects passwords. `start` signs the token locally with the AWS SDK (`aws.GenerateRDSAuthToken` in `internal/pkg/aws/rds.go`, module `feature/rds/auth`) using the bastion profile/region, the proxy host and the remote port, then writes `localhost:<local_port>:*:<user>:<token>` to the password file (`:` and `\` escaped, file mode 0600). Tokens are valid for new logins during 15 minutes; `start` on an already running postgres tunnel only refreshes the token (`refreshToken()`); for other engines it is an error. The user is always `DRAFTEA_EMAIL` (exported by home-manager from `identity.nix`, set with `hms-set-email`); no override flag, no prompt, no config file fallback, by design. `RuntimeEntry.IAMUser` records the user so `stop` removes the entry. `generateRDSAuthToken` is a package var stubbed in tests
 
 ## Configuration Files
 
@@ -298,7 +302,7 @@ connections:       # instances per engine type
 ```
 
 Host is built at runtime per engine:
-- **Postgres**: `{name}-{env}.cluster-{clusters.rds}`
+- **Postgres**: `proxy-{name}-{env}-iam.proxy-{clusters.rds}` (RDS Proxy with IAM auth)
 - **Redis**: `{name}-{env}.{clusters.cache}`
 - **Redis (serverless)**: `{name}-{env}-{clusters.cache_serverless}` (error if `cache_serverless` is unset; `serverless` on postgres/mongo is a validation error)
 - **MongoDB**: `draftea-{env}-maincluster.cluster-{clusters.docdb}`

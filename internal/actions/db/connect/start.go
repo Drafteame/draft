@@ -14,7 +14,9 @@ type StartInput struct {
 	LocalPort int    // 0 means use the default computed from config
 }
 
-// Start launches a new SSM tunnel for the given type+name.
+// Start launches a new SSM tunnel for the given type+name. Postgres tunnels
+// also get an RDS IAM auth token written to .pgpass; if the tunnel is already
+// running, only the token is refreshed.
 func Start(input StartInput) error {
 	cfg, err := loadConfig()
 	if err != nil {
@@ -26,6 +28,19 @@ func Start(input StartInput) error {
 		return err
 	}
 
+	withToken := resolved.DBType == iamDBType
+
+	// Resolve the IAM user before launching anything so a missing value does
+	// not leave a tunnel without its token behind.
+	iamUser := ""
+
+	if withToken {
+		iamUser, err = resolveIAMUser()
+		if err != nil {
+			return err
+		}
+	}
+
 	state, err := loadRuntimeState()
 	if err != nil {
 		return err
@@ -35,6 +50,10 @@ func Start(input StartInput) error {
 
 	if existing, ok := state.Connections[key]; ok {
 		if isProcessAlive(existing.PID) {
+			if withToken {
+				return refreshToken(state, key, existing, resolved, iamUser)
+			}
+
 			return fmt.Errorf("connection %s/%s is already running (PID: %d, port: localhost:%d)",
 				input.DBType, input.Name, existing.PID, existing.LocalPort)
 		}
@@ -57,7 +76,7 @@ func Start(input StartInput) error {
 		return err
 	}
 
-	pid, err := launchTunnel(resolved.Bastion, resolved.Host, resolved.RemotePort, localPort, logPath)
+	pid, err := launchTunnel(resolved.Bastion, resolved.Host, resolved.RemotePort, localPort, logPath, tunnelProbe(resolved.DBType))
 	if err != nil {
 		return err
 	}
@@ -91,6 +110,26 @@ func Start(input StartInput) error {
 	}
 
 	log.Infof("  Stop    : draft db:connect stop %s %s", input.DBType, input.Name)
+
+	if !withToken {
+		return nil
+	}
+
+	result, err := issueIAMToken(resolved, localPort, iamUser)
+	if err != nil {
+		return fmt.Errorf("tunnel is up but the IAM token could not be issued: %w\n"+
+			"retry with: draft db:connect start %s %s", err, input.DBType, input.Name)
+	}
+
+	entry := state.Connections[key]
+	entry.IAMUser = iamUser
+	state.Connections[key] = entry
+
+	if err := saveRuntimeState(state); err != nil {
+		log.Warnf("could not persist runtime state: %s", err)
+	}
+
+	printIAMTokenInfo(result, input.DBType, input.Name)
 
 	return nil
 }
