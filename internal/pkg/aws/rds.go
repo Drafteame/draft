@@ -23,8 +23,8 @@ type RDSAuthTokenInput struct {
 
 // GenerateRDSAuthToken signs an RDS IAM auth token for the given database.
 // Signing happens locally (no API call); the token is accepted for new logins
-// during 15 minutes. Credentials are resolved from the shared config profile,
-// including SSO cached tokens.
+// during 15 minutes. Credentials are resolved from the shared config profile
+// (~/.aws/config and ~/.aws/credentials), the same chain the AWS CLI uses.
 func GenerateRDSAuthToken(ctx context.Context, input RDSAuthTokenInput) (string, error) {
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithSharedConfigProfile(input.Profile),
