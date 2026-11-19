@@ -246,7 +246,7 @@ internal/actions/db/connect/
   status.go     ← Status() — reads state, verifies PIDs live, cleans dead entries
   start.go      ← Start(StartInput) — resolves config, checks port, launches tunnel, optionally issues IAM token
   stop.go       ← Stop(StopInput) — stopAll / stopByType / stopOne + killEntry() (removes .pgpass entry)
-  iam.go        ← issueIAMToken(), refreshToken(), generateAuthToken() (aws rds generate-db-auth-token), resolveIAMUser()
+  iam.go        ← issueIAMToken(), refreshToken(), generateAuthToken() (SDK signer via internal/pkg/aws/rds.go), resolveIAMUser()
   pgpass.go     ← pgpassPath() ($PGPASSFILE or ~/.pgpass), upsertPgpassEntry(), removePgpassEntry(), escapePgpass()
 ```
 
@@ -256,7 +256,7 @@ Key behaviors:
 - **Lazy state cleanup**: dead entries (idle timeout, manual kill) are cleaned from state on next `status` or `start` call — no background monitor needed
 - **Session logs**: `aws ssm` stdout/stderr go to `~/.draft/dbconnect-logs/<type>_<name>.log` (a file, not a pipe, so the detached tunnel survives `draft` exiting); the log tail is embedded in startup errors
 - **Connection name convention**: `{service}-{env}` (e.g. `turbo-dev`, `turbo-prod`) — `splitServiceEnv()` parses it back into service + env at resolution time
-- **IAM auth (postgres only)**: `start --token` shells out to `aws rds generate-db-auth-token` with the bastion profile/region, the real RDS host and the remote port, then writes `localhost:<local_port>:*:<user>:<token>` to the password file (`:` and `\` escaped, file mode 0600). Tokens are valid for new logins during 15 minutes; `start --token` on an already running tunnel only refreshes the token (`refreshToken()`), no separate subcommand. The user is always `DRAFTEA_EMAIL` (exported by home-manager from `identity.nix`, set with `hms-set-email`); no override flag, no prompt, no config file fallback, by design. `RuntimeEntry.IAMUser` records the user so `stop` removes the entry. `runAuthTokenCmd` is a package var stubbed in tests
+- **IAM auth (postgres only)**: `start --token` signs the token locally with the AWS SDK (`aws.GenerateRDSAuthToken` in `internal/pkg/aws/rds.go`, module `feature/rds/auth`) using the bastion profile/region, the real RDS host and the remote port, then writes `localhost:<local_port>:*:<user>:<token>` to the password file (`:` and `\` escaped, file mode 0600). Tokens are valid for new logins during 15 minutes; `start --token` on an already running tunnel only refreshes the token (`refreshToken()`), no separate subcommand. The user is always `DRAFTEA_EMAIL` (exported by home-manager from `identity.nix`, set with `hms-set-email`); no override flag, no prompt, no config file fallback, by design. `RuntimeEntry.IAMUser` records the user so `stop` removes the entry. `generateRDSAuthToken` is a package var stubbed in tests
 
 ## Configuration Files
 

@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -8,60 +9,52 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/Drafteame/draft/internal/pkg/aws"
 )
 
-// stubAuthToken replaces the aws CLI call for the duration of the test and
-// records the arguments it was invoked with.
-func stubAuthToken(t *testing.T, out string, err error) *[]string {
+// stubAuthToken replaces the SDK token signing for the duration of the test
+// and records the input it was invoked with.
+func stubAuthToken(t *testing.T, token string, err error) *aws.RDSAuthTokenInput {
 	t.Helper()
 
-	var got []string
+	var got aws.RDSAuthTokenInput
 
-	orig := runAuthTokenCmd
-	runAuthTokenCmd = func(args ...string) (string, error) {
-		got = append([]string{}, args...)
-		return out, err
+	orig := generateRDSAuthToken
+	generateRDSAuthToken = func(_ context.Context, input aws.RDSAuthTokenInput) (string, error) {
+		got = input
+		return token, err
 	}
 
-	t.Cleanup(func() { runAuthTokenCmd = orig })
+	t.Cleanup(func() { generateRDSAuthToken = orig })
 
 	return &got
 }
 
-func TestGenerateAuthToken_PassesResolvedValuesToAWSCLI(t *testing.T) {
-	got := stubAuthToken(t, "host:5432/?Action=connect&X-Amz-Signature=abc\n", nil)
+func TestGenerateAuthToken_PassesResolvedValuesToSigner(t *testing.T) {
+	got := stubAuthToken(t, "host:5432/?Action=connect&X-Amz-Signature=abc", nil)
 
 	bastion := BastionConfig{Profile: "dev-profile", Region: "us-east-2"}
 
 	token, err := generateAuthToken(bastion, "turbo-dev.cluster-aaa.us-east-2.rds.amazonaws.com", 5432, "dev@draftea.com")
 	require.NoError(t, err)
 
-	assert.Equal(t, "host:5432/?Action=connect&X-Amz-Signature=abc", token, "token must be trimmed")
-	assert.Equal(t, []string{
-		"--hostname", "turbo-dev.cluster-aaa.us-east-2.rds.amazonaws.com",
-		"--port", "5432",
-		"--username", "dev@draftea.com",
-		"--region", "us-east-2",
-		"--profile", "dev-profile",
+	assert.Equal(t, "host:5432/?Action=connect&X-Amz-Signature=abc", token)
+	assert.Equal(t, aws.RDSAuthTokenInput{
+		Profile: "dev-profile",
+		Region:  "us-east-2",
+		Host:    "turbo-dev.cluster-aaa.us-east-2.rds.amazonaws.com",
+		Port:    5432,
+		User:    "dev@draftea.com",
 	}, *got)
 }
 
-func TestGenerateAuthToken_Errors(t *testing.T) {
-	t.Run("cli failure", func(t *testing.T) {
-		stubAuthToken(t, "", errors.New("boom"))
+func TestGenerateAuthToken_PropagatesSignerError(t *testing.T) {
+	stubAuthToken(t, "", errors.New("boom"))
 
-		_, err := generateAuthToken(BastionConfig{}, "host", 5432, "u")
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "boom")
-	})
-
-	t.Run("empty token", func(t *testing.T) {
-		stubAuthToken(t, "  \n", nil)
-
-		_, err := generateAuthToken(BastionConfig{}, "host", 5432, "u")
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "empty token")
-	})
+	_, err := generateAuthToken(BastionConfig{}, "host", 5432, "u")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "boom")
 }
 
 func TestIssueIAMToken_RejectsNonPostgres(t *testing.T) {
@@ -70,11 +63,11 @@ func TestIssueIAMToken_RejectsNonPostgres(t *testing.T) {
 	_, err := issueIAMToken(ResolvedConnection{DBType: "redis"}, 56100, "u")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "only supported for postgres")
-	assert.Empty(t, *got, "aws must not be called for unsupported engines")
+	assert.Empty(t, got.Host, "the signer must not be called for unsupported engines")
 }
 
 func TestIssueIAMToken_WritesPgpassForLocalPort(t *testing.T) {
-	stubAuthToken(t, "tok:en\n", nil)
+	stubAuthToken(t, "tok:en", nil)
 
 	pgpass := filepath.Join(t.TempDir(), ".pgpass")
 	t.Setenv("PGPASSFILE", pgpass)
@@ -134,8 +127,8 @@ func TestRefreshToken_UsesTunnelPortAndRecordsUser(t *testing.T) {
 
 	require.NoError(t, refreshToken(state, key, state.Connections[key], resolved, "dev@draftea.com"))
 
-	assert.Contains(t, *got, "turbo-prod.cluster-ddd.us-east-2.rds.amazonaws.com")
-	assert.Contains(t, *got, "prod-profile")
+	assert.Equal(t, "turbo-prod.cluster-ddd.us-east-2.rds.amazonaws.com", got.Host)
+	assert.Equal(t, "prod-profile", got.Profile)
 
 	data, err := os.ReadFile(pgpass)
 	require.NoError(t, err)
@@ -162,7 +155,7 @@ func TestStart_FailsBeforeCallingAWSWhenUserIsUnknown(t *testing.T) {
 	err := Start(StartInput{DBType: "postgres", Name: "turbo-dev", Token: true})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "DRAFTEA_EMAIL is not set")
-	assert.Empty(t, *got)
+	assert.Empty(t, got.Host)
 }
 
 func TestStart_RejectsTokenForNonPostgres(t *testing.T) {

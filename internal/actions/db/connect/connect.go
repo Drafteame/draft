@@ -85,9 +85,7 @@ type RuntimeEntry struct {
 	RemotePort int       `json:"remote_port"`
 	Host       string    `json:"host"`
 	StartedAt  time.Time `json:"started_at"`
-	// IAMUser is the postgres user an IAM token was written to .pgpass for
-	// (empty when the tunnel was started without --iam).
-	IAMUser string `json:"iam_user,omitempty"`
+	IAMUser    string    `json:"iam_user,omitempty"`
 }
 
 // runtimeKey builds the state map key for a given type+name.

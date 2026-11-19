@@ -1,20 +1,16 @@
 package connect
 
 import (
-	"bytes"
+	"context"
 	"fmt"
 	"os"
-	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Drafteame/draft/internal/pkg/aws"
 	"github.com/Drafteame/draft/internal/pkg/log"
 )
 
-// iamUserEnv is exported by home-manager from the drafteaEmail field of
-// ~/.config/nix-modules/user/identity.nix (set with hms-set-email). It is the
-// postgres user for IAM auth.
 const iamUserEnv = "DRAFTEA_EMAIL"
 
 // iamTokenTTL is how long an RDS IAM auth token is accepted by the database.
@@ -23,48 +19,19 @@ const iamTokenTTL = 15 * time.Minute
 // iamDBType is the only engine that supports IAM database authentication here.
 const iamDBType = "postgres"
 
-// runAuthTokenCmd executes `aws rds generate-db-auth-token` with the given
-// arguments and returns its stdout. It is a variable so tests can stub it.
-var runAuthTokenCmd = func(args ...string) (string, error) {
-	cmd := exec.Command("aws", append([]string{"rds", "generate-db-auth-token"}, args...)...)
-
-	var stdout, stderr bytes.Buffer
-
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	if err := cmd.Run(); err != nil {
-		msg := strings.TrimSpace(stderr.String())
-		if msg == "" {
-			return "", fmt.Errorf("aws rds generate-db-auth-token failed: %w", err)
-		}
-
-		return "", fmt.Errorf("aws rds generate-db-auth-token failed: %w\n%s", err, msg)
-	}
-
-	return stdout.String(), nil
-}
+// generateRDSAuthToken signs the token; a variable so tests can stub it.
+var generateRDSAuthToken = aws.GenerateRDSAuthToken
 
 // generateAuthToken builds an RDS IAM auth token for the real RDS host and
 // remote port, using the bastion profile/region of the environment.
 func generateAuthToken(bastion BastionConfig, host string, remotePort int, user string) (string, error) {
-	out, err := runAuthTokenCmd(
-		"--hostname", host,
-		"--port", strconv.Itoa(remotePort),
-		"--username", user,
-		"--region", bastion.Region,
-		"--profile", bastion.Profile,
-	)
-	if err != nil {
-		return "", err
-	}
-
-	token := strings.TrimSpace(out)
-	if token == "" {
-		return "", fmt.Errorf("aws rds generate-db-auth-token returned an empty token")
-	}
-
-	return token, nil
+	return generateRDSAuthToken(context.Background(), aws.RDSAuthTokenInput{
+		Profile: bastion.Profile,
+		Region:  bastion.Region,
+		Host:    host,
+		Port:    remotePort,
+		User:    user,
+	})
 }
 
 // iamTokenResult describes a token that was written to the password file.
