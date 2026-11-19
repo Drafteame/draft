@@ -102,7 +102,7 @@ func splitServiceEnv(name string) (service, env string, err error) {
 
 // buildHost constructs the remote host string for the given db type, service instance, and environment.
 //
-// PostgreSQL        : {service}-{env}.cluster-{clusters.rds}
+// PostgreSQL        : proxy-{service}-{env}-iam.proxy-{clusters.rds}   (RDS Proxy with IAM auth)
 // Redis             : {service}-{env}.{clusters.cache}
 // Redis (serverless): {service}-{env}-{clusters.cache_serverless}
 // MongoDB           : draftea-{env}-maincluster.cluster-{clusters.docdb}
@@ -116,7 +116,7 @@ func buildHost(dbType string, svc *ServiceConfig, env string, clusters ClustersC
 
 	switch dbType {
 	case "postgres":
-		return fmt.Sprintf("%s-%s.cluster-%s", svc.Name, env, clusters.RDS), nil
+		return fmt.Sprintf("proxy-%s-%s-iam.proxy-%s", svc.Name, env, clusters.RDS), nil
 	case "redis":
 		if !svc.Serverless {
 			return fmt.Sprintf("%s-%s.%s", svc.Name, env, clusters.Cache), nil

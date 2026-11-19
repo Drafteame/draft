@@ -100,7 +100,7 @@ func resolveIAMUser() (string, error) {
 // printIAMTokenInfo prints the user the token was issued for and how to refresh it.
 func printIAMTokenInfo(result iamTokenResult, dbType, name string) {
 	log.Infof("  IAM user: %s", result.User)
-	log.Infof("  Refresh : draft db:connect start %s %s --token", dbType, name)
+	log.Infof("  Refresh : draft db:connect start %s %s", dbType, name)
 }
 
 // refreshToken issues a new token for a tunnel that is already running and

@@ -127,7 +127,7 @@ func TestRefreshToken_UsesTunnelPortAndRecordsUser(t *testing.T) {
 
 	require.NoError(t, refreshToken(state, key, state.Connections[key], resolved, "dev@draftea.com"))
 
-	assert.Equal(t, "turbo-prod.cluster-ddd.us-east-2.rds.amazonaws.com", got.Host)
+	assert.Equal(t, "proxy-turbo-prod-iam.proxy-ddd.us-east-2.rds.amazonaws.com", got.Host, "token must be signed for the IAM proxy host")
 	assert.Equal(t, "prod-profile", got.Profile)
 
 	data, err := os.ReadFile(pgpass)
@@ -152,21 +152,8 @@ func TestStart_FailsBeforeCallingAWSWhenUserIsUnknown(t *testing.T) {
 
 	got := stubAuthToken(t, "token", nil)
 
-	err := Start(StartInput{DBType: "postgres", Name: "turbo-dev", Token: true})
+	err := Start(StartInput{DBType: "postgres", Name: "turbo-dev"})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "DRAFTEA_EMAIL is not set")
 	assert.Empty(t, got.Host)
-}
-
-func TestStart_RejectsTokenForNonPostgres(t *testing.T) {
-	home := t.TempDir()
-	t.Setenv("HOME", home)
-	t.Setenv("DRAFTEA_EMAIL", "dev@draftea.com")
-
-	require.NoError(t, os.MkdirAll(filepath.Join(home, ".draft"), 0755))
-	require.NoError(t, os.WriteFile(filepath.Join(home, ".draft", configFileName), []byte(testConfigYAML), 0644))
-
-	err := Start(StartInput{DBType: "mongo", Name: "main-dev", Token: true})
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "--token is only supported for postgres")
 }

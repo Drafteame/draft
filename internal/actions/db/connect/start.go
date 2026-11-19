@@ -12,11 +12,11 @@ type StartInput struct {
 	DBType    string
 	Name      string // "{service}-{env}", e.g. "turbo-dev"
 	LocalPort int    // 0 means use the default computed from config
-	Token     bool   // generate an RDS IAM auth token and store it in .pgpass (postgres only)
 }
 
-// Start launches a new SSM tunnel for the given type+name. With Token set
-// and the tunnel already running, it only refreshes the token.
+// Start launches a new SSM tunnel for the given type+name. Postgres tunnels
+// also get an RDS IAM auth token written to .pgpass; if the tunnel is already
+// running, only the token is refreshed.
 func Start(input StartInput) error {
 	cfg, err := loadConfig()
 	if err != nil {
@@ -28,15 +28,13 @@ func Start(input StartInput) error {
 		return err
 	}
 
-	if input.Token && resolved.DBType != iamDBType {
-		return fmt.Errorf("--token is only supported for %s connections", iamDBType)
-	}
+	withToken := resolved.DBType == iamDBType
 
 	// Resolve the IAM user before launching anything so a missing value does
 	// not leave a tunnel without its token behind.
 	iamUser := ""
 
-	if input.Token {
+	if withToken {
 		iamUser, err = resolveIAMUser()
 		if err != nil {
 			return err
@@ -52,7 +50,7 @@ func Start(input StartInput) error {
 
 	if existing, ok := state.Connections[key]; ok {
 		if isProcessAlive(existing.PID) {
-			if input.Token {
+			if withToken {
 				return refreshToken(state, key, existing, resolved, iamUser)
 			}
 
@@ -113,14 +111,14 @@ func Start(input StartInput) error {
 
 	log.Infof("  Stop    : draft db:connect stop %s %s", input.DBType, input.Name)
 
-	if !input.Token {
+	if !withToken {
 		return nil
 	}
 
 	result, err := issueIAMToken(resolved, localPort, iamUser)
 	if err != nil {
 		return fmt.Errorf("tunnel is up but the IAM token could not be issued: %w\n"+
-			"retry with: draft db:connect start %s %s --token", err, input.DBType, input.Name)
+			"retry with: draft db:connect start %s %s", err, input.DBType, input.Name)
 	}
 
 	entry := state.Connections[key]
