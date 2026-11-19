@@ -252,7 +252,7 @@ internal/actions/db/connect/
 
 Key behaviors:
 - **Subprocess isolation**: tunnel launched with `Setpgid=true` (own process group) so terminal doesn't hang and `stop` can kill the entire group including the Session Manager Plugin child
-- **Liveness verification**: `start` polls every 300ms (up to 10s) waiting for the local port to accept TCP connections before reporting success — avoids false positives
+- **Liveness verification**: `start` polls every 300ms (up to 10s) until the local port accepts a TCP connection, then `confirmTunnel()` keeps that connection open: the plugin opens the port before the bastion has reached anything, so a wrong host or closed remote port only shows up afterwards. Postgres gets an `SSLRequest` probe: the one-byte reply is success and no reply within `tunnelSettleTimeout` (3s) is an error (unknown proxy names can hang instead of failing DNS). Other engines send nothing (TLS-only endpoints) and succeed after 3s of silence. EOF on the probe connection or the process exiting is always an error, with the session log tail
 - **Lazy state cleanup**: dead entries (idle timeout, manual kill) are cleaned from state on next `status` or `start` call — no background monitor needed
 - **Session logs**: `aws ssm` stdout/stderr go to `~/.draft/dbconnect-logs/<type>_<name>.log` (a file, not a pipe, so the detached tunnel survives `draft` exiting); the log tail is embedded in startup errors
 - **Connection name convention**: `{service}-{env}` (e.g. `turbo-dev`, `turbo-prod`) — `splitServiceEnv()` parses it back into service + env at resolution time

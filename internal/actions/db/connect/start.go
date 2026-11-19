@@ -76,7 +76,7 @@ func Start(input StartInput) error {
 		return err
 	}
 
-	pid, err := launchTunnel(resolved.Bastion, resolved.Host, resolved.RemotePort, localPort, logPath)
+	pid, err := launchTunnel(resolved.Bastion, resolved.Host, resolved.RemotePort, localPort, logPath, tunnelProbe(resolved.DBType))
 	if err != nil {
 		return err
 	}
