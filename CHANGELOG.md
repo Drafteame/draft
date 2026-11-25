@@ -1,3 +1,9 @@
+## v1.28.0 (2026-11-25)
+
+
+- chore(ci): update vendor hash for version 1.28.0
+- feat(db-connect): postgres tunnels through the IAM RDS Proxy with the token in .pgpass (#228)
+
 ## v1.27.0 (2026-10-06)
 
 
