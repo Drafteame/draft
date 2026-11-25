@@ -10,12 +10,29 @@ import (
 var cmd = &cobra.Command{
 	Use:   "start <type> <name>",
 	Short: "Start an SSM tunnel to a database (type: postgres, redis, mongo)",
-	Args:  cobra.ExactArgs(2),
-	Run:   run,
+	Long: `Start an SSM port-forwarding tunnel to a database.
+
+Postgres connections go through the RDS Proxy with IAM authentication. Once the
+tunnel is up an RDS IAM authentication token is generated and written to the
+PostgreSQL password file ($PGPASSFILE or ~/.pgpass), so psql and any libpq
+client connect without a password. The token is only valid for new logins
+during 15 minutes; running the same command again while the tunnel is up just
+refreshes the token without restarting anything.
+
+The PostgreSQL user is your Draftea email, taken from DRAFTEA_EMAIL (set with
+hms-set-email).
+
+Examples:
+  draft db:connect start postgres turbo-dev
+  draft db:connect start postgres turbo-dev --port 15432
+  draft db:connect start redis api-cache-dev`,
+	Args: cobra.ExactArgs(2),
+	Run:  run,
 }
 
 func GetCmd() *cobra.Command {
 	cmd.Flags().IntP("port", "p", 0, "Override local port (default: use config value)")
+
 	return cmd
 }
 

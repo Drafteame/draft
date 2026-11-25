@@ -113,6 +113,10 @@ func stopOne(state RuntimeState, dbType, name string) error {
 
 // killEntry terminates the process for a single connection entry and removes it from state.
 func killEntry(state RuntimeState, key string, entry RuntimeEntry) error {
+	// The IAM token is useless without the tunnel; drop it whether or not the
+	// process is still alive.
+	cleanupIAMToken(entry.LocalPort, entry.IAMUser)
+
 	if !isProcessAlive(entry.PID) {
 		delete(state.Connections, key)
 		log.Warnf("connection %s/%s was not running (stale state cleaned up)", entry.DBType, entry.Name)

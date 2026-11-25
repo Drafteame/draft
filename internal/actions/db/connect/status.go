@@ -36,6 +36,8 @@ func Status() error {
 
 		if !alive {
 			statusStr = "down"
+			// The IAM token is useless without the tunnel; drop it with the entry.
+			cleanupIAMToken(entry.LocalPort, entry.IAMUser)
 			delete(state.Connections, key)
 			stateChanged = true
 		}
