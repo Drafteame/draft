@@ -58,7 +58,9 @@ func Start(input StartInput) error {
 				input.DBType, input.Name, existing.PID, existing.LocalPort)
 		}
 
-		// Dead entry — clean it up and continue
+		// Dead entry — clean it up and continue. Its token may sit on another
+		// local port (--port override), so the new entry would not replace it.
+		cleanupIAMToken(existing.LocalPort, existing.IAMUser)
 		delete(state.Connections, key)
 	}
 
